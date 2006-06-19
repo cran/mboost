@@ -1,4 +1,12 @@
 
+		CHANGES in `mboost' VERSION 0.4-7 (2006-06-19)
+
+  o  add src/Makevars (required for Windows builds)
+
+  o  make sure objects that are modified at C-level get _copied_ in
+     `blackboost'
+
+
 		CHANGES in `mboost' VERSION 0.4-6 (2006-06-14)
 
   o  some minor `codetools' fixes: removed unused variables 

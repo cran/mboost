@@ -178,3 +178,12 @@ SEXP R_trace_glmboost(SEXP x, SEXP MPinv, SEXP xselect) {
     Free(z);
     return(ans);
 }
+
+/**
+    copy an R object
+    *\param x an R object
+*/
+SEXP copymem (SEXP x) {
+    
+    return(duplicate(x));
+}
