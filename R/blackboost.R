@@ -10,7 +10,9 @@ blackboost_fit <- function(object, tree_controls, fitmem, family = GaussReg(),
                         control = boost_control(), weights = NULL) {
 
     ### number of observations in the learning sample
-    y <- party:::get_variables(object@responses)[[1]]
+    ### make sure this gets _copied_
+    y <- .Call("copymem", party:::get_variables(object@responses)[[1]], 
+               package = "mboost")
     if (is.factor(y)) {
         y <- (2 * (as.numeric(y) - 1)) - 1
         object@responses <- party:::initVariableFrame(data.frame(y = y), NULL)
@@ -43,7 +45,7 @@ blackboost_fit <- function(object, tree_controls, fitmem, family = GaussReg(),
         ### fit tree to residuals
         .Call("R_modify_response", as.double(u), object@responses, 
               PACKAGE = "party")
-        ens[[m]] <- .Call("R_TreeGrow", object, weights, fitmem, tree_controls, 
+        ens[[m]] <- .Call("R_TreeGrow", object, weights, fitmem, tree_controls,
                           where, PACKAGE = "party")
 
         ### check if first node is terminal, i.e., if at least 
