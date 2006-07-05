@@ -1,8 +1,8 @@
 Package: mboost
 Title: Gradient Boosting for Fitting Generalized Linear, Additive 
   and Interaction Models
-Date: $Date: 2006/06/19 11:46:31 $
-Version: 0.4-7
+Date: $Date: 2006/07/05 11:37:56 $
+Version: 0.4-8
 Author: Torsten Hothorn and Peter Buhlmann
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
 Description: Functional gradient descent algorithms for optimizing 
@@ -13,4 +13,4 @@ Depends: R (>= 2.3.0), modeltools, party (>= 0.8-6)
 Suggests: mlbench, ipred
 SaveImage: yes
 License: GPL
-Packaged: Mon Jun 19 13:51:45 2006; hothorn
+Packaged: Wed Jul  5 14:25:32 2006; hothorn

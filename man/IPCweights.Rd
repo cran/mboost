@@ -37,4 +37,4 @@ IPCweights(x, maxweight = 5)
     Boosting: A statistical perspective. Submitted manuscript.
 
 }
-\keyword{models}
+\keyword{survival}

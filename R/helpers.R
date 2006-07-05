@@ -19,7 +19,7 @@ boost_dpp <- function(formula, data, weights = NULL, ...) {
     x <- env@get("designMatrix")
 
     if (is.null(weights))
-        weights <- rep.int(1, nrow(x))
+        weights <- rep.int(1, NROW(x))
 
     if (is.factor(y)) {
         if (nlevels(y) != 2)
@@ -40,7 +40,7 @@ boost_dpp <- function(formula, data, weights = NULL, ...) {
 gb_xyw <- function(x, y, w) {
 
     if (is.null(w))
-        w <- rep.int(1, nrow(x))
+        w <- rep.int(1, NROW(x))
 
     if (is.factor(y)) {
         if (nlevels(y) != 2)
@@ -65,7 +65,7 @@ gm.glmboost <- function(object) {
 
     mstop <- nrow(object$ensemble)
     x <- object$data$x
-    RET <- matrix(0, nrow = nrow(x), ncol = mstop)
+    RET <- matrix(0, nrow = NROW(x), ncol = mstop)
 
     jsel <- object$ensemble[,"xselect"]
     cf <- object$ensemble[,"coef"] * object$control$nu 
@@ -82,7 +82,7 @@ gm.gamboost <- function(object) {
 
     mstop <- nrow(object$ensemble)
     x <- object$data$x
-    RET <- matrix(0, nrow = nrow(x), ncol = mstop)
+    RET <- matrix(0, nrow = NROW(x), ncol = mstop)
     nu <- object$control$nu
 
     jsel <- object$ensemble[,"xselect"]
@@ -99,7 +99,7 @@ gm.gamboost <- function(object) {
 gamplot <- function(object) {
 
      x <- object$data$x
-     lp <- matrix(0, ncol = ncol(x), nrow = nrow(x))
+     lp <- matrix(0, ncol = NCOL(x), nrow = NROW(x))
      ens <- object$ensemble
      ensss <- object$ensembless
      nu <- object$control$nu

@@ -200,10 +200,17 @@ coef(bf_glm[mstop(aic)])
 cf <- coef(bf_glm[mopt])
 nsel <- sum(abs(cf) > 0)
 @
-and thus only \Sexpr{nsel} covariates have been selected for the final model. Note that 
-the variables \Robject{hipcirc}, \Robject{kneebreadth} and \Robject{anthro3a}, which
-we have used for fitting a simple linear model at the beginning of this paragraph, have been 
-selected by the boosting algorithm as well.
+and thus only \Sexpr{nsel} covariates have been selected for the final
+model (intercept equal to zero occurs here for mean centered response and
+predictors and hence, 
+%TORSTEN: PLEASE CHECK
+$n^{-1} \sum_{i=1}^n Y_i = \Sexpr{round(bf_glm$offset, 3)}$
+%TORSTEN
+is the intercept in the uncentered model). Note that   
+the variables \Robject{hipcirc}, \Robject{kneebreadth} and
+\Robject{anthro3a}, which 
+we have used for fitting a simple linear model at the beginning of this
+paragraph, have been selected by the boosting algorithm as well. 
 
 
 \SweaveOpts{prefix.string=figures/BH} 
@@ -222,7 +229,7 @@ bffm <- DEXfat ~ age + waistcirc + hipcirc + elbowbreadth + kneebreadth +
 Being more flexible than the linear model which we fitted to the
 \Robject{bodyfat} data in Section~\ref{subsec.compLS}, we estimate an additive
 model using the \Rcmd{gamboost} function from \Rpackage{mboost} (first with
-prespecified $m_\text{stop} = 100$ 
+pre-specified $m_\text{stop} = 100$ 
 boosting iterations, $\nu = 0.1$ and squared error loss):
 <<bodyfat-gamboost-fit, echo = TRUE>>=
 bf_gam <- gamboost(bffm, data = cbodyfat)
@@ -308,10 +315,11 @@ mstop(aic <- AIC(bf_fp))
 @
 The corrected AIC criterion (see Section~\ref{subsec.stopping}) suggests to
 stop after $m_\text{stop} = \Sexpr{mstop(aic)}$ 
-boosting iterations and the final model has
-$\Sexpr{sum(abs(coef(bf_fp[mstop(aic)])) > 0 )}$  
-parameters. Again, the partial 
-contributions of each of the covariates can be computed easily and are shown 
+boosting iterations and the final model selects
+$\Sexpr{sum(abs(coef(bf_fp[mstop(aic)])) > 0 )}$ (transformed) predictor
+variables. Again, the partial 
+contributions of each of the 9 original covariates can be computed
+easily and are shown  
 (for the same variables as in Figure~\ref{bodyfat-gamboost-plot}) in 
 Figure~\ref{bodyfat-fpboost-plot}. Note that the depicted functional
 relationship derived 
@@ -423,7 +431,10 @@ wpbc_glm <- wpbc_glm[mstop(aic)]
 logLik(wpbc_glm)
 coef(wpbc_glm)[abs(coef(wpbc_glm)) > 0]
 @
-and we then can extract the fitted conditional probabilities 
+(because of using the offset-value $\hat{f}^{[0]}$, we have to add the value
+$\hat{f}^{[0]}$ to the reported intercept estimate above for the logistic
+regression model) and we then can
+extract the fitted conditional probabilities  
 <<wpbc-glmboost-prob, echo = TRUE>>=
 f <- fitted(wpbc_glm)
 ### probabilities
@@ -490,7 +501,8 @@ wpbc3 <- wpbc[,colnames(wpbc) != "status"]
 indep <- names(wpbc3)[names(wpbc3) != "time"]
 wpbc3[indep] <- lapply(wpbc3[indep], function(x) x - mean(x, na.rm = TRUE))
 @
-and fit a weighted linear model by boosting with componentwise linear model as base learners:
+and fit a weighted linear model by boosting with componentwise linear
+weighted least squares as base procedure: 
 <<wpbc-glmboost-censored-fit, echo = TRUE>>=
 wpbc_surv <- glmboost(log(time) ~ ., data = wpbc3,
                   control = boost_control(mstop = 500), weights = iw)

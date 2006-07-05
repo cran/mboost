@@ -15,21 +15,21 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     if (is.null(weights)) {
         weights <- object$w
     } else {
-        if (length(y) == length(weights)) 
+        if (NROW(x) == length(weights)) 
             object$w <- weights
         else 
-            stop(sQuote("weights"), " is not of length ", length(y))
+            stop(sQuote("weights"), " is not of length ", NROW(x))
     }
 
     ### hyper parameters
     mstop <- control$mstop
-    AIC <- control$risk
+    risk <- control$risk
     constraint <- control$constraint
     nu <- control$nu
 
     ### extract negative gradient and risk functions
     ngradient <- family@ngradient
-    risk <- family@risk
+    riskfct <- family@risk
 
     ### unweighted problem
     WONE <- (max(abs(weights - 1)) < .Machine$double.eps)
@@ -39,11 +39,16 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     ### rescale weights (because of the AIC criterion)
     ### <FIXME> is this correct with zero weights??? </FIXME>
     weights <- rescale_weights(weights)
+    oobweights <- as.numeric(weights == 0)
 
     ### the ensemble
-    ens <- matrix(NA, nrow = mstop, ncol = 3)
-    colnames(ens) <- c("xselect", "coef", "risk")
-    brisk <- NA
+    ens <- matrix(NA, nrow = mstop, ncol = 2)
+    colnames(ens) <- c("xselect", "coef")
+
+    ### vector of empirical risks for all boosting iterations 
+    ### (either in-bag or out-of-bag)
+    mrisk <- numeric(mstop)
+    mrisk[1:mstop] <- NA
 
     ### some calculations independent of mstop and memory allocation
     ### for each _column_ of the design matrix x, compute the corresponding
@@ -78,20 +83,36 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit)   
 
-        ### AIC precomputations
-        if (AIC) brisk <- risk(y, fit, weights)
+        ### evaluate risk, either for the learning sample (inbag)
+        ### or the test sample (oobag)
+        if (risk == "inbag") mrisk[m] <- riskfct(y, fit, weights)
+        if (risk == "oobag") mrisk[m] <- riskfct(y, fit, oobweights)
 
         ### save the model, i.e., the selected coefficient and variance
-        ens[m,] <- c(xselect, coef, brisk)
+        ens[m,] <- c(xselect, coef)
     }
 
-    RET <- list(ensemble = ens, control = control, fit = fit, 
-                ustart = ustart,  offset = offset,
-                MPinv = MPinv, family = family, weights = weights)
+    updatefun <- function(object, control, weights)
+        glmboost_fit(object, family = family,
+                     control = control, weights = weights)
+
+    RET <- list(ensemble = ens,		### coefficients for selected variables
+                fit = fit,		### vector of fitted values
+                offset = offset,	### offset
+                ustart = ustart,	### first negative gradients
+                risk = mrisk,		### empirical risks for m = 1, ..., mstop
+                control = control, 	### control parameters
+                family = family,	### family object
+                response = y, 		### the response variable
+                weights = weights,	### weights used for fitting
+                update = updatefun,	### a function for fitting with new weights
+                MPinv = MPinv, 		### Moore-Penrose inverse of x
+    )
+    ### save learning sample
     if (control$savedata) RET$data <- object
     class(RET) <- c("glmboost", "gb")
 
-    ### prediction function (linear predictor)
+    ### prediction function (linear predictor only)
     RET$predict <- function(newdata = NULL, mstop = mstop, ...) {
 
         if (!is.null(newdata)) {
@@ -105,6 +126,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
         if (constraint) lp <- sign(lp) * pmin(abs(lp), 1)    
         return(drop(lp))
     }
+    ### function for computing hat matrices of individual predictors
     RET$hat <- function(j) x[,j] %*% MPinv[j, ,drop = FALSE]
 
     return(RET)
@@ -131,11 +153,11 @@ glmboost.formula <- function(formula, data = list(), weights = NULL, ...) {
 ### matrix interface
 glmboost.matrix <- function(x, y, weights = NULL, ...) {
 
-    if (length(y) != nrow(x))
+    if (NROW(x) != NROW(y))
         stop("number of observations in", sQuote("x"), "and", 
              sQuote("y"), "differ")
-    if (is.null(weights)) weights <- rep(1, length(y))
-    if (length(weights) != nrow(x))
+    if (is.null(weights)) weights <- rep(1, NROW(x))
+    if (length(weights) != NROW(x))
         stop("number of observations in", sQuote("x"), "and", 
              sQuote("weights"), "differ")
 
@@ -146,8 +168,10 @@ glmboost.matrix <- function(x, y, weights = NULL, ...) {
 ### methods: coefficients
 coef.glmboost <- function(object, ...) {
 
-    ret <- sapply(1:ncol(object$data$x), function(j)
-        sum(object$ensemble[object$ensemble[,"xselect"] == j, "coef"]))
+    ret <- numeric(NCOL(object$data$x))
+    xselect <- object$ensemble[,"xselect"]
+    for (j in unique(xselect))
+        ret[j] <- sum(object$ensemble[xselect == j, "coef"])
     names(ret) <- colnames(object$data$x)
     ret * object$control$nu
 }
@@ -176,7 +200,7 @@ print.glmboost <- function(x, ...) {
     cat("Call:\n", deparse(x$call), "\n\n", sep = "")
     show(x$family)
     cat("\n")
-    cat("Number of boosting iterations: mstop =", nrow(x$ensemble), "\n")
+    cat("Number of boosting iterations: mstop =", mstop(x), "\n")
     cat("Step size: ", x$control$nu, "\n")
     cat("\n")
     cat("Coefficients: \n")

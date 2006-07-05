@@ -7,7 +7,7 @@ export(glmboost, glmboost_fit,
        blackboost, blackboost_fit, 
        boost_control, mstop, Family, 
        GaussReg, GaussClass, Laplace, Binomial, Poisson, 
-       Huber, AdaExp, boost_dpp, FP, IPCweights)
+       Huber, AdaExp, CoxPH, boost_dpp, FP, IPCweights, cvrisk)
 exportClasses("boost_family")
 exportMethods("show")
 
@@ -29,10 +29,15 @@ S3method(resid, blackboost)
 S3method(coef, glmboost)
 S3method(print, gamboost)
 S3method(print, blackboost)
+S3method(print, cvrisk)
 S3method(predict, blackboost)
 S3method(print, gbAIC)
 S3method(plot, gbAIC)
+S3method(plot, cvrisk)
 S3method(mstop, gbAIC)
+S3method(mstop, cvrisk)
+S3method(mstop, gb)
+S3method(mstop, blackboost)
 S3method("[", gb)
 S3method("[", blackboost)
 

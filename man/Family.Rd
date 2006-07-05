@@ -7,6 +7,7 @@
 \alias{Huber}
 \alias{Laplace}
 \alias{Poisson}
+\alias{CoxPH}
 \title{ Gradient Boosting Families }
 \description{
     \code{boost_family} objects provide a convenient way to specify loss functions
@@ -25,6 +26,7 @@ GaussReg()
 Huber(d = NULL)
 Laplace()
 Poisson()
+CoxPH()
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -74,4 +76,4 @@ Poisson()
            name = "My Gauss Variant")
 
 }
-\keyword{misc}
+\keyword{models}

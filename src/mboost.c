@@ -15,7 +15,6 @@ int nrow(SEXP x)
     return(INTEGER(getAttrib(x, R_DimSymbol))[0]);
 }
 
-
 /**
     number of columns
     *\param x a matrix
@@ -24,7 +23,6 @@ int ncol(SEXP x)
 {
     return(INTEGER(getAttrib(x, R_DimSymbol))[1]);
 }
-
 
 /**
     matrix product x %*% y
@@ -49,7 +47,6 @@ void C_matprod(double *x, int nrx, int ncx,
     } else /* zero-extent operations should return zeroes */
 	for(i = 0; i < nrx*ncy; i++) z[i] = 0;
 }
-
 
 /**
     trace of the boosting hat operator for each iteration of 
@@ -176,6 +173,102 @@ SEXP R_trace_glmboost(SEXP x, SEXP MPinv, SEXP xselect) {
     }
     UNPROTECT(1);
     Free(z);
+    return(ans);
+}
+
+/**
+    negative gradient of the partial likelihood of a Cox model
+    see formula (4.65) in Chapter 4 of Greg Ridgeway's thesis    
+    http://www.i-pensieri.com/gregr/papers/thesis.pdf
+    *\param time survival times
+    *\param event censoring indicate (event == 1 means dead)
+    *\param f boosting fit
+*/
+SEXP ngradientCoxPLik(SEXP time, SEXP event, SEXP f) {
+
+    SEXP ans;
+    double *dtime, *df, *dans, *dummy;
+    int *ievent, i, j, k, n;
+    
+    /* we don't assume the variables to be ordered w.r.t. time */
+
+    /* allocate memory */
+    n = LENGTH(time);
+    PROTECT(ans = allocVector(REALSXP, n));
+    dans = REAL(ans);
+    dtime = REAL(time);
+    ievent = INTEGER(event);
+    df = REAL(f);
+    dummy = Calloc(n, double);
+    
+    for (i = 0; i < n; i++) {
+        df[i] = exp(df[i]);
+        dans[i] = 0.0;
+    }
+        
+    for (j = 0; j < n; j++) {
+        for (k = 0; k < n; k++) {
+            if (dtime[j] <= dtime[k])
+                dummy[j] += df[k];
+        }
+    }
+    
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            if (ievent[j] & (dtime[j] <= dtime[i])) 
+                dans[i] += df[i] / dummy[j];
+        }
+        dans[i] = ievent[i] - dans[i];
+    }
+
+    Free(dummy);
+    UNPROTECT(1);
+    return(ans);
+}
+
+/**
+    partial likelihood of a Cox model
+    see formula (4.62) in Chapter 4 of Greg Ridgeway's thesis
+    http://www.i-pensieri.com/gregr/papers/thesis.pdf
+    *\param time survival times (ordered!)
+    *\param event censoring indicate (event == 1 means dead)
+    *\param f boosting fit
+*/
+SEXP CoxPLik(SEXP time, SEXP event, SEXP f) {
+
+    SEXP ans;
+    double *dtime, *df, *dans, *dummy, tmp;
+    int *ievent, i, j, n;
+    
+    /* we assume the variables to be ordered w.r.t. time */
+
+    /* allocate memory */
+    n = LENGTH(time);
+    PROTECT(ans = allocVector(REALSXP, 1));
+    dans = REAL(ans);
+    dtime = REAL(time);
+    ievent = INTEGER(event);
+    df = REAL(f);
+    dummy = Calloc(n, double);
+    
+    /* dummy[0] is total sum of exp(df) and 
+       dummy[j], j > 0 is abused as temp memory */
+    for (j = 0; j < n; j++) {
+        tmp = exp(df[j]);
+        dummy[0] += tmp;
+        if (j > 0)
+            dummy[j] = tmp;
+    }
+
+    for (j = 1; j < n; j++)
+        dummy[j] = dummy[j - 1] - dummy[j];
+    
+    dans[0] = 0.0;
+    for (i = 0; i < n; i++) 
+        dans[0] += ievent[i] * (df[i] - log(dummy[i]));
+        
+    Free(dummy);
+    UNPROTECT(1);
     return(ans);
 }
 

@@ -94,3 +94,4 @@ glmboost_fit(object, family = GaussReg(),
 
 }
 \keyword{models}
+\keyword{regression}

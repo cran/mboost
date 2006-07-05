@@ -1,16 +1,19 @@
 
 ### 
-### Experimental version of gradient boosting with conditional trees as 
+### Experimental version of gradient boosting with conditional trees 
 ### as base learner
 ### 
 
 
 ### Fitting function
-blackboost_fit <- function(object, tree_controls, fitmem, family = GaussReg(), 
-                        control = boost_control(), weights = NULL) {
+blackboost_fit <- function(object, tree_controls,
+                           fitmem = ctree_memory(object, TRUE), 
+                           family = GaussReg(), control = boost_control(), 
+                           weights = NULL) {
 
     ### number of observations in the learning sample
     ### make sure this gets _copied_
+    tmp <- .Call("copymem",  object@responses, package = "mboost")
     y <- .Call("copymem", party:::get_variables(object@responses)[[1]], 
                package = "mboost")
     if (is.factor(y)) {
@@ -19,17 +22,26 @@ blackboost_fit <- function(object, tree_controls, fitmem, family = GaussReg(),
     }
     if (is.null(weights)) weights <- object@weights
     storage.mode(weights) <- "double"
+    oobweights <- as.numeric(weights == 0)
+
 
     ### hyper parameters
     mstop <- control$mstop
+    risk <- control$risk
     constraint <- control$constraint
     nu <- control$nu
 
-    ### the ensemble
+    ### the ensemble, essentially a list of trees
     ens <- vector(mode = "list", length = mstop)
+
+    ### vector of empirical risks for all boosting iterations
+    ### (either in-bag or out-of-bag)
+    mrisk <- numeric(mstop)
+    mrisk[1:mstop] <- NA
 
     ### extract negative gradient function
     ngradient <- family@ngradient
+    riskfct <- family@risk
     if (!family@weights && any(max(abs(weights - 1))))
         stop(sQuote("family"), " is not able to deal with weights")
 
@@ -52,11 +64,14 @@ blackboost_fit <- function(object, tree_controls, fitmem, family = GaussReg(),
         ### one split was performed
         if (ens[[m]][[4]])
             warning("could not split root node in iteration ", m, 
-                    ", decrease ", sQuote("mincriterion"))
+                    ", with mincriterion ", sQuote("mincriterion"))
 
         ### update step
+        if (risk == "oobag")
+            where <- .Call("R_get_nodeID", ens[[m]], object@inputs, 0.0,
+                           PACKAGE = "party")
         fit <- fit + nu * unlist(.Call("R_getpredictions", ens[[m]], where, 
-                                PACKAGE = "party"))
+                                       PACKAGE = "party"))
 
         ### L2 boost with constraints (binary classification)
         if (constraint)
@@ -65,14 +80,35 @@ blackboost_fit <- function(object, tree_controls, fitmem, family = GaussReg(),
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit)   
 
+        ### evaluate risk, either for the learning sample (inbag)
+        ### or the test sample (oobag)
+        if (risk == "inbag") mrisk[m] <- riskfct(y, fit, weights)
+        if (risk == "oobag") mrisk[m] <- riskfct(y, fit, oobweights)
+
     }
 
-    RET <- list(ensemble = ens, control = control, ustart = ustart,
-                fit = fit, family = family, offset = offset)
-    if (control$savedata) RET$data <- object
-    class(RET) <- "blackboost"
+    updatefun <- function(object, control, weights)
+        blackboost_fit(object, family = family, tree_controls = tree_controls,
+                       fitmem = fitmem, control = control, weights = weights)
 
-    ### prediction function
+    RET <- list(ensemble = ens, 	### list of trees
+                fit = fit,              ### vector of fitted values   
+                offset = offset,        ### offset
+                ustart = ustart,        ### first negative gradients
+                risk = mrisk,           ### empirical risks for m = 1, ..., mstop
+                control = control,      ### control parameters   
+                family = family,        ### family object
+                response = y,           ### the response variable
+                weights = weights,      ### weights used for fitting
+                update = updatefun,     ### a function for fitting with new weights
+                tree_controls = tree_controls
+    )
+
+    object@responses <- tmp
+    ### save learning sample
+    if (control$savedata) RET$data <- object
+
+    ### prediction function (linear predictor only)
     RET$predict <- function(newdata = NULL, mstop = mstop, ...) {
 
         if (is.null(newdata)) {
@@ -93,18 +129,21 @@ blackboost_fit <- function(object, tree_controls, fitmem, family = GaussReg(),
         return(p)
     }
 
+    class(RET) <- "blackboost"
     return(RET)
 }
 
 ### methods: subset
 "[.blackboost" <- function(x, i, ...) { 
-    if (i == length(x$ensemble)) return(x)
+    mstop <- mstop(x)
+    if (i == mstop) return(x)
     if (length(i) != 1)
         stop("not a positive integer")
-    if (i < 1 || i > length(x$ensemble))
+    if (i < 1 || i > mstop)
         warning("invalid number of boosting iterations")
-    indx <- 1:min(max(i, 1), nrow(x$ensemble))
+    indx <- 1:min(max(i, 1), mstop)
     x$ensemble <- x$ensemble[indx]
+    x$risk <- x$risk[indx]
     x$fit <- x$predict(mstop = max(indx))
     x
 }
@@ -114,7 +153,7 @@ predict.blackboost <- function(object, newdata = NULL,
                               type = c("lp", "response"), ...) {
     y <- object$data$y
     type <- match.arg(type)
-    lp <- object$predict(newdata = newdata, mstop = length(object$ensemble), ...)
+    lp <- object$predict(newdata = newdata, mstop = mstop(object), ...)
     if (type == "response" && is.factor(y))
         return(factor(levels(y)[(lp > 0) + 1], levels = levels(y)))
     return(lp)
@@ -148,7 +187,7 @@ print.blackboost <- function(x, ...) {
     cat("Call:\n", deparse(x$call), "\n\n", sep = "")
     show(x$family)
     cat("\n")
-    cat("Number of boosting iterations: mstop =", length(x$ensemble), "\n")
+    cat("Number of boosting iterations: mstop =", mstop(x), "\n")
     cat("Step size: ", x$control$nu, "\n")
     cat("\n")
     invisible(x)

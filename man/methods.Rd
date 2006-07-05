@@ -4,8 +4,11 @@
 \alias{print.gamboost}
 \alias{AIC.gb}
 \alias{predict.gb}
-\alias{mstop.gbAIC}
 \alias{mstop}
+\alias{mstop.gbAIC}
+\alias{mstop.gb}
+\alias{mstop.cvrisk}
+\alias{mstop.blackboost}
 \alias{fitted.gb}
 \alias{logLik.gb}
 \title{ Methods for Gradient Boosting Objects }
@@ -18,6 +21,9 @@
 \method{coef}{glmboost}(object, ...)
 \method{AIC}{gb}(object, method = c("corrected", "classical"), ...)
 \method{mstop}{gbAIC}(object, ...)
+\method{mstop}{gb}(object, ...)
+\method{mstop}{cvrisk}(object, ...)
+\method{mstop}{blackboost}(object, ...)
 \method{predict}{gb}(object, newdata = NULL, type = c("lp", "response"), ...)
 \method{fitted}{gb}(object, type = c("lp", "response"), ...)
 \method{logLik}{gb}(object, ...)
@@ -74,6 +80,9 @@
     cars.gb <- glmboost(dist ~ speed, data = cars, 
                         control = boost_control(mstop = 2000))
     cars.gb
+
+    ### initial number of boosting iterations
+    mstop(cars.gb)
 
     ### AIC criterion
     aic <- AIC(cars.gb, method = "corrected")

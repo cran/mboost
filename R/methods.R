@@ -6,13 +6,15 @@
 
 ### methods: subset
 "[.gb" <- function(x, i, ...) {
-    if (i == nrow(x$ensemble)) return(x)
+    mstop <- mstop(x)
+    if (i == mstop) return(x)
     if (length(i) != 1)
         stop("not a positive integer")
-    if (i < 1 || i > length(x$ensemble))
+    if (i < 1 || i > mstop)
         warning("invalid number of boosting iterations")
-    indx <- 1:min(max(i, 1), nrow(x$ensemble))
+    indx <- 1:min(max(i, 1), mstop)
     x$ensemble <- x$ensemble[indx, , drop = FALSE]
+    x$risk <- x$risk[indx]
     x$fit <- x$predict(mstop = max(indx))
     x
 }
@@ -21,7 +23,7 @@
 predict.gb <- function(object, newdata = NULL, type = c("lp", "response"), ...) {
     type <- match.arg(type)
     y <- object$data$y
-    lp <- object$predict(newdata = newdata, mstop = nrow(object$ensemble), ...)
+    lp <- object$predict(newdata = newdata, mstop = mstop(object), ...)
     if (type == "response" && is.factor(y))
        return(factor(levels(y)[(lp > 0) + 1], levels = levels(y)))
     return(lp)
@@ -79,7 +81,7 @@ hatvalues.gb <- function(model, ...) {
 ### methods: AIC
 AIC.gb <- function(object, method = c("corrected", "classical"), ...) {
 
-    if (!object$control$risk)
+    if (object$control$risk != "inbag")
         return(NA)
     method <- match.arg(method)
 
@@ -94,12 +96,12 @@ AIC.gb <- function(object, method = c("corrected", "classical"), ...) {
 
     sumw <- sum(object$weights)
     if (method == "corrected")
-        AIC <- log(object$ensemble[, "risk"] / sumw) + 
+        AIC <- log(object$risk / sumw) + 
                (1 + trace/sumw) / (1 - (trace + 2)/sumw)
 
     ### loss-function is to be MINIMIZED, take -2 * logLik == 2 * risk
     if (method == "classical")
-        AIC <- 2 * object$ensemble[,"risk"] + 2 * trace
+        AIC <- 2 * object$risk + 2 * trace
 
     mstop <- which.min(AIC)
     RET <- AIC[mstop]
@@ -118,7 +120,7 @@ logLik.gb <- function(object, ...)
     -object$family@risk(object$data$yfit, fitted(object), object$weights)
 
 print.gbAIC <- function(x, ...) {
-    mstop <- attr(x, "mstop")
+    mstop <- mstop(x)
     df <- attr(x, "df")[mstop]
     attributes(x) <- NULL
     print(x)
@@ -129,18 +131,23 @@ print.gbAIC <- function(x, ...) {
 }
 
 plot.gbAIC <- function(x, y = NULL, ...) {
+    mstop <- mstop(x)
     class(x) <- NULL
     plot(attr(x, "AIC"), xlab = "Number of boosting iterations", 
          ylab = ifelse(attr(x, "corrected"), "Corrected AIC", "AIC"),
          type = "l", ...)
-    points(attr(x, "mstop"), x)
-    lines(c(attr(x, "mstop"), attr(x, "mstop")), 
+    points(mstop, x)
+    lines(c(mstop, mstop), 
           c(x - x/2, x), lty = 2)
 }
 
 mstop <- function(object, ...) UseMethod("mstop")
 
 mstop.gbAIC <- function(object, ...) attr(object, "mstop")
+
+mstop.gb <- function(object, ...) nrow(object$ensemble)
+
+mstop.blackboost <- function(object, ...) length(object$ensemble)
 
 ### methods: variance of predictions (!)
 vcov.gb <- function(object, ...) {
@@ -150,4 +157,3 @@ vcov.gb <- function(object, ...) {
     sigma2 <- sum(resid(object)^2) / (length(object$yfit) - df)
     return(sigma2 * colSums(Bhat^2))
 }
-
