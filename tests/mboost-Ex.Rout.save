@@ -1,13 +1,11 @@
 
 R : Copyright 2006, The R Foundation for Statistical Computing
-Version 2.3.0 (2006-04-24)
+Version 2.3.1 (2006-06-01)
 ISBN 3-900051-07-0
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
-
-  Natural language support but running in an English locale
 
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
@@ -75,7 +73,7 @@ Loading required package: strucchange
 > ### Name: FP
 > ### Title: Fractional Polynomials
 > ### Aliases: FP
-> ### Keywords: models
+> ### Keywords: datagen
 > 
 > ### ** Examples
 > 
@@ -167,8 +165,8 @@ FP(kneebreadth)log(kneebreadth)kneebreadth^-1
 > ### Name: Family
 > ### Title: Gradient Boosting Families
 > ### Aliases: Family AdaExp Binomial GaussClass GaussReg Huber Laplace
-> ###   Poisson
-> ### Keywords: misc
+> ###   Poisson CoxPH
+> ### Keywords: models
 > 
 > ### ** Examples
 > 
@@ -201,7 +199,7 @@ Loss function: (y - f)^2
 > ### Name: blackboost
 > ### Title: Gradient Boosting with Regression Trees
 > ### Aliases: blackboost blackboost_fit
-> ### Keywords: models
+> ### Keywords: models regression
 > 
 > ### ** Examples
 > 
@@ -283,6 +281,91 @@ Loss function: abs(y - f)
 > 
 > 
 > 
+> cleanEx(); ..nameEx <- "cvrisk"
+> 
+> ### * cvrisk
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: cvrisk
+> ### Title: Cross-Validation
+> ### Aliases: cvrisk
+> ### Keywords: models regression
+> 
+> ### ** Examples
+> 
+> 
+>   data("bodyfat", package = "mboost")
+>   tbodyfat <- bodyfat
+>  
+>   indep <- names(tbodyfat)[-2]  
+>   tbodyfat[indep] <- lapply(bodyfat[indep], function(x)
++         x <- x - mean(x)
++   )
+>   
+>   ### fit linear model to data
+>   model <- glmboost(DEXfat ~ ., data = tbodyfat, control = boost_control(mstop = 100))
+> 
+>   ### AIC-based selection of number of boosting iterations
+>   AIC(model)
+[1] 3.352738
+Optimal number of boosting iterations: 45 
+Degrees of freedom (for mstop = 45): 1.917234 
+> 
+>   ### 10-fold cross-validation
+>   n <- nrow(tbodyfat)
+>   k <- 10
+>   ntest <- floor(n / k)
+>   cv10f <- matrix(c(rep(c(rep(0, ntest), rep(1, n)), k - 1), 
++                     rep(0, n * k - (k - 1) * (n + ntest))), nrow = n)
+>   cvm <- cvrisk(model, folds = cv10f)
+>   print(cvm)
+
+	 Cross-validated Squared Error (Regression) 
+	 glmboost.formula(formula = DEXfat ~ ., data = tbodyfat, control = boost_control(mstop = 100)) 
+
+      10       20       30       40       50       60       70       80 
+38.82368 19.71075 14.63678 12.81819 12.23021 12.01648 12.05912 12.12549 
+      90      100 
+12.17647 12.25439 
+
+	 Optimal number of boosting iterations: 60 
+>   mstop(cvm)
+[1] 60
+>   plot(cvm)
+> 
+>   ### 25 bootstrap iterations
+>   bs25 <- rmultinom(25, n, rep(1, n)/n)
+>   cvm <- cvrisk(model, folds = bs25)
+>   print(cvm)
+
+	 Cross-validated Squared Error (Regression) 
+	 glmboost.formula(formula = DEXfat ~ ., data = tbodyfat, control = boost_control(mstop = 100)) 
+
+      10       20       30       40       50       60       70       80 
+31.57239 16.24234 13.42206 12.70971 12.50181 12.53480 12.59716 12.69199 
+      90      100 
+12.78871 12.87324 
+
+	 Optimal number of boosting iterations: 50 
+>   mstop(cvm)
+[1] 50
+> 
+>   layout(matrix(1:2, ncol = 2))
+>   plot(cvm)
+> 
+>   ### there seems to be some nonlinearity involved ...
+>   blackbox <- blackboost(DEXfat ~ ., data = bodyfat)
+>   cvtree <- cvrisk(blackbox, folds = bs25)
+Warning: no admissible split found
+Warning: no admissible split found
+Warning: no admissible split found
+Warning: no admissible split found
+>   plot(cvtree)
+> 
+> 
+> 
+> 
 > cleanEx(); ..nameEx <- "gamboost"
 > 
 > ### * gamboost
@@ -292,7 +375,7 @@ Loss function: abs(y - f)
 > ### Name: gamboost
 > ### Title: Gradient Boosting with Componentwise Smoothing Splines
 > ### Aliases: gamboost gamboost.formula gamboost.matrix gamboost_fit
-> ### Keywords: models
+> ### Keywords: models nonlinear
 > 
 > ### ** Examples
 > 
@@ -341,7 +424,7 @@ Degrees of freedom (for mstop = 25): 4.563027
 > ### Name: glmboost
 > ### Title: Gradient Boosting with Componentwise Linear Models
 > ### Aliases: glmboost glmboost.formula glmboost.matrix glmboost_fit
-> ### Keywords: models
+> ### Keywords: models regression
 > 
 > ### ** Examples
 > 
@@ -433,7 +516,8 @@ Coefficients:
 > ### Name: methods
 > ### Title: Methods for Gradient Boosting Objects
 > ### Aliases: print.glmboost coef.glmboost print.gamboost AIC.gb predict.gb
-> ###   mstop.gbAIC mstop fitted.gb logLik.gb
+> ###   mstop mstop.gbAIC mstop.gb mstop.cvrisk mstop.blackboost fitted.gb
+> ###   logLik.gb
 > ### Keywords: methods
 > 
 > ### ** Examples
@@ -462,6 +546,10 @@ Coefficients:
 (Intercept)       speed 
  -60.331204    3.918359 
 
+> 
+>     ### initial number of boosting iterations
+>     mstop(cars.gb)
+[1] 2000
 > 
 >     ### AIC criterion
 >     aic <- AIC(cars.gb, method = "corrected")
@@ -525,7 +613,7 @@ worst_concavepoints      worst_symmetry    worst_fractaldim               tsize
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", env = .CheckExEnv),"\n")
-Time elapsed:  9.84 0.174 10.044 0 0 
+Time elapsed:  13.386 0.082 13.557 0 0 
 > grDevices::dev.off()
 null device 
           1 

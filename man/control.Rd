@@ -7,16 +7,18 @@
 }
 \usage{
 boost_control(mstop = 100, nu = 0.1, constraint = FALSE, 
-              risk = TRUE, savedata = TRUE)
+              risk = c("inbag", "oobag", "none"), savedata = TRUE)
 }
 \arguments{
   \item{mstop}{ an integer giving the number of initial boosting iterations. }
   \item{nu}{ a double (between 0 and 1) defining the step size or shrinkage parameter. } 
   \item{constraint}{ a logical indicating whether the working responses
                      should be restricted to \eqn{(-1, +1)}. }
-  \item{risk}{ a logical indicating if the empirical risk should be 
-               computed for each boosting iteration 
-               (needed for \code{\link{AIC}}).}
+  \item{risk}{ a character indicating how the empirical risk should be 
+               computed for each boosting iteration. \code{inbag} leads
+               risks computed for the learning sample (i.e., all non-zero weights),
+               \code{oobag} to risks based on the out-of-bag (all observations with 
+               zero weights) and \code{none} to no risk computations at all.}
   \item{savedata}{ a logical, should the data be saved in the 
                    returned object?}
 }

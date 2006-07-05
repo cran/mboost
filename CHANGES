@@ -1,4 +1,34 @@
 
+
+		CHANGES in `mboost' VERSION 0.4-8 (2006-06-05)
+
+  o  Huber() is `Huber Error', not `Huber Absolute Error'
+
+  o  added `CoxPH' family object for fitting Cox models
+
+  o  remove inst/LaTeX
+
+  o  use NROW / NCOL more often (now that `y' may be a `Surv' object)
+
+  o  implement `cvrisk', a general cross-validation function for the
+     empirical risk and a corresponding plot method
+
+  o  unify risk computations in all three fitting functions
+
+  o  unify names for `gb' objects
+
+  o  allow for out-of-bag risk computations
+
+  o  some cosmetics
+
+  o  update keywords in Rd-files
+
+  o  risk was always 0 in Huber()@risk when d was choosen adaptively
+
+  o  pData(westbc)$nodal.y has levels `negative' and `positive' 
+     (lymph node status)
+
+
 		CHANGES in `mboost' VERSION 0.4-7 (2006-06-19)
 
   o  add src/Makevars (required for Windows builds)

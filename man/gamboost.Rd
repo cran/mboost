@@ -72,3 +72,4 @@ gamboost_fit(object, dfbase = 4, family = GaussReg(),
 
 }
 \keyword{models}
+\keyword{nonlinear}

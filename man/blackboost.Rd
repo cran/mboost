@@ -89,3 +89,4 @@ blackboost_fit(object, tree_controls, fitmem, family = GaussReg(),
 
 }
 \keyword{models}
+\keyword{regression}

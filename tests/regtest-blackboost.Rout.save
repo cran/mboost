@@ -1,6 +1,6 @@
 
 R : Copyright 2006, The R Foundation for Statistical Computing
-Version 2.3.0 (2006-04-24)
+Version 2.3.1 (2006-06-01)
 ISBN 3-900051-07-0
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -44,6 +44,10 @@ Loading required package: strucchange
 + 
 +     print(ae <- mean((predict(a) - BostonHousing$medv)^2))
 + 
++     pdiffs <- max(abs(predict(a$update(a$data, a$control, a$weights)) - predict(a)))
++     stopifnot(pdiffs < sqrt(.Machine$double.eps))
++ 
++ 
 +     ### attach `gbm', quietly
 +     sink("tmpfile")
 +     require("gbm")
@@ -82,5 +86,5 @@ Iter   TrainDeviance   ValidDeviance   StepSize   Improve
    500        2.7537             nan     0.1000       nan
 
 [1] 2.753747
-There were 14 warnings (use warnings() to see them)
+There were 28 warnings (use warnings() to see them)
 > 

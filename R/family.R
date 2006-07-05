@@ -76,12 +76,12 @@ Poisson <- function()
     Family(ngradient = function(y, f) y - exp(f),
            loss = function(y, f) -y*f + exp(f),
            offset = weighted.mean,
-           name = "Poisson")
+           name = "Poisson Likelihood")
 
 ### L1Huber
 Huber <- function(d = NULL) {
     mc <- match.call()
-    if (length(mc) > 2)
+    if (length(mc) == 2)
         dtxt <- deparse(mc[[2]])
     else
         dtxt <- NULL
@@ -91,10 +91,12 @@ Huber <- function(d = NULL) {
                fit <<- f
                ifelse(abs(y - f) < d, y - f, d * sign(y - f))
            },
-           loss = function(y, f)
-               ifelse((a <- abs(y - f)) < d, a^2/2, d*(a - d/2)),
+           loss = function(y, f) {
+               if (is.null(d)) d <- median(abs(y - fit))
+               ifelse((a <- abs(y - f)) < d, a^2/2, d*(a - d/2))
+           },
            offset = function(y, w) median(y),
-           name = paste("Huber Absolute Error", 
+           name = paste("Huber Error", 
                ifelse(is.null(d), "(with adaptive d)", 
                                   paste("(with d = ", dtxt, ")", sep = ""))))
 }
@@ -108,3 +110,29 @@ AdaExp <- function()
                1/2 * log(p / (1 - p))
            },
            name = "Adaboost Exponential Error")
+
+### Cox proportional hazards model (partial likelihood)
+CoxPH <- function()
+    Family(ngradient = function(y, f) {
+               time <- y[,1]
+               storage.mode(time) <- "double"
+               event <- y[,2]
+               storage.mode(event) <- "integer"
+               if (length(f) == 1)
+                   f <- rep(f, length(time))
+               storage.mode(f) <- "double"
+               .Call("ngradientCoxPLik", time, event, f)
+           },
+           loss = function(y, f, w) {
+               time <- y[,1]
+               storage.mode(time) <- "double"
+               event <- y[,2]
+               storage.mode(event) <- "integer"
+               if (length(f) == 1)
+                   f <- rep(f, length(time))
+               storage.mode(f) <- "double"
+               ot <- order(time)
+              .Call("CoxPLik", time[ot], event[ot], f[ot]) * (-1)
+           },
+           weights = FALSE, 
+           name = "Partial Likelihood")

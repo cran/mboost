@@ -46,7 +46,7 @@ flush(stderr()); flush(stdout())
 ### Name: FP
 ### Title: Fractional Polynomials
 ### Aliases: FP
-### Keywords: models
+### Keywords: datagen
 
 ### ** Examples
 
@@ -91,8 +91,8 @@ flush(stderr()); flush(stdout())
 ### Name: Family
 ### Title: Gradient Boosting Families
 ### Aliases: Family AdaExp Binomial GaussClass GaussReg Huber Laplace
-###   Poisson
-### Keywords: misc
+###   Poisson CoxPH
+### Keywords: models
 
 ### ** Examples
 
@@ -115,7 +115,7 @@ flush(stderr()); flush(stdout())
 ### Name: blackboost
 ### Title: Gradient Boosting with Regression Trees
 ### Aliases: blackboost blackboost_fit
-### Keywords: models
+### Keywords: models regression
 
 ### ** Examples
 
@@ -175,6 +175,62 @@ flush(stderr()); flush(stdout())
 
 
 
+cleanEx(); ..nameEx <- "cvrisk"
+
+### * cvrisk
+
+flush(stderr()); flush(stdout())
+
+### Name: cvrisk
+### Title: Cross-Validation
+### Aliases: cvrisk
+### Keywords: models regression
+
+### ** Examples
+
+
+  data("bodyfat", package = "mboost")
+  tbodyfat <- bodyfat
+ 
+  indep <- names(tbodyfat)[-2]  
+  tbodyfat[indep] <- lapply(bodyfat[indep], function(x)
+        x <- x - mean(x)
+  )
+  
+  ### fit linear model to data
+  model <- glmboost(DEXfat ~ ., data = tbodyfat, control = boost_control(mstop = 100))
+
+  ### AIC-based selection of number of boosting iterations
+  AIC(model)
+
+  ### 10-fold cross-validation
+  n <- nrow(tbodyfat)
+  k <- 10
+  ntest <- floor(n / k)
+  cv10f <- matrix(c(rep(c(rep(0, ntest), rep(1, n)), k - 1), 
+                    rep(0, n * k - (k - 1) * (n + ntest))), nrow = n)
+  cvm <- cvrisk(model, folds = cv10f)
+  print(cvm)
+  mstop(cvm)
+  plot(cvm)
+
+  ### 25 bootstrap iterations
+  bs25 <- rmultinom(25, n, rep(1, n)/n)
+  cvm <- cvrisk(model, folds = bs25)
+  print(cvm)
+  mstop(cvm)
+
+  layout(matrix(1:2, ncol = 2))
+  plot(cvm)
+
+  ### there seems to be some nonlinearity involved ...
+  blackbox <- blackboost(DEXfat ~ ., data = bodyfat)
+  cvtree <- cvrisk(blackbox, folds = bs25)
+  plot(cvtree)
+
+
+
+
 cleanEx(); ..nameEx <- "gamboost"
 
 ### * gamboost
@@ -184,7 +240,7 @@ flush(stderr()); flush(stdout())
 ### Name: gamboost
 ### Title: Gradient Boosting with Componentwise Smoothing Splines
 ### Aliases: gamboost gamboost.formula gamboost.matrix gamboost_fit
-### Keywords: models
+### Keywords: models nonlinear
 
 ### ** Examples
 
@@ -214,7 +270,7 @@ flush(stderr()); flush(stdout())
 ### Name: glmboost
 ### Title: Gradient Boosting with Componentwise Linear Models
 ### Aliases: glmboost glmboost.formula glmboost.matrix glmboost_fit
-### Keywords: models
+### Keywords: models regression
 
 ### ** Examples
 
@@ -262,7 +318,8 @@ flush(stderr()); flush(stdout())
 ### Name: methods
 ### Title: Methods for Gradient Boosting Objects
 ### Aliases: print.glmboost coef.glmboost print.gamboost AIC.gb predict.gb
-###   mstop.gbAIC mstop fitted.gb logLik.gb
+###   mstop mstop.gbAIC mstop.gb mstop.cvrisk mstop.blackboost fitted.gb
+###   logLik.gb
 ### Keywords: methods
 
 ### ** Examples
@@ -272,6 +329,9 @@ flush(stderr()); flush(stdout())
     cars.gb <- glmboost(dist ~ speed, data = cars, 
                         control = boost_control(mstop = 2000))
     cars.gb
+
+    ### initial number of boosting iterations
+    mstop(cars.gb)
 
     ### AIC criterion
     aic <- AIC(cars.gb, method = "corrected")

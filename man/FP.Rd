@@ -69,4 +69,4 @@ FP(x, p = c(-2, -1, -0.5, 0.5, 1, 2, 3))
     cf[abs(cf) > 0]
 
 }
-\keyword{models}
+\keyword{datagen}

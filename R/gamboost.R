@@ -6,7 +6,7 @@
 
 ### hat matrix for smoothing splines
 hatMatTH <- function(x, w = NULL, df = 5) {
-    n <- nrow(x)
+    n <- NROW(x)
     indx <- diag(n)
     apply(indx, 2, function(y) 
         predict(smooth.spline(x = x, y = y, w = w, df = df, 
@@ -17,7 +17,7 @@ predict.smooth.spline.fit <- stats:::predict.smooth.spline.fit
 
 ### Fitting function
 gamboost_fit <- function(object, dfbase = 4, family = GaussReg(), 
-                      control = boost_control(), weights = NULL) {
+                         control = boost_control(), weights = NULL) {
 
     ### data
     x <- object$x
@@ -25,24 +25,24 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     if (is.null(weights)) {
         weights <- object$w
     } else {
-        if (length(y) == length(weights))
+        if (NROW(y) == length(weights))
             object$w <- weights
         else 
-            stop(sQuote("weights"), " is not of length ", length(y))
+            stop(sQuote("weights"), " is not of length ", NROW(y))
     }
 
     ### hyper parameters
     mstop <- control$mstop
-    AIC <- control$risk
+    risk <- control$risk
     constraint <- control$constraint
     nu <- control$nu
 
     ### extract negative gradient and risk functions
     ngradient <- family@ngradient
-    risk <- family@risk
+    riskfct <- family@risk
 
     ### inputs with more than four unique values
-    pindx <- (1:ncol(x))[apply(x, 2, function(xx) length(unique(xx)) > 4)]
+    pindx <- (1:NCOL(x))[apply(x, 2, function(xx) length(unique(xx)) > 4)]
 
     ### unweighted problem
     WONE <- (max(abs(weights - 1)) < .Machine$double.eps)
@@ -52,12 +52,17 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     ### rescale weights (because of the AIC criterion)
     ### <FIXME> is this correct with zero weights??? </FIXME>
     weights <- rescale_weights(weights)
+    oobweights <- as.numeric(weights == 0)
 
     ### the ensemble
-    ens <- matrix(NA, nrow = mstop, ncol = 2)
-    colnames(ens) <- c("xselect", "risk")
+    ens <- matrix(NA, nrow = mstop, ncol = 1)
+    colnames(ens) <- "xselect"
     ensss <- vector(mode = "list", length = mstop)
-    brisk <- NA
+
+    ### vector of empirical risks for all boosting iterations
+    ### (either in-bag or out-of-bag)
+    mrisk <- numeric(mstop)
+    mrisk[1:mstop] <- NA   
 
     fit <- offset <- family@offset(y, weights)
     u <- ustart <- ngradient(y, fit)
@@ -98,22 +103,38 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit)   
 
-        ### AIC precomputations
-        if (AIC) brisk <- risk(y, fit, weights)
+        ### evaluate risk, either for the learning sample (inbag)
+        ### or the test sample (oobag)
+        if (risk == "inbag") mrisk[m] <- riskfct(y, fit, weights)
+        if (risk == "oobag") mrisk[m] <- riskfct(y, fit, oobweights)
 
         ### save the model, i.e., the selected coefficient and variance
-        ens[m,] <- c(xselect, brisk)
+        ens[m,] <- xselect
         ensss[[m]] <- basess
 
     }
 
-    RET <- list(ensemble = ens, ensembless = ensss,
-                control = control, fit = fit, offset = offset, 
-                ustart = ustart, family = family, dfbase = dfbase, weights = weights)
-    if (control$savedata) RET$data <- object
-    class(RET) <- c("gamboost", "gb")
+    updatefun <- function(object, control, weights) 
+        gamboost_fit(object, dfbase = dfbase, family = family,
+                     control = control, weights = weights)
 
-    ### prediction function
+    RET <- list(ensemble = ens,         ### selected variables 
+                ensembless = ensss,	### list of smooth.spline fits
+                fit = fit,              ### vector of fitted values
+                offset = offset,        ### offset
+                ustart = ustart,        ### first negative gradients
+                risk = mrisk,           ### empirical risks for m = 1, ..., mstop
+                control = control,      ### control parameters   
+                family = family,        ### family object
+                response = y,           ### the response variable
+                weights = weights,      ### weights used for fitting   
+                update = updatefun,     ### a function for fitting with new weights
+                dfbase = dfbase         ### degrees of freedom for smooth.spline
+    )
+    ### save learning sample
+    if (control$savedata) RET$data <- object
+
+    ### prediction function (linear predictor only)
     RET$predict <- function(newdata = NULL, mstop = mstop, ...) {
 
         if (!is.null(newdata)) {
@@ -128,8 +149,12 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
         if (constraint) lp <- sign(lp) * pmin(abs(lp), 1)    
         return(lp)
     }
+
+    ### function for computing hat matrices of individual predictors
     RET$hat <- function(j) hatMatTH(x[,j,drop = FALSE],
                                     w = weights, df = dfbase)
+
+    class(RET) <- c("gamboost", "gb")
     return(RET)
 }
 
@@ -154,11 +179,11 @@ gamboost.formula <- function(formula, data = list(), weights = NULL, ...) {
 ### matrix interface
 gamboost.matrix <- function(x, y, weights = NULL, ...) {
 
-    if (length(y) != nrow(x))
+    if (NROW(y) != NROW(x))
         stop("number of observations in", sQuote("x"), "and",
              sQuote("y"), "differ")
-    if (is.null(weights)) weights <- rep(1, length(y))
-    if (length(weights) != nrow(x))
+    if (is.null(weights)) weights <- rep(1, NROW(x))
+    if (length(weights) != NROW(x))
         stop("number of observations in", sQuote("x"), "and",
              sQuote("weights"), "differ")
 
@@ -177,7 +202,7 @@ print.gamboost <- function(x, ...) {
     cat("Call:\n", deparse(x$call), "\n\n", sep = "")
     show(x$family)
     cat("\n")
-    cat("Number of boosting iterations: mstop =", nrow(x$ensemble), "\n")
+    cat("Number of boosting iterations: mstop =", mstop(x), "\n")
     cat("Step size: ", x$control$nu, "\n")
     cat("Degree of freedom: ", x$dfbase, "\n")
     cat("\n")

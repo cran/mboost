@@ -1,7 +1,15 @@
 
+    o  check cvrisk for blackboost & bodyfat
+
+    o  update benchmarks in cache with cvrisk
+
+    o  use col = rgb(0, 0, 0, 0.1) for lines in plot.cvrisk
+
     o  AIC(..., "classical") as default???
 
     o  use extractAIC instead of AIC
+
+    o  coxphboost
 
     o  adjust control$M when subsetting
     

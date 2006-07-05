@@ -15,6 +15,10 @@ if (!inherits(tst, "try-error")) {
 
     print(ae <- mean((predict(a) - BostonHousing$medv)^2))
 
+    pdiffs <- max(abs(predict(a$update(a$data, a$control, a$weights)) - predict(a)))
+    stopifnot(pdiffs < sqrt(.Machine$double.eps))
+
+
     ### attach `gbm', quietly
     sink("tmpfile")
     require("gbm")
