@@ -1,4 +1,16 @@
 
+		CHANGES in `mboost' VERSION 0.4-9 (2006-07-17)
+
+  o  some small speed improvements in `gamboost'
+
+  o  handle factors in `gamboost' properly (via a linear model)
+
+  o  the dfbase argument can take a vector now (in `gamboost')
+
+  o  update and improve entries in DESCRIPTION
+
+  o  documentation updates
+
 
 		CHANGES in `mboost' VERSION 0.4-8 (2006-06-05)
 

@@ -1,4 +1,11 @@
 
+    o  use better colours
+
+    o  dfbase == 1 means fitting lm with intercept, can we work around?
+
+    o  fire a warning when AIC is called in cases the hat matrix is
+       meaningless
+
     o  check cvrisk for blackboost & bodyfat
 
     o  update benchmarks in cache with cvrisk
@@ -8,8 +15,6 @@
     o  AIC(..., "classical") as default???
 
     o  use extractAIC instead of AIC
-
-    o  coxphboost
 
     o  adjust control$M when subsetting
     

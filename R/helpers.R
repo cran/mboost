@@ -204,3 +204,156 @@ getsurv <- function(obj, times)
     }
     nsurv
 }
+
+
+### modified and speeded up version of `stats::smooth.spline'
+### everything is for internal use in `mboost' only!
+
+sknotl <- function(x, nk = NULL) {
+    ## if (!all.knots)
+    ## return reasonable sized knot sequence for INcreasing x[]:
+    n.kn <- function(n) {
+        ## Number of inner knots
+        if(n < 50) n
+        else trunc({
+            a1 <- log( 50, 2)
+	    a2 <- log(100, 2)
+            a3 <- log(140, 2)
+	    a4 <- log(200, 2)
+	    if	(n < 200) 2^(a1+(a2-a1)*(n-50)/150)
+	    else if (n < 800) 2^(a2+(a3-a2)*(n-200)/600)
+	    else if (n < 3200)2^(a3+(a4-a3)*(n-800)/2400)
+	    else  200 + (n-3200)^0.2
+        })
+    }
+    n <- length(x)
+    if(is.null(nk)) nk <- n.kn(n)
+    else if(!is.numeric(nk)) stop("'nknots' must be numeric <= n")
+    else if(nk > n)
+        stop("cannot use more inner knots than unique 'x' values")
+    c(rep(x[1], 3), x[seq(1,n, len= nk)], rep(x[n], 3))
+}
+
+smoothbase <- function(x, ux, y, w, df) {
+
+    ### handle dummy codings and linear fits, essentially
+    if (length(ux) < 4 || df == 1) {
+        if (all(x %in% c(0, 1))) {
+            X <- matrix(x, ncol = 1)
+        } else {
+            X <- cbind(1, x)
+        }
+        object <- lm.wfit(x = X, 
+                          y = matrix(y, ncol = 1), w = w)
+        object$yfit <- object$fitted.values
+        class(object) <- "lmfit"
+        return(object)
+    }
+
+    ### original `smooth.spline' parameters
+    spar <- NULL
+    cv <- FALSE
+    all.knots <- FALSE
+    df.offset <- 0
+    penalty <- 1
+    nknots <- NULL
+    control.spar = list()
+
+    contr.sp <- list(low = -1.5,## low = 0.      was default till R 1.3.x
+                     high = 1.5,
+                     tol = 1e-4,## tol = 0.001   was default till R 1.3.x
+                     eps = 2e-8,## eps = 0.00244 was default till R 1.3.x
+                     maxit = 500, trace = getOption("verbose"))
+    contr.sp[(names(control.spar))] <- control.spar
+    if(!all(sapply(contr.sp[1:4],is.double)) ||
+       contr.sp$tol < 0 || contr.sp$eps <= 0 || contr.sp$maxit <= 0)
+        stop("invalid 'control.spar'")
+
+    n <- length(x)
+
+    ## Replace y[] for same x[] (to 6 digits precision) by their mean :
+    ## BUT ONLY WHEN NEEDED !!!
+    if (length(ux) == length(x)) {
+        tmp <- cbind(w, w*y, w*y^2)[order(x),]
+    } else {
+        ox <- match(x, ux)
+        tmp <- cbind(w, w*y, w*y^2)
+        out <- matrix(0, nrow = length(ux), ncol = 3)
+        tmp <- .Call("wybar", ox, sort(unique(ox)), tmp, out, 
+                     PACKAGE = "mboost")
+    }
+    wbar <- tmp[, 1]
+    ybar <- tmp[, 2]/ifelse(wbar > 0, wbar, 1)
+    yssw <- sum(tmp[, 3] - wbar*ybar^2) # will be added to RSS for GCV
+    nx <- length(ux)
+    if(nx <= 3) stop("need at least four unique 'x' values")
+    if(cv && nx < n)
+        warning("crossvalidation with non-unique 'x' values seems doubtful")
+    r.ux <- ux[nx] - ux[1]
+    xbar <- (ux - ux[1])/r.ux           # scaled to [0,1]
+    if(all.knots) {
+	knot <- c(rep(xbar[1], 3), xbar, rep(xbar[nx], 3))
+	nk <- nx + 2
+    } else {
+	knot <- sknotl(xbar, nknots)
+	nk <- length(knot) - 4
+    }
+
+    ## ispar != 1 : compute spar (later)
+    ispar <-
+        if(is.null(spar) || missing(spar)) { ## || spar == 0
+            if(contr.sp$trace) -1 else 0
+        } else 1
+    spar <- if(ispar == 1) as.double(spar) else double(1)
+    ## was <- if(missing(spar)) 0 else if(spar < 1.01e-15) 0 else  1
+    ## icrit {../src/sslvrg.f}:
+    ##		(0 = no crit,  1 = GCV ,  2 = ord.CV , 3 = df-matching)
+    icrit <- if(cv) 2 else  1
+    dofoff <- df.offset
+    if(!missing(df)) {
+	if(df > 1 && df <= nx) {
+	    icrit <- 3
+	    dofoff <- df
+	} else warning("you must supply 1 < df <= n,  n = #{unique x} = ", nx)
+    }
+    iparms <- as.integer(c(icrit,ispar, contr.sp$maxit))
+    names(iparms) <- c("icrit", "ispar", "iter")
+
+    fit <- .Fortran("qsbart",		# code in ../src/qsbart.f
+		    as.double(penalty),
+		    as.double(dofoff),
+		    x = as.double(xbar),
+		    y = as.double(ybar),
+		    w = as.double(wbar),
+		    ssw = as.double(yssw),
+		    as.integer(nx),
+		    as.double(knot),
+		    as.integer(nk),
+		    coef = double(nk),
+		    ty = double(nx),
+		    lev = double(nx),
+		    crit = double(1),
+		    iparms = iparms,
+		    spar = spar,
+		    parms = unlist(contr.sp[1:4]),
+		    isetup = as.integer(0),
+		    scrtch = double((17 + 0) * nk + 1),
+		    ld4  = as.integer(4),
+		    ldnk = as.integer(1),
+		    ier = integer(1),
+		    DUP = FALSE, PACKAGE = "stats"
+		    )[c("coef", "ty")]
+
+    fit.object <- list(knot = knot, nk = nk, min = ux[1], range = r.ux,
+		       coef = fit$coef)
+    class(fit.object) <- "smooth.spline.fit"
+    if (length(ux) == length(x)) {
+        fit.object$yfit <- fit$ty[rank(x)]
+    } else {
+        fit.object$yfit <- predict(fit.object, x = x)$y
+    }
+    fit.object
+}
+
+predict.lmfit <- function(object, x)
+    list(y = x * object$coef)

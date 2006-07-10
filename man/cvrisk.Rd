@@ -6,7 +6,8 @@
   for hyper parameter selection.
 }
 \usage{
-cvrisk(object, folds, grid = seq(from = 10, to = mstop(object), length = 10))
+cvrisk(object, folds, grid = seq(from = 10, to = mstop(object), 
+                                 length = 10))
 }
 \arguments{
   \item{object}{ an object of class \code{gb}. }
@@ -47,7 +48,8 @@ cvrisk(object, folds, grid = seq(from = 10, to = mstop(object), length = 10))
   )
   
   ### fit linear model to data
-  model <- glmboost(DEXfat ~ ., data = tbodyfat, control = boost_control(mstop = 100))
+  model <- glmboost(DEXfat ~ ., data = tbodyfat, 
+                    control = boost_control(mstop = 100))
 
   ### AIC-based selection of number of boosting iterations
   AIC(model)

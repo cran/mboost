@@ -280,3 +280,32 @@ SEXP copymem (SEXP x) {
     
     return(duplicate(x));
 }
+
+/**
+    sum up weights and y for tied x-values in smoothbase: DIRTY!
+*/
+SEXP wybar (SEXP ox, SEXP suox, SEXP tmp, SEXP ans) {
+
+    int n, p, j, i, count = 0, *iox, *isuox, tox;
+    double *dtmp, *dans;
+    
+    iox = INTEGER(ox);
+    isuox = INTEGER(suox);
+    dtmp = REAL(tmp);
+    dans = REAL(ans);
+    n = nrow(tmp);
+    p = nrow(ans);
+    
+    for (i = 0; i < LENGTH(suox); i++) {
+        tox = isuox[i];
+        for (j = 0; j < n; j++) {
+            if (tox == iox[j]) {
+                dans[count] += dtmp[j];
+                dans[count + p] += dtmp[j + n];
+                dans[count + 2 * p] += dtmp[j + 2 * n];
+            }
+        }
+        count++;
+    }
+    return(ans);
+}
