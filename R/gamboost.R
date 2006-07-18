@@ -8,9 +8,10 @@
 hatMatTH <- function(x, w = NULL, df = 5) {
     n <- NROW(x)
     indx <- diag(n)
+    x <- signif(x, 10)
     apply(indx, 2, function(y) 
-        predict(smooth.spline(x = x, y = y, w = w, df = df, 
-                keep.data = FALSE)$fit, x = x)$y)
+        predict(smoothbase(x = x, ux = unique(sort(x)), y = y, w = w, df = df),
+                x = x)$y)
 }
 
 predict.smooth.spline.fit <- stats:::predict.smooth.spline.fit
@@ -31,6 +32,11 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
             stop(sQuote("weights"), " is not of length ", NROW(y))
     }
 
+    if (length(dfbase) == 1) dfbase <- rep(dfbase, ncol(x))
+    if (length(dfbase) != ncol(x)) 
+        stop("length of ", sQuote("dfbase"), 
+             " does not equal the number of covariates")
+
     ### hyper parameters
     mstop <- control$mstop
     risk <- control$risk
@@ -40,9 +46,6 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     ### extract negative gradient and risk functions
     ngradient <- family@ngradient
     riskfct <- family@risk
-
-    ### inputs with more than four unique values
-    pindx <- (1:NCOL(x))[apply(x, 2, function(xx) length(unique(xx)) > 4)]
 
     ### unweighted problem
     WONE <- (max(abs(weights - 1)) < .Machine$double.eps)
@@ -67,26 +70,25 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     fit <- offset <- family@offset(y, weights)
     u <- ustart <- ngradient(y, fit)
 
+    xs <- signif(x, 10)
+    ux <- vector(mode = "list", length = ncol(x))
+    for (i in 1:ncol(x)) ux[[i]] <- unique(sort(xs[,i]))
+
     ### start boosting iteration
     for (m in 1:mstop) {
   
         sums <- 0
         xselect <- 0
         ### fit least squares to residuals _componentwise_
-        for (i in pindx) {
-            if (WONE) {
-                ss <- try(smooth.spline(x = x[,i], y = u, df = dfbase, 
-                                        keep.data = FALSE))
-            } else {
-                ss <- try(smooth.spline(x = x[,i], y = u, w = weights, 
-                                        df = dfbase, keep.data = FALSE))
-            }
+        for (i in (1:ncol(x))[dfbase > 0]) {
+            ss <- try(smoothbase(x = xs[,i], ux = ux[[i]], 
+                                 y = u, w = weights, df = dfbase[i]))
             if (inherits(ss, "try-error")) next()
-            tsums <- sum((predict(ss$fit, x[,i])$y - u)^2)
+            tsums <- sum((ss$yfit - u)^2)
             if (tsums < sums || sums == 0) {
                 sums <- tsums
                 xselect <- i
-                basess <- ss$fit
+                basess <- ss
             }
         }
 
@@ -94,7 +96,7 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
             stop("could not fit base learner in boosting iteration ", m)
 
         ### update step
-        fit <- fit + nu * predict(basess, x = x[,xselect])$y
+        fit <- fit + nu * basess$yfit
 
         ### L2 boost with constraints (binary classification)
         if (constraint)
@@ -204,7 +206,9 @@ print.gamboost <- function(x, ...) {
     cat("\n")
     cat("Number of boosting iterations: mstop =", mstop(x), "\n")
     cat("Step size: ", x$control$nu, "\n")
-    cat("Degree of freedom: ", x$dfbase, "\n")
+    dfbase <- ifelse(length(unique(x$dfbase)) == 1, unique(x$dfbase), 
+                     x$dfbase)
+    cat("Degree of freedom: ", dfbase, "\n")
     cat("\n")
     invisible(x)
 

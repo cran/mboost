@@ -47,3 +47,41 @@ stopifnot(isTRUE(all.equal(drop(attr(aic, "hatmat") %*% u + off),
                            as.vector(predict(bf_gam)))))
 stopifnot(isTRUE(all.equal(drop(attr(aic, "hatmat") %*% u + off),
                            as.vector(fitted(bf_gam)))))
+
+
+### compare `gamboost' with `lm' in cases where this is actually possible
+set.seed(290875)
+x <- matrix(runif(1000) * 10, ncol = 10)
+xf <- gl(4, nrow(x)/4)
+
+### OK, we need to allow for some small differences (larger mstop values
+### would fix this)
+stopin <- function(x, y) stopifnot(max(abs(x - y)) < 0.1)
+
+### univariate linear model
+df <- data.frame(y = 3*x[,2], x = x)
+ga <- gamboost(y ~ x.2 - 1, data = df,
+               control = boost_control(mstop = 500))
+stopin(fitted(lm(y ~ x.2 - 1, data = df)), fitted(ga))
+
+### univariate model involving sin transformation
+df <- data.frame(y = sin(x[,1]), x = x)
+ga <- gamboost(y ~ x.1 - 1, data = df, 
+               control = boost_control(mstop = 500))
+stopin(fitted(lm(y ~ sin(x.1) - 1, data = df)), fitted(ga))
+
+### bivariate model: linear and sin
+df <- data.frame(y = sin(x[,1]) + 3*x[,2], x = x)
+ga <- gamboost(y ~ x.1 + x.2 - 1, data = df, 
+               control = boost_control(mstop = 500))
+stopin(fitted(lm(y ~ sin(x.1) + x.2 - 1, data = df)), fitted(ga))
+ga <- gamboost(y ~ x.1 + x.2 - 1, data = df, dfbase = c(4, 1), 
+               control = boost_control(mstop = 500))
+stopin(fitted(lm(y ~ sin(x.1) + x.2 - 1, data = df)), fitted(ga))
+
+### ANCOVA model
+df <- data.frame(y = 3 * x[,2] + (1:4)[xf], x = x)
+ga <- gamboost(y ~ xf + x.2 - 1, data = df, 
+               control = boost_control(mstop = 500))
+stopin(fitted(lm(y ~ xf + x.2 - 1, data = df)), fitted(ga))
+

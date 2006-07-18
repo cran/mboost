@@ -27,11 +27,12 @@ IPCweights(x, maxweight = 5)
 \references{ 
 
     Mark J. van der Laan and James M. Robins (2003), 
-    \emph{Unified Methods for Censored Longitudinal Data and Causality}, Springer, New York.
+    \emph{Unified Methods for Censored Longitudinal Data and Causality}, 
+    Springer, New York.
 
     Torsten Hothorn, Peter Buhlmann, Sandrine Dudoit,
     Annette Molinaro and Mark J. van der Laan (2006), Survival Ensembles.
-    \emph{Biostatistics} (in press).
+    \emph{Biostatistics} \bold{7}(3), 355--373.
 
     Peter Buhlmann and Torsten Hothorn (2006),
     Boosting: A statistical perspective. Submitted manuscript.

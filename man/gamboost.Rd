@@ -22,7 +22,9 @@ gamboost_fit(object, dfbase = 4, family = GaussReg(),
   \item{x}{ design matrix.}
   \item{y}{ vector of responses. }
   \item{object}{ an object of class \code{boost_data}, see \code{\link{boost_dpp}}. }
-  \item{dfbase}{ an integer giving the degrees of freedom for the smoothing spline. }
+  \item{dfbase}{ an integer vector giving the degrees of freedom for the smoothing 
+                 spline, either globally for all variables (when its length is one)
+                 or separately for each single covariate. }
   \item{family}{ an object of class \code{\link{boost_family-class}},
                 implementing the negative gradient corresponding
                 to the loss function to be optimized, by default, squared error loss
@@ -34,7 +36,9 @@ gamboost_fit(object, dfbase = 4, family = GaussReg(),
 
   A (generalized) additive model is fitted using a boosting algorithm based on componentwise
   univariate smoothing splines. The methodology is described in
-  Buhlmann and Yu (2003).
+  Buhlmann and Yu (2003). If \code{dfbase = 1}, a univariate 
+  linear model is used as base learner (resulting in a linear partial fit
+  for this variable).
 
   The function \code{gamboost_fit} provides access to the fitting
   procedure without data pre-processing, e.g. for cross-validation.
@@ -69,6 +73,17 @@ gamboost_fit(object, dfbase = 4, family = GaussReg(),
         lines(cars$speed, predict(cars.gb[i]), col = "red"))          
     lines(cars$speed, predict(smooth.spline(cars$speed, cars$dist),
                               cars$speed)$y, col = "green")
+
+    ### artificial example: sinus transformation
+    x <- sort(runif(100)) * 10
+    y <- sin(x) + rnorm(length(x), sd = 0.25)
+    plot(x, y)
+    ### linear model
+    lines(x, fitted(lm(y ~ sin(x) - 1)), col = "red")
+    ### GAM
+    lines(x, fitted(gamboost(y ~ x - 1, 
+                    control = boost_control(mstop = 500))), 
+          col = "green")
 
 }
 \keyword{models}
