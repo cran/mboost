@@ -8,6 +8,7 @@
 \usepackage{graphicx}
 \usepackage{rotating}
 %%\usepackage[nolists]{endfloat}
+%%\usepackage{Sweave}
 
 %%\VignetteIndexEntry{Survival Ensembles}
 %%\VignetteDepends{mboost,ipred}

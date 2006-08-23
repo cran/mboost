@@ -12,6 +12,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     ### init data and weights
     x <- object$x
     y <- object$yfit
+    check_y_family(object$y, family)
     if (is.null(weights)) {
         weights <- object$w
     } else {
@@ -60,7 +61,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     MPinvS <- (1 / sqrt(xtx)) * t(xw)
 
     fit <- offset <- family@offset(y, weights)
-    u <- ustart <- ngradient(y, fit)
+    u <- ustart <- ngradient(y, fit, weights)
 
     ### start boosting iteration
     for (m in 1:mstop) {
@@ -81,7 +82,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
             fit <- sign(fit) * pmin(abs(fit), 1)
 
         ### negative gradient vector, the new `residuals'
-        u <- ngradient(y, fit)   
+        u <- ngradient(y, fit, weights)
 
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)

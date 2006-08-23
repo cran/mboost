@@ -1,4 +1,8 @@
 
+    o  add offset to coef?
+
+    o  check if y is a factor for binomial???
+
     o  use better colours
 
     o  dfbase == 1 means fitting lm with intercept, can we work around?
@@ -18,8 +22,6 @@
 
     o  adjust control$M when subsetting
     
-    o  allow dfbase vector (including linear terms with df = 1)
-
     o  names in predict and fitted
 
     o  multivariate responses

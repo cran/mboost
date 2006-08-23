@@ -93,3 +93,39 @@ stopifnot(max(abs(hatvalues(lmmod) - hatvalues(lmb))) < sqrt(.Machine$double.eps
 stopifnot(max(abs(attr(AIC(lmb), "hatmatrix") %*% (df$y - lmb$offset) + lmb$offset -
         fitted(lmb))) < sqrt(.Machine$double.eps)) 
 
+### Cox model (check for CoxPH family)
+if (require("survival")) {
+
+    test <- data.frame(time = c(1, 2, 5, 2, 1, 7, 3, 4, 8, 8),
+                       event = c(1, 1, 1, 1, 1, 1, 1, 0, 0, 0),
+                       x     = c(1, 0, 0, 1, 0, 1, 1, 1, 0, 0))
+
+    stopifnot(all.equal(coef(cx <- coxph(Surv(time, event) ~ x, data = test, method = "breslow")),
+                       coef(gl <- glmboost(Surv(time, event) ~ x, data = test,
+                       family = CoxPH(), 
+                       control = boost_control(mstop = 1000)))[2]))
+
+    stopifnot(all.equal(cx$loglik[2], logLik(gl)))
+
+    indx <- c(1, 1, 1, 2:10)
+    w <- tabulate(indx)
+
+    stopifnot(all.equal(coef(cx <- coxph(Surv(time, event) ~ x, data = test, weights = w, 
+                                   method = "breslow")),
+                       coef(gl <- glmboost(Surv(time, event) ~ x, data = test, weights = w,
+                       family = CoxPH(), 
+                       control = boost_control(mstop = 1000)))[2]))
+
+    stopifnot(all.equal(cx$loglik[2], logLik(gl)))
+
+    indx <- c(1, 1, 1, 3:10)
+    w <- tabulate(indx)
+
+    stopifnot(all.equal(coef(cx <- coxph(Surv(time, event) ~ x, data = test[indx,], 
+                                   method = "breslow")),
+                       coef(gl <- glmboost(Surv(time, event) ~ x, data = test, weights = w,
+                       family = CoxPH(), 
+                       control = boost_control(mstop = 1000)))[2]))
+
+    stopifnot(all.equal(cx$loglik[2], logLik(gl)))
+}

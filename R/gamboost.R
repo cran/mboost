@@ -23,6 +23,7 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     ### data
     x <- object$x
     y <- object$yfit
+    check_y_family(object$y, family)
     if (is.null(weights)) {
         weights <- object$w
     } else {
@@ -68,7 +69,7 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     mrisk[1:mstop] <- NA   
 
     fit <- offset <- family@offset(y, weights)
-    u <- ustart <- ngradient(y, fit)
+    u <- ustart <- ngradient(y, fit, weights)
 
     xs <- signif(x, 10)
     ux <- vector(mode = "list", length = ncol(x))
@@ -103,7 +104,7 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
             fit <- sign(fit) * pmin(abs(fit), 1)
 
         ### negative gradient vector, the new `residuals'
-        u <- ngradient(y, fit)   
+        u <- ngradient(y, fit, weights)
 
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)

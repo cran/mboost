@@ -7,6 +7,7 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{rotating}
+%%\usepackage{Sweave}
 %%\usepackage[nolists]{endfloat}
 
 %%\VignetteIndexEntry{mboost Illustrations}

@@ -16,6 +16,7 @@ blackboost_fit <- function(object, tree_controls,
     tmp <- .Call("copymem",  object@responses, package = "mboost")
     y <- .Call("copymem", party:::get_variables(object@responses)[[1]], 
                package = "mboost")
+    check_y_family(y, family)
     if (is.factor(y)) {
         y <- (2 * (as.numeric(y) - 1)) - 1
         object@responses <- party:::initVariableFrame(data.frame(y = y), NULL)
@@ -46,7 +47,7 @@ blackboost_fit <- function(object, tree_controls,
         stop(sQuote("family"), " is not able to deal with weights")
 
     fit <- offset <- family@offset(y, weights)
-    u <- ustart <- ngradient(y, fit)
+    u <- ustart <- ngradient(y, fit, weights)
 
     where <- rep(1, object@nobs)
     storage.mode(where) <- "integer"
@@ -78,7 +79,7 @@ blackboost_fit <- function(object, tree_controls,
             fit <- sign(fit) * pmin(abs(fit), 1)
 
         ### negative gradient vector, the new `residuals'
-        u <- ngradient(y, fit)   
+        u <- ngradient(y, fit, weights)
 
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)
