@@ -9,7 +9,8 @@
   linear models are utilized as base learners.
 }
 \usage{
-\method{glmboost}{formula}(formula, data = list(), weights = NULL, ...)
+\method{glmboost}{formula}(formula, data = list(), weights = NULL, 
+             contrasts.arg = NULL, ...)
 \method{glmboost}{matrix}(x, y, weights = NULL, ...)
 glmboost_fit(object, family = GaussReg(), 
              control = boost_control(), weights = NULL)
@@ -19,6 +20,10 @@ glmboost_fit(object, family = GaussReg(),
   \item{data}{ a data frame containing the variables in the model. }
   \item{weights}{ an optional vector of weights to be used in the fitting
                   process. }
+  \item{contrasts.arg}{a list, whose entries are contrasts suitable for input
+          to the \code{contrasts} replacement function and whose names are
+          the names of columns of \code{data} containing factors. 
+          See \code{\link{model.matrix.default}}.}
   \item{x}{ design matrix. }
   \item{y}{ vector of responses. }
   \item{object}{ an object of class \code{boost_data}, see \code{\link{boost_dpp}}. }
