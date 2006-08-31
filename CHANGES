@@ -1,4 +1,17 @@
 
+
+		CHANGES in `mboost' VERSION 0.4-10 (2006-08-30)
+
+  o  add checks for CoxPH (against coefficients and logLik of coxph)
+
+  o  add weights to CoxPH
+
+  o  the ngradient function in Family objects needs to implement
+     arguments (y, f, w), not just (y, f)
+
+  o  check for meaningful class of the response for some families
+
+
 		CHANGES in `mboost' VERSION 0.4-9 (2006-07-17)
 
   o  some small speed improvements in `gamboost'

@@ -54,6 +54,26 @@ gb_xyw <- function(x, y, w) {
     list(x = x, y = y, yfit = yfit, w = w)
 }
 
+### check measurement scale of response for some losses
+check_y_family <- function(y, family) {
+
+    if (isTRUE(all.equal(attributes(family), 
+                  attributes(Binomial())))) {
+        if (!is.factor(y))
+            warning("response is not a factor but ", 
+                    sQuote("family = Binomial()"))
+        if (nlevels(y) != 2)
+            warning("response is not a factor at two levels but ", 
+                    sQuote("family = Binomial()"))
+    }
+    if (isTRUE(all.equal(attributes(family), 
+                  attributes(CoxPH())))) {
+        if (!inherits(y, "Surv"))
+            stop("response is not an object of class ", sQuote("Surv"), 
+                 " but ", sQuote("family = CoxPH()"))
+    }
+}
+
 ### check for negative gradient corresponding to L2 loss
 checkL2 <- function(object)
     isTRUE(all.equal(attributes(object$family)[-c(4:8)], 
