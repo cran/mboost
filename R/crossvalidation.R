@@ -5,7 +5,8 @@
 ##
 
 cvrisk <- function(object, folds, 
-                   grid = seq(from = 10, to = mstop(object), length = 10)) {
+                   grid = floor(seq(from = floor(mstop(object)/10), 
+                                    to = mstop(object), length = 10))) {
 
     fitfct <- object$update
     oobrisk <- matrix(0, nrow = ncol(folds), ncol = length(grid))

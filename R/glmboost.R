@@ -107,7 +107,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
                 response = y, 		### the response variable
                 weights = weights,	### weights used for fitting
                 update = updatefun,	### a function for fitting with new weights
-                MPinv = MPinv, 		### Moore-Penrose inverse of x
+                MPinv = MPinv 		### Moore-Penrose inverse of x
     )
     ### save learning sample
     if (control$savedata) RET$data <- object
@@ -138,10 +138,11 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
 glmboost <- function(x, ...) UseMethod("glmboost")
 
 ### formula interface
-glmboost.formula <- function(formula, data = list(), weights = NULL, ...) {
+glmboost.formula <- function(formula, data = list(), weights = NULL, 
+                             contrasts.arg = NULL, ...) {
 
     ### construct design matrix etc.
-    object <- boost_dpp(formula, data, weights)
+    object <- boost_dpp(formula, data, weights, contrasts.arg = contrasts.arg)
 
     ### fit the ensemble
     RET <- glmboost_fit(object, ...)

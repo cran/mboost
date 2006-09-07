@@ -11,7 +11,7 @@ rescale_weights <- function(w) {
 ### data preprocessing
 boost_dpp <- function(formula, data, weights = NULL, ...) {
 
-    env <- ModelEnvFormula(formula, data)
+    env <- ModelEnvFormula(formula, data, ...)
     y <- env@get("response")
     if (length(y) != 1)
         stop("cannot deal with multivariate response variables")

@@ -1,4 +1,12 @@
 
+		CHANGES in `mboost' VERSION 0.4-11 (2006-09-07)
+
+  o  add `contrasts.arg' argument to `glmboost.formula'
+
+  o  more meaningful default for `grid' in `cvrisk'
+
+  o  R-2.4.0 fixes
+
 
 		CHANGES in `mboost' VERSION 0.4-10 (2006-08-30)
 
