@@ -152,7 +152,7 @@ blackboost_fit <- function(object, tree_controls,
 ### methods: prediction
 predict.blackboost <- function(object, newdata = NULL, 
                               type = c("lp", "response"), ...) {
-    y <- object$data$y
+    y <- party:::get_variables(object$data@responses)[[1]]
     type <- match.arg(type)
     lp <- object$predict(newdata = newdata, mstop = mstop(object), ...)
     if (type == "response" && is.factor(y))
@@ -190,6 +190,7 @@ print.blackboost <- function(x, ...) {
     cat("\n")
     cat("Number of boosting iterations: mstop =", mstop(x), "\n")
     cat("Step size: ", x$control$nu, "\n")
+    cat("Offset: ", x$offset, "\n")
     cat("\n")
     invisible(x)
 }

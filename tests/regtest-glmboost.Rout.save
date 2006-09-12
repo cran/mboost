@@ -1,5 +1,5 @@
 
-R version 2.4.0 Under development (unstable) (2006-08-22 r38955)
+R version 2.4.0 alpha (2006-09-11 r39258)
 Copyright (C) 2006 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
@@ -36,6 +36,26 @@ Attaching package: 'zoo'
 
 Loading required package: sandwich
 Loading required package: strucchange
+Loading required package: vcd
+Loading required package: MASS
+
+Attaching package: 'MASS'
+
+
+	The following object(s) are masked from package:strucchange :
+
+	 SP500 
+
+Loading required package: colorspace
+Creating a new generic function for 'plot' in 'colorspace'
+
+Attaching package: 'colorspace'
+
+
+	The following object(s) are masked from package:grDevices :
+
+	 hcl 
+
 [1] TRUE
 > 
 > set.seed(290875)
@@ -58,7 +78,7 @@ Loading required package: strucchange
 > fm@offset <- function(y, w) 0
 > 
 > mydf.gb <- glmboost(y ~ ., data = mydf, family = fm, 
-+                     control = boost_control(mstop = 10000))
++                     control = boost_control(mstop = 1000, nu = 1))
 > mydf.lm <- lm(y ~ ., data = mydf)
 > 
 > ### compare coefficients
@@ -68,16 +88,16 @@ Loading required package: strucchange
 > mydf <- dgp(beta = c(1, 2.5, rep(0, 38)))
 > 
 > mydf.gb <- glmboost(y ~ ., data = mydf, family = fm, 
-+                     control = boost_control(mstop = 10000))
++                     control = boost_control(mstop = 1000, nu = 1))
 > aic <- AIC(mydf.gb, method = "corrected")
 > mstop(aic)
-[1] 374
+[1] 44
 > mydf.lm <- lm(y ~ ., data = mydf)
 > 
 > ### compare coefficients
 > which(abs(coef(mydf.lm)) < abs(coef(mydf.gb[mstop(aic)])))
-(Intercept) 
-          1 
+ X1 X35 
+  2  36 
 > 
 > #### check boosting hat matrix and subsetting / predict
 > stopifnot(isTRUE(all.equal(drop(attr(aic, "hatmat") %*% mydf$y),
@@ -90,13 +110,13 @@ Loading required package: strucchange
 > ### a simple two-dimensional example from `glmboost.Rd'
 > data("cars")
 > cars.gb <- glmboost(dist ~ speed, data = cars, family = fm, 
-+                     control = boost_control(mstop = 5000))
++                     control = boost_control(mstop = 1000, nu = 1))
 > cars.gb
 
 	 Generalized Linear Models Fitted via Gradient Boosting) 
 
 Call:
-glmboost.formula(formula = dist ~ speed, data = cars, family = fm,     control = boost_control(mstop = 5000))
+glmboost.formula(formula = dist ~ speed, data = cars, family = fm,     control = boost_control(mstop = 1000, nu = 1))
 
 
 	 Squared Error (Regression) 
@@ -104,33 +124,36 @@ glmboost.formula(formula = dist ~ speed, data = cars, family = fm,     control =
 Loss function: (y - f)^2 
  
 
-Number of boosting iterations: mstop = 5000 
-Step size:  0.1 
+Number of boosting iterations: mstop = 1000 
+Step size:  1 
+Offset:  0 
 
 Coefficients: 
 (Intercept)       speed 
- -17.579079    3.932408 
+ -17.579095    3.932409 
+attr(,"offset")
+[1] 0
 
 > 
 > ### coefficients should coincide
-> coef(cars.gb)
-(Intercept)       speed 
- -17.579079    3.932408 
-> coef(lm(dist ~ speed, data = cars))
-(Intercept)       speed 
- -17.579095    3.932409 
+> cf <- coef(cars.gb)
+> attr(cf, "offset") <- NULL
+> stopifnot(all.equal(cf, coef(lm(dist ~ speed, data = cars))))
 > 
 > ### logistic regression
-> mydf <- data.frame(x = runif(100), y = gl(2, 50))
-> bmod <- glmboost(y ~ x, data = mydf, family = Binomial(), 
-+                  control = boost_control(mstop = 10000))
-> gmod <- glm(y ~ x, data = mydf, family = binomial())
+> mydf <- data.frame(x = runif(100), z = rnorm(100), 
++                    y = factor(c(rep(0, 30), rep(1, 70))))
+> bmod <- glmboost(y ~ x + z, data = mydf, family = Binomial(), 
++                  control = boost_control(mstop = 1000, nu = 1))
+> gmod <- glm(y ~ x + z, data = mydf, family = binomial())
 > llg <- logLik(gmod)
 > attributes(llg) <- NULL
 > stopifnot(all.equal(logLik(bmod), llg))
 > stopifnot(max(abs(predict(gmod, type = "link")/2 - fitted(bmod))) < 
 +                   sqrt(.Machine$double.eps))
-> stopifnot(all.equal(coef(bmod) * 2, coef(gmod)))
+> cfb <- (coef(bmod) + c(bmod$offset, 0, 0)) * 2
+> attr(cfb, "offset") <- NULL
+> stopifnot(all.equal(cfb, coef(gmod)))
 > 
 > ### weighted least squares problem
 > 
@@ -144,7 +167,7 @@ Coefficients:
 > 
 > ### linear model, boosting fit
 > lmb <- glmboost(y ~ x + z, data = df, weights = df$w,
-+                 control = boost_control(mstop = 20000))
++                 control = boost_control(mstop = 5000, nu = 1))
 > 
 > ### compare fitted values
 > stopifnot(max(abs(fitted(lmmod) -fitted(lmb))) < sqrt(.Machine$double.eps))
@@ -166,7 +189,7 @@ Coefficients:
 +     stopifnot(all.equal(coef(cx <- coxph(Surv(time, event) ~ x, data = test, method = "breslow")),
 +                        coef(gl <- glmboost(Surv(time, event) ~ x, data = test,
 +                        family = CoxPH(), 
-+                        control = boost_control(mstop = 1000)))[2]))
++                        control = boost_control(mstop = 2000, nu = 1)))[2]))
 + 
 +     stopifnot(all.equal(cx$loglik[2], logLik(gl)))
 + 
@@ -177,7 +200,7 @@ Coefficients:
 +                                    method = "breslow")),
 +                        coef(gl <- glmboost(Surv(time, event) ~ x, data = test, weights = w,
 +                        family = CoxPH(), 
-+                        control = boost_control(mstop = 1000)))[2]))
++                        control = boost_control(mstop = 200, nu = 1)))[2]))
 + 
 +     stopifnot(all.equal(cx$loglik[2], logLik(gl)))
 + 

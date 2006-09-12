@@ -16,12 +16,8 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 Type 'q()' to quit R.
 
 > 
-> ### check potential coding problems via `codetools'
-> if (require("codetools")) {
-+     library("mboost")
-+     print(checkUsagePackage("mboost"))
-+ }
-Loading required package: codetools
+> require("mboost")
+Loading required package: mboost
 Loading required package: modeltools
 Loading required package: party
 Loading required package: survival
@@ -60,6 +56,12 @@ Attaching package: 'colorspace'
 
 	 hcl 
 
-NULL
+[1] TRUE
 > 
+> set.seed(290875)
+> 
+> dummy <- data.frame(y = gl(2, 100), x = runif(200))
+> pr <- predict(blackboost(y ~ x, data = dummy, family = Binomial()), 
++               newdata = dummy, type = "response")
+> stopifnot(is.factor(pr) && all(levels(pr) %in% levels(dummy$y)))
 > 
