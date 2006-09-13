@@ -21,7 +21,7 @@ fm <- GaussReg()
 fm@offset <- function(y, w) 0
 
 mydf.gb <- glmboost(y ~ ., data = mydf, family = fm, 
-                    control = boost_control(mstop = 10000))
+                    control = boost_control(mstop = 1000, nu = 1))
 mydf.lm <- lm(y ~ ., data = mydf)
 
 ### compare coefficients
@@ -31,7 +31,7 @@ stopifnot(max(abs(coef(mydf.gb) - coef(mydf.lm))) < 1e-10)
 mydf <- dgp(beta = c(1, 2.5, rep(0, 38)))
 
 mydf.gb <- glmboost(y ~ ., data = mydf, family = fm, 
-                    control = boost_control(mstop = 10000))
+                    control = boost_control(mstop = 1000, nu = 1))
 aic <- AIC(mydf.gb, method = "corrected")
 mstop(aic)
 mydf.lm <- lm(y ~ ., data = mydf)
@@ -50,24 +50,28 @@ stopifnot(isTRUE(all.equal(drop(attr(AIC(mydf.gb[255]), "hatmat") %*% mydf$y),
 ### a simple two-dimensional example from `glmboost.Rd'
 data("cars")
 cars.gb <- glmboost(dist ~ speed, data = cars, family = fm, 
-                    control = boost_control(mstop = 5000))
+                    control = boost_control(mstop = 1000, nu = 1))
 cars.gb
 
 ### coefficients should coincide
-coef(cars.gb)
-coef(lm(dist ~ speed, data = cars))
+cf <- coef(cars.gb)
+attr(cf, "offset") <- NULL
+stopifnot(all.equal(cf, coef(lm(dist ~ speed, data = cars))))
 
 ### logistic regression
-mydf <- data.frame(x = runif(100), y = gl(2, 50))
-bmod <- glmboost(y ~ x, data = mydf, family = Binomial(), 
-                 control = boost_control(mstop = 10000))
-gmod <- glm(y ~ x, data = mydf, family = binomial())
+mydf <- data.frame(x = runif(100), z = rnorm(100), 
+                   y = factor(c(rep(0, 30), rep(1, 70))))
+bmod <- glmboost(y ~ x + z, data = mydf, family = Binomial(), 
+                 control = boost_control(mstop = 1000, nu = 1))
+gmod <- glm(y ~ x + z, data = mydf, family = binomial())
 llg <- logLik(gmod)
 attributes(llg) <- NULL
 stopifnot(all.equal(logLik(bmod), llg))
 stopifnot(max(abs(predict(gmod, type = "link")/2 - fitted(bmod))) < 
                   sqrt(.Machine$double.eps))
-stopifnot(all.equal(coef(bmod) * 2, coef(gmod)))
+cfb <- (coef(bmod) + c(bmod$offset, 0, 0)) * 2
+attr(cfb, "offset") <- NULL
+stopifnot(all.equal(cfb, coef(gmod)))
 
 ### weighted least squares problem
 
@@ -81,7 +85,7 @@ lmmod <- lm(y ~ x + z, data = df, weights = w)
 
 ### linear model, boosting fit
 lmb <- glmboost(y ~ x + z, data = df, weights = df$w,
-                control = boost_control(mstop = 20000))
+                control = boost_control(mstop = 5000, nu = 1))
 
 ### compare fitted values
 stopifnot(max(abs(fitted(lmmod) -fitted(lmb))) < sqrt(.Machine$double.eps))
@@ -103,7 +107,7 @@ if (require("survival")) {
     stopifnot(all.equal(coef(cx <- coxph(Surv(time, event) ~ x, data = test, method = "breslow")),
                        coef(gl <- glmboost(Surv(time, event) ~ x, data = test,
                        family = CoxPH(), 
-                       control = boost_control(mstop = 1000)))[2]))
+                       control = boost_control(mstop = 2000, nu = 1)))[2]))
 
     stopifnot(all.equal(cx$loglik[2], logLik(gl)))
 
@@ -114,7 +118,7 @@ if (require("survival")) {
                                    method = "breslow")),
                        coef(gl <- glmboost(Surv(time, event) ~ x, data = test, weights = w,
                        family = CoxPH(), 
-                       control = boost_control(mstop = 1000)))[2]))
+                       control = boost_control(mstop = 200, nu = 1)))[2]))
 
     stopifnot(all.equal(cx$loglik[2], logLik(gl)))
 

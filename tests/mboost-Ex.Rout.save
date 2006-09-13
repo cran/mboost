@@ -1,11 +1,13 @@
 
-R version 2.4.0 Under development (unstable) (2006-08-22 r38955)
+R version 2.4.0 alpha (2006-09-13 r39286)
 Copyright (C) 2006 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
 
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
@@ -18,18 +20,46 @@ Type 'q()' to quit R.
 > ### * <HEADER>
 > ###
 > attach(NULL, name = "CheckExEnv")
-> assign(".CheckExEnv", as.environment(2), pos = length(search())) # base
-> ## add some hooks to label plot pages for base and grid graphics
-> setHook("plot.new", ".newplot.hook")
-> setHook("persp", ".newplot.hook")
-> setHook("grid.newpage", ".gridplot.hook")
-> 
+> assign("nameEx", 
++        local({
++ 	   s <- "__{must remake R-ex/*.R}__"
++            function(new) {
++                if(!missing(new)) s <<- new else s
++            }
++        }),
++        pos = "CheckExEnv")
+> ## Add some hooks to label plot pages for base and grid graphics
+> assign("base_plot_hook",
++        function() {
++            pp <- par(c("mfg","mfcol","oma","mar"))
++            if(all(pp$mfg[1:2] == c(1, pp$mfcol[2]))) {
++                outer <- (oma4 <- pp$oma[4]) > 0; mar4 <- pp$mar[4]
++                mtext(sprintf("help(\"%s\")", nameEx()), side = 4,
++                      line = if(outer)max(1, oma4 - 1) else min(1, mar4 - 1),
++               outer = outer, adj = 1, cex = .8, col = "orchid", las=3)
++            }
++        },
++        pos = "CheckExEnv")
+> assign("grid_plot_hook",
++        function() {
++            pushViewport(viewport(width=unit(1, "npc") - unit(1, "lines"),
++                                  x=0, just="left"))
++            grid.text(sprintf("help(\"%s\")", nameEx()),
++                      x=unit(1, "npc") + unit(0.5, "lines"),
++                      y=unit(0.8, "npc"), rot=90,
++                      gp=gpar(col="orchid"))
++        },
++        pos = "CheckExEnv")
+> setHook("plot.new",     get("base_plot_hook", pos = "CheckExEnv"))
+> setHook("persp",        get("base_plot_hook", pos = "CheckExEnv"))
+> setHook("grid.newpage", get("grid_plot_hook", pos = "CheckExEnv"))
 > assign("cleanEx",
 +        function(env = .GlobalEnv) {
 + 	   rm(list = ls(envir = env, all.names = TRUE), envir = env)
 +            RNGkind("default", "default")
 + 	   set.seed(1)
 +    	   options(warn = 1)
++ 	   .CheckExEnv <- as.environment("CheckExEnv")
 + 	   delayedAssign("T", stop("T used instead of TRUE"),
 + 		  assign.env = .CheckExEnv)
 + 	   delayedAssign("F", stop("F used instead of FALSE"),
@@ -43,11 +73,10 @@ Type 'q()' to quit R.
 + 	       warning("items ", paste(missitems, collapse=", "),
 + 		       " have been removed from the search path")
 +        },
-+        env = .CheckExEnv)
-> assign("..nameEx", "__{must remake R-ex/*.R}__", env = .CheckExEnv) # for now
-> assign("ptime", proc.time(), env = .CheckExEnv)
++        pos = "CheckExEnv")
+> assign("ptime", proc.time(), pos = "CheckExEnv")
 > grDevices::postscript("mboost-Ex.ps")
-> assign("par.postscript", graphics::par(no.readonly = TRUE), env = .CheckExEnv)
+> assign("par.postscript", graphics::par(no.readonly = TRUE), pos = "CheckExEnv")
 > options(contrasts = c(unordered = "contr.treatment", ordered = "contr.poly"))
 > options(warn = 1)    
 > library('mboost')
@@ -69,11 +98,30 @@ Attaching package: 'zoo'
 
 Loading required package: sandwich
 Loading required package: strucchange
+Loading required package: vcd
+Loading required package: MASS
+
+Attaching package: 'MASS'
+
+
+	The following object(s) are masked from package:strucchange :
+
+	 SP500 
+
+Loading required package: colorspace
+Creating a new generic function for 'plot' in 'colorspace'
+
+Attaching package: 'colorspace'
+
+
+	The following object(s) are masked from package:grDevices :
+
+	 hcl 
+
 > 
-> assign(".oldSearch", search(), env = .CheckExEnv)
-> assign(".oldNS", loadedNamespaces(), env = .CheckExEnv)
-> cleanEx(); ..nameEx <- "FP"
-> 
+> assign(".oldSearch", search(), pos = 'CheckExEnv')
+> assign(".oldNS", loadedNamespaces(), pos = 'CheckExEnv')
+> cleanEx(); nameEx("FP");
 > ### * FP
 > 
 > flush(stderr()); flush(stdout())
@@ -164,8 +212,7 @@ FP(kneebreadth)log(kneebreadth)kneebreadth^-1
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "Family"
-> 
+> cleanEx(); nameEx("Family");
 > ### * Family
 > 
 > flush(stderr()); flush(stdout())
@@ -198,8 +245,7 @@ Loss function: (y - f)^2
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "blackboost"
-> 
+> cleanEx(); nameEx("blackboost");
 > ### * blackboost
 > 
 > flush(stderr()); flush(stdout())
@@ -230,6 +276,7 @@ Loss function: (y - f)^2
 
 Number of boosting iterations: mstop = 50 
 Step size:  0.1 
+Offset:  42.98 
 
 > 
 >     ### plot fit
@@ -239,8 +286,7 @@ Step size:  0.1
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "bodyfat"
-> 
+> cleanEx(); nameEx("bodyfat");
 > ### * bodyfat
 > 
 > flush(stderr()); flush(stdout())
@@ -265,8 +311,7 @@ Step size:  0.1
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "boost.family-class"
-> 
+> cleanEx(); nameEx("boost.family-class");
 > ### * boost.family-class
 > 
 > flush(stderr()); flush(stdout())
@@ -289,8 +334,7 @@ Loss function: abs(y - f)
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "cvrisk"
-> 
+> cleanEx(); nameEx("cvrisk");
 > ### * cvrisk
 > 
 > flush(stderr()); flush(stdout())
@@ -312,7 +356,8 @@ Loss function: abs(y - f)
 +   )
 >   
 >   ### fit linear model to data
->   model <- glmboost(DEXfat ~ ., data = tbodyfat, control = boost_control(mstop = 100))
+>   model <- glmboost(DEXfat ~ ., data = tbodyfat, 
++                     control = boost_control(mstop = 100))
 > 
 >   ### AIC-based selection of number of boosting iterations
 >   AIC(model)
@@ -374,8 +419,7 @@ Warning: no admissible split found
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "gamboost"
-> 
+> cleanEx(); nameEx("gamboost");
 > ### * gamboost
 > 
 > flush(stderr()); flush(stdout())
@@ -406,6 +450,7 @@ Loss function: (y - f)^2
 
 Number of boosting iterations: mstop = 50 
 Step size:  0.1 
+Offset:  42.98 
 Degree of freedom:  4 
 
 >     AIC(cars.gb, method = "corrected")
@@ -420,11 +465,21 @@ Degrees of freedom (for mstop = 25): 4.563027
 >     lines(cars$speed, predict(smooth.spline(cars$speed, cars$dist),
 +                               cars$speed)$y, col = "green")
 > 
+>     ### artificial example: sinus transformation
+>     x <- sort(runif(100)) * 10
+>     y <- sin(x) + rnorm(length(x), sd = 0.25)
+>     plot(x, y)
+>     ### linear model
+>     lines(x, fitted(lm(y ~ sin(x) - 1)), col = "red")
+>     ### GAM
+>     lines(x, fitted(gamboost(y ~ x - 1, 
++                     control = boost_control(mstop = 500))), 
++           col = "green")
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "glmboost"
 > 
+> cleanEx(); nameEx("glmboost");
 > ### * glmboost
 > 
 > flush(stderr()); flush(stdout())
@@ -455,16 +510,21 @@ Loss function: (y - f)^2
 
 Number of boosting iterations: mstop = 5000 
 Step size:  0.1 
+Offset:  42.98 
 
 Coefficients: 
 (Intercept)       speed 
  -60.559044    3.932406 
+attr(,"offset")
+[1] 42.98
 
 > 
 >     ### coefficients should coincide
 >     coef(cars.gb) + c(cars.gb$offset, 0)
 (Intercept)       speed 
  -17.579044    3.932406 
+attr(,"offset")
+[1] 42.98
 >     coef(lm(dist ~ speed, data = cars))
 (Intercept)       speed 
  -17.579095    3.932409 
@@ -492,15 +552,20 @@ Loss function: abs(y - f)
 
 Number of boosting iterations: mstop = 5000 
 Step size:  0.1 
+Offset:  36 
 
 Coefficients: 
 (Intercept)       speed 
  -29.532000    2.096213 
+attr(,"offset")
+[1] 36
 
 > 
 >     coef(cars.gbl) + c(cars.gbl$offset, 0)
 (Intercept)       speed 
    6.468000    2.096213 
+attr(,"offset")
+[1] 36
 >     lines(cars$speed, predict(cars.gbl), col = "green")
 > 
 >     ### Huber loss with adaptive choice of delta
@@ -515,8 +580,7 @@ Coefficients:
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "methods"
-> 
+> cleanEx(); nameEx("methods");
 > ### * methods
 > 
 > flush(stderr()); flush(stdout())
@@ -549,10 +613,13 @@ Loss function: (y - f)^2
 
 Number of boosting iterations: mstop = 2000 
 Step size:  0.1 
+Offset:  42.98 
 
 Coefficients: 
 (Intercept)       speed 
  -60.331204    3.918359 
+attr(,"offset")
+[1] 42.98
 
 > 
 >     ### initial number of boosting iterations
@@ -570,6 +637,8 @@ Degrees of freedom (for mstop = 1549): 1.986856
 >     coef(cars.gb[mstop(aic)])
 (Intercept)       speed 
  -59.751114    3.882873 
+attr(,"offset")
+[1] 42.98
 >     plot(cars$dist, predict(cars.gb[mstop(aic)]), 
 +          ylim = range(cars$dist))
 >     abline(a = 0, b = 1)
@@ -577,8 +646,7 @@ Degrees of freedom (for mstop = 1549): 1.986856
 > 
 > 
 > 
-> cleanEx(); ..nameEx <- "wpbc"
-> 
+> cleanEx(); nameEx("wpbc");
 > ### * wpbc
 > 
 > flush(stderr()); flush(stdout())
@@ -614,14 +682,16 @@ worst_concavepoints      worst_symmetry    worst_fractaldim               tsize
        0.0000000000       -0.1901055629        0.0000000000        0.0365868895 
              pnodes 
        0.0000000000 
+attr(,"offset")
+[1] -0.5835661
 > 
 > 
 > 
 > 
 > ### * <FOOTER>
 > ###
-> cat("Time elapsed: ", proc.time() - get("ptime", env = .CheckExEnv),"\n")
-Time elapsed:  12.699 0.099 12.908 0 0 
+> cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  23.441 0.2 33.23 0 0 
 > grDevices::dev.off()
 null device 
           1 

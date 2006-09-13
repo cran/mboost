@@ -1,18 +1,46 @@
 ### * <HEADER>
 ###
 attach(NULL, name = "CheckExEnv")
-assign(".CheckExEnv", as.environment(2), pos = length(search())) # base
-## add some hooks to label plot pages for base and grid graphics
-setHook("plot.new", ".newplot.hook")
-setHook("persp", ".newplot.hook")
-setHook("grid.newpage", ".gridplot.hook")
-
+assign("nameEx", 
+       local({
+	   s <- "__{must remake R-ex/*.R}__"
+           function(new) {
+               if(!missing(new)) s <<- new else s
+           }
+       }),
+       pos = "CheckExEnv")
+## Add some hooks to label plot pages for base and grid graphics
+assign("base_plot_hook",
+       function() {
+           pp <- par(c("mfg","mfcol","oma","mar"))
+           if(all(pp$mfg[1:2] == c(1, pp$mfcol[2]))) {
+               outer <- (oma4 <- pp$oma[4]) > 0; mar4 <- pp$mar[4]
+               mtext(sprintf("help(\"%s\")", nameEx()), side = 4,
+                     line = if(outer)max(1, oma4 - 1) else min(1, mar4 - 1),
+              outer = outer, adj = 1, cex = .8, col = "orchid", las=3)
+           }
+       },
+       pos = "CheckExEnv")
+assign("grid_plot_hook",
+       function() {
+           pushViewport(viewport(width=unit(1, "npc") - unit(1, "lines"),
+                                 x=0, just="left"))
+           grid.text(sprintf("help(\"%s\")", nameEx()),
+                     x=unit(1, "npc") + unit(0.5, "lines"),
+                     y=unit(0.8, "npc"), rot=90,
+                     gp=gpar(col="orchid"))
+       },
+       pos = "CheckExEnv")
+setHook("plot.new",     get("base_plot_hook", pos = "CheckExEnv"))
+setHook("persp",        get("base_plot_hook", pos = "CheckExEnv"))
+setHook("grid.newpage", get("grid_plot_hook", pos = "CheckExEnv"))
 assign("cleanEx",
        function(env = .GlobalEnv) {
 	   rm(list = ls(envir = env, all.names = TRUE), envir = env)
            RNGkind("default", "default")
 	   set.seed(1)
    	   options(warn = 1)
+	   .CheckExEnv <- as.environment("CheckExEnv")
 	   delayedAssign("T", stop("T used instead of TRUE"),
 		  assign.env = .CheckExEnv)
 	   delayedAssign("F", stop("F used instead of FALSE"),
@@ -26,19 +54,17 @@ assign("cleanEx",
 	       warning("items ", paste(missitems, collapse=", "),
 		       " have been removed from the search path")
        },
-       env = .CheckExEnv)
-assign("..nameEx", "__{must remake R-ex/*.R}__", env = .CheckExEnv) # for now
-assign("ptime", proc.time(), env = .CheckExEnv)
+       pos = "CheckExEnv")
+assign("ptime", proc.time(), pos = "CheckExEnv")
 grDevices::postscript("mboost-Ex.ps")
-assign("par.postscript", graphics::par(no.readonly = TRUE), env = .CheckExEnv)
+assign("par.postscript", graphics::par(no.readonly = TRUE), pos = "CheckExEnv")
 options(contrasts = c(unordered = "contr.treatment", ordered = "contr.poly"))
 options(warn = 1)    
 library('mboost')
 
-assign(".oldSearch", search(), env = .CheckExEnv)
-assign(".oldNS", loadedNamespaces(), env = .CheckExEnv)
-cleanEx(); ..nameEx <- "FP"
-
+assign(".oldSearch", search(), pos = 'CheckExEnv')
+assign(".oldNS", loadedNamespaces(), pos = 'CheckExEnv')
+cleanEx(); nameEx("FP");
 ### * FP
 
 flush(stderr()); flush(stdout())
@@ -82,8 +108,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "Family"
-
+cleanEx(); nameEx("Family");
 ### * Family
 
 flush(stderr()); flush(stdout())
@@ -106,8 +131,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "blackboost"
-
+cleanEx(); nameEx("blackboost");
 ### * blackboost
 
 flush(stderr()); flush(stdout())
@@ -132,8 +156,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "bodyfat"
-
+cleanEx(); nameEx("bodyfat");
 ### * bodyfat
 
 flush(stderr()); flush(stdout())
@@ -156,8 +179,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "boost.family-class"
-
+cleanEx(); nameEx("boost.family-class");
 ### * boost.family-class
 
 flush(stderr()); flush(stdout())
@@ -175,8 +197,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "cvrisk"
-
+cleanEx(); nameEx("cvrisk");
 ### * cvrisk
 
 flush(stderr()); flush(stdout())
@@ -198,7 +219,8 @@ flush(stderr()); flush(stdout())
   )
   
   ### fit linear model to data
-  model <- glmboost(DEXfat ~ ., data = tbodyfat, control = boost_control(mstop = 100))
+  model <- glmboost(DEXfat ~ ., data = tbodyfat, 
+                    control = boost_control(mstop = 100))
 
   ### AIC-based selection of number of boosting iterations
   AIC(model)
@@ -231,8 +253,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "gamboost"
-
+cleanEx(); nameEx("gamboost");
 ### * gamboost
 
 flush(stderr()); flush(stdout())
@@ -258,11 +279,21 @@ flush(stderr()); flush(stdout())
     lines(cars$speed, predict(smooth.spline(cars$speed, cars$dist),
                               cars$speed)$y, col = "green")
 
+    ### artificial example: sinus transformation
+    x <- sort(runif(100)) * 10
+    y <- sin(x) + rnorm(length(x), sd = 0.25)
+    plot(x, y)
+    ### linear model
+    lines(x, fitted(lm(y ~ sin(x) - 1)), col = "red")
+    ### GAM
+    lines(x, fitted(gamboost(y ~ x - 1, 
+                    control = boost_control(mstop = 500))), 
+          col = "green")
 
 
 
-cleanEx(); ..nameEx <- "glmboost"
 
+cleanEx(); nameEx("glmboost");
 ### * glmboost
 
 flush(stderr()); flush(stdout())
@@ -309,8 +340,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "methods"
-
+cleanEx(); nameEx("methods");
 ### * methods
 
 flush(stderr()); flush(stdout())
@@ -346,8 +376,7 @@ flush(stderr()); flush(stdout())
 
 
 
-cleanEx(); ..nameEx <- "wpbc"
-
+cleanEx(); nameEx("wpbc");
 ### * wpbc
 
 flush(stderr()); flush(stdout())
@@ -371,7 +400,7 @@ flush(stderr()); flush(stdout())
 
 ### * <FOOTER>
 ###
-cat("Time elapsed: ", proc.time() - get("ptime", env = .CheckExEnv),"\n")
+cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
 grDevices::dev.off()
 ###
 ### Local variables: ***

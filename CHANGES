@@ -1,4 +1,14 @@
 
+		CHANGES in `mboost' VERSION 0.4-12 (2006-09-13)
+
+  o  predict(<blackboost-object>, type = "response") did not return
+     factors when the response was actually a factor
+
+  o  report offset in print methods
+
+  o  add offset attribute to coef.glmboost
+
+
 		CHANGES in `mboost' VERSION 0.4-11 (2006-09-07)
 
   o  add `contrasts.arg' argument to `glmboost.formula'

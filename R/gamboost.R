@@ -207,6 +207,7 @@ print.gamboost <- function(x, ...) {
     cat("\n")
     cat("Number of boosting iterations: mstop =", mstop(x), "\n")
     cat("Step size: ", x$control$nu, "\n")
+    cat("Offset: ", x$offset, "\n")
     dfbase <- ifelse(length(unique(x$dfbase)) == 1, unique(x$dfbase), 
                      x$dfbase)
     cat("Degree of freedom: ", dfbase, "\n")

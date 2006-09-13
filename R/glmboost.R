@@ -175,7 +175,9 @@ coef.glmboost <- function(object, ...) {
     for (j in unique(xselect))
         ret[j] <- sum(object$ensemble[xselect == j, "coef"])
     names(ret) <- colnames(object$data$x)
-    ret * object$control$nu
+    RET <- ret * object$control$nu
+    attr(RET, "offset") <- object$offset
+    RET
 }
 
 ### methods: hatvalues. For L_2 loss ONLY!
@@ -204,9 +206,12 @@ print.glmboost <- function(x, ...) {
     cat("\n")
     cat("Number of boosting iterations: mstop =", mstop(x), "\n")
     cat("Step size: ", x$control$nu, "\n")
+    cat("Offset: ", x$offset, "\n")
     cat("\n")
     cat("Coefficients: \n")
-    print(coef(x))
+    cf <- coef(x)
+    attr(x, "offset") <- NULL
+    print(cf)
     cat("\n")
     invisible(x)
 }
