@@ -141,8 +141,15 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     RET$predict <- function(newdata = NULL, mstop = mstop, ...) {
 
         if (!is.null(newdata)) {
-            mf <- object$menv@get("input", data = newdata)
-            x <- model.matrix(attr(mf, "terms"), data = mf)
+            if (is.null(object$menv)) {
+                if (!is.matrix(newdata) || any(dim(newdata) != dim(x)))
+                    stop(sQuote("newdata"), " is not a matrix with dimensions ",
+                         dim(x))
+                x <- newdata
+            } else {
+                mf <- object$menv@get("input", data = newdata)
+                x <- model.matrix(attr(mf, "terms"), data = mf)
+            }
         }
 
         lp <- offset

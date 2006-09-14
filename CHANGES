@@ -1,4 +1,9 @@
 
+		CHANGES in `mboost' VERSION 0.4-13 (2006-10-04)
+
+  o  predict(..., newdata) can take a matrix now
+
+
 		CHANGES in `mboost' VERSION 0.4-12 (2006-09-13)
 
   o  predict(<blackboost-object>, type = "response") did not return
