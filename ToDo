@@ -1,8 +1,4 @@
 
-    o  add offset to coef?
-
-    o  check if y is a factor for binomial???
-
     o  use better colours
 
     o  dfbase == 1 means fitting lm with intercept, can we work around?
@@ -35,4 +31,3 @@
     o  check hatvalues, hatmatrix for boosting with non-gaussian family
 
     o  weighted median for offset in Huber / Laplace, see Hmisc:::wtd.quantile
-
