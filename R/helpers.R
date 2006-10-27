@@ -146,6 +146,35 @@ bhatmat <- function(n, H, xselect, fitm, fW) {
     list(hatmatrix = B, trace = tr)
 }
 
+hatglm <- function(model) {
+
+     x <- model$data$x
+     nr <- colSums(x^2)
+     nu <- model$control$nu
+     x <- t(t(x) / sqrt(nr)) * sqrt(nu)
+     xselect <- model$ensemble[,"xselect"]
+     fW <- model$family@fW
+
+     g <- mboost:::gm.glmboost(model)
+     fitm <- t(apply(g, 1, function(a) cumsum(a)))
+
+     B <- matrix(0, nrow = nrow(x), ncol = nrow(x))
+     tr <- numeric(length(xselect))
+
+     for (m in 1:length(xselect)) {
+        xs <- x[,xselect[m]]
+        xw <- xs * fW(fitm[,m])
+        B <- B + xs %*% (xw - crossprod(xw, B))
+        tr[m] <- .Call("sumdiag", B)
+    }
+    op <- list(hatmatrix = B, trace = tr)
+    RET <- diag(op[[1]])       
+    attr(RET, "hatmatrix") <- op[[1]]
+    attr(RET, "trace") <- op[[2]]
+    RET
+}
+
+
 ### fractional polynomials transformation
 ### all powers `p' of `x', all powers `p' of `x' times `log(x)' and `log(x)'
 ### see Sauerbrei & Royston (1999), JRSS A (162), 71--94

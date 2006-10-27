@@ -36,7 +36,7 @@
   \item{type}{ a character indicating whether the fit or the response
                (classes) should be predicted in case of classification 
                problems. }
-  \item{method}{ a character specifying if the corrected AIC criterium or
+  \item{method}{ a character specifying if the corrected AIC criterion or
                  a classical (-2 logLik + 2 * df) should be computed.}
   \item{\dots}{ additional arguments passed to callies. }
 }

@@ -72,6 +72,8 @@ stopifnot(max(abs(predict(gmod, type = "link")/2 - fitted(bmod))) <
 cfb <- (coef(bmod) + c(bmod$offset, 0, 0)) * 2
 attr(cfb, "offset") <- NULL
 stopifnot(all.equal(cfb, coef(gmod)))
+aic <- AIC(bmod, "classical")
+stopifnot(abs(AIC(gmod) - attr(aic, "AIC")[mstop(bmod)]) < 1e-5)
 
 ### weighted least squares problem
 

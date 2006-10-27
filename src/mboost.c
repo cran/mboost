@@ -177,6 +177,30 @@ SEXP R_trace_glmboost(SEXP x, SEXP MPinv, SEXP xselect) {
 }
 
 /**
+    trace of a quadratic matrix
+    *\param B quadratic matrix
+*/
+
+SEXP sumdiag(SEXP B) {
+
+    SEXP ans;
+    double *dans, *dB;
+    int i, n;
+    
+    PROTECT(ans = allocVector(REALSXP, 1));
+    dans = REAL(ans);
+    dans[0] = 0;
+    dB = REAL(B);
+    n = nrow(B);
+    
+    for (i = 0; i < n; i++) 
+        dans[0] += dB[i * n + i];
+    
+    UNPROTECT(1);
+    return(ans);
+}
+
+/**
     negative gradient of the partial likelihood of a Cox model
     see formula (4.65) in Chapter 4 of Greg Ridgeway's thesis    
     http://www.i-pensieri.com/gregr/papers/thesis.pdf
