@@ -42,14 +42,14 @@ CoxPH()
              squared error.}
   \item{weights}{ a logical indicating if weights are allowed. }
   \item{name}{ a character giving the name of the loss function for pretty printing. }
-  \item{d}{ delta parameter for Huber loss function. If omitted, it is choosen adaptively.}
+  \item{d}{ delta parameter for Huber loss function. If omitted, it is chosen adaptively.}
 }
 \details{
 
   The boosting algorithms implemented in \code{\link{glmboost}}, \code{\link{gamboost}} or
   \code{\link{blackboost}} aim at minimizing the (weighted) empirical risk function 
   \code{risk(y, f, w)} with respect to \code{f}. By default, the risk function is the 
-  weighted sum of the loss function \code{loss(y, f)} but can be choosen arbitrarily.
+  weighted sum of the loss function \code{loss(y, f)} but can be chosen arbitrarily.
   The \code{ngradient(y, f)} function is the negative gradient of \code{loss(y, f)} with 
   respect to \code{f}.
   For binary classification problems we assume that the response \code{y} is coded by

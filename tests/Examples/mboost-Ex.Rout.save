@@ -1,5 +1,5 @@
 
-R version 2.4.0 alpha (2006-09-13 r39286)
+R version 2.5.0 Under development (unstable) (2006-10-25 r39730)
 Copyright (C) 2006 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
@@ -100,16 +100,8 @@ Loading required package: sandwich
 Loading required package: strucchange
 Loading required package: vcd
 Loading required package: MASS
-
-Attaching package: 'MASS'
-
-
-	The following object(s) are masked from package:strucchange :
-
-	 SP500 
-
 Loading required package: colorspace
-Creating a new generic function for 'plot' in 'colorspace'
+Creating a new generic function for "plot" in "colorspace"
 
 Attaching package: 'colorspace'
 
@@ -425,7 +417,7 @@ Warning: no admissible split found
 > flush(stderr()); flush(stdout())
 > 
 > ### Name: gamboost
-> ### Title: Gradient Boosting with Componentwise Smoothing Splines
+> ### Title: Gradient Boosting with Component-wise Smoothing Splines
 > ### Aliases: gamboost gamboost.formula gamboost.matrix gamboost_fit
 > ### Keywords: models nonlinear
 > 
@@ -485,7 +477,7 @@ Degrees of freedom (for mstop = 25): 4.563027
 > flush(stderr()); flush(stdout())
 > 
 > ### Name: glmboost
-> ### Title: Gradient Boosting with Componentwise Linear Models
+> ### Title: Gradient Boosting with Component-wise Linear Models
 > ### Aliases: glmboost glmboost.formula glmboost.matrix glmboost_fit
 > ### Keywords: models regression
 > 
@@ -497,7 +489,7 @@ Degrees of freedom (for mstop = 25): 4.563027
 +                         control = boost_control(mstop = 5000))
 >     cars.gb
 
-	 Generalized Linear Models Fitted via Gradient Boosting) 
+	 Generalized Linear Models Fitted via Gradient Boosting
 
 Call:
 glmboost.formula(formula = dist ~ speed, data = cars, control = boost_control(mstop = 5000))
@@ -539,7 +531,7 @@ attr(,"offset")
 +                          family = Laplace())
 >     cars.gbl
 
-	 Generalized Linear Models Fitted via Gradient Boosting) 
+	 Generalized Linear Models Fitted via Gradient Boosting
 
 Call:
 glmboost.formula(formula = dist ~ speed, data = cars, control = boost_control(mstop = 5000),     family = Laplace())
@@ -600,7 +592,7 @@ attr(,"offset")
 +                         control = boost_control(mstop = 2000))
 >     cars.gb
 
-	 Generalized Linear Models Fitted via Gradient Boosting) 
+	 Generalized Linear Models Fitted via Gradient Boosting
 
 Call:
 glmboost.formula(formula = dist ~ speed, data = cars, control = boost_control(mstop = 2000))
@@ -691,7 +683,7 @@ attr(,"offset")
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  23.441 0.2 33.23 0 0 
+Time elapsed:  21.541 0.152 22.192 0 0 
 > grDevices::dev.off()
 null device 
           1 

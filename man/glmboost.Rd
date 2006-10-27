@@ -3,9 +3,9 @@
 \alias{glmboost.formula}
 \alias{glmboost.matrix}
 \alias{glmboost_fit}
-\title{ Gradient Boosting with Componentwise Linear Models }
+\title{ Gradient Boosting with Component-wise Linear Models }
 \description{
-  Gradient boosting for optimizing arbitrary loss functions where componentwise
+  Gradient boosting for optimizing arbitrary loss functions where component-wise
   linear models are utilized as base learners.
 }
 \usage{
@@ -36,7 +36,7 @@ glmboost_fit(object, family = GaussReg(),
 }
 \details{
 
-  A (generalized) linear model is fitted using a boosting algorithm based on componentwise 
+  A (generalized) linear model is fitted using a boosting algorithm based on component-wise 
   univariate linear models. The fit, i.e., the regression coefficients, can be
   interpreted in the usual way. The methodology is described in 
   Buhlmann and Yu (2003) and Buhlmann (2006).

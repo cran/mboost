@@ -62,10 +62,10 @@
     There are two possible learning problems: predicting \code{status} or predicting
     the time to recur.
 
-	1) Predicting field 2, outcome: R = recurrent, N = nonrecurrent
+	1) Predicting field 2, outcome: R = recurrent, N = non-recurrent
 	- Dataset should first be filtered to reflect a particular
 	endpoint; e.g., recurrences before 24 months = positive,
-	nonrecurrence beyond 24 months = negative.
+	non-recurrence beyond 24 months = negative.
 	- 86.3% accuracy estimated accuracy on 2-year recurrence using
 	previous version of this data.  
 

@@ -259,7 +259,7 @@ cleanEx(); nameEx("gamboost");
 flush(stderr()); flush(stdout())
 
 ### Name: gamboost
-### Title: Gradient Boosting with Componentwise Smoothing Splines
+### Title: Gradient Boosting with Component-wise Smoothing Splines
 ### Aliases: gamboost gamboost.formula gamboost.matrix gamboost_fit
 ### Keywords: models nonlinear
 
@@ -299,7 +299,7 @@ cleanEx(); nameEx("glmboost");
 flush(stderr()); flush(stdout())
 
 ### Name: glmboost
-### Title: Gradient Boosting with Componentwise Linear Models
+### Title: Gradient Boosting with Component-wise Linear Models
 ### Aliases: glmboost glmboost.formula glmboost.matrix glmboost_fit
 ### Keywords: models regression
 

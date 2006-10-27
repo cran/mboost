@@ -118,9 +118,9 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
 
         if (!is.null(newdata)) {
             if (is.null(object$menv)) {
-                if (!is.matrix(newdata) || any(dim(newdata) != dim(x)))
-                    stop(sQuote("newdata"), " is not a matrix with dimensions ",
-                         dim(x))
+                if (!is.matrix(newdata) || ncol(newdata) != ncol(x))
+                    stop(sQuote("newdata"), " is not a matrix with ",
+                         ncol(x), " columns")
                 x <- newdata
             } else {
                 mf <- object$menv@get("input", data = newdata)
@@ -187,10 +187,10 @@ coef.glmboost <- function(object, ...) {
     RET
 }
 
-### methods: hatvalues. For L_2 loss ONLY!
+### methods: hatvalues. 
 hatvalues.glmboost <- function(model, ...) {
 
-    if (!checkL2(model)) return(hatvalues.gb(model, ...))
+    if (!checkL2(model)) return(hatglm(model))
     xf <- t(model$MPinv) * model$control$nu
     op <- .Call("R_trace_glmboost", model$data$x, xf,
                 as.integer(model$ensemble[, "xselect"]),

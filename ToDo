@@ -6,6 +6,8 @@
     o  fire a warning when AIC is called in cases the hat matrix is
        meaningless
 
+    o  check AIC for glmboost with non-gaussian family
+
     o  check cvrisk for blackboost & bodyfat
 
     o  update benchmarks in cache with cvrisk

@@ -1,4 +1,9 @@
 
+		CHANGES in `mboost' VERSION 0.4-14 (2006-10-27)
+
+  o  AIC(..., "classical") is now faster for non-gaussian families
+
+
 		CHANGES in `mboost' VERSION 0.4-13 (2006-10-04)
 
   o  predict(..., newdata) can take a matrix now

@@ -3,9 +3,9 @@
 \alias{gamboost.formula}
 \alias{gamboost.matrix}
 \alias{gamboost_fit}
-\title{ Gradient Boosting with Componentwise Smoothing Splines }
+\title{ Gradient Boosting with Component-wise Smoothing Splines }
 \description{
-  Gradient boosting for optimizing arbitrary loss functions where componentwise
+  Gradient boosting for optimizing arbitrary loss functions where component-wise
   smoothing splines are utilized as base learners.
 }
 \usage{
@@ -34,7 +34,7 @@ gamboost_fit(object, dfbase = 4, family = GaussReg(),
 }
 \details{
 
-  A (generalized) additive model is fitted using a boosting algorithm based on componentwise
+  A (generalized) additive model is fitted using a boosting algorithm based on component-wise
   univariate smoothing splines. The methodology is described in
   Buhlmann and Yu (2003). If \code{dfbase = 1}, a univariate 
   linear model is used as base learner (resulting in a linear partial fit
