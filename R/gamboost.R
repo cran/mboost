@@ -22,6 +22,10 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
 
     ### data
     x <- object$x
+    if (control$center) {
+        x <- object$center(x)
+        object$x <- x
+    }
     y <- object$yfit
     check_y_family(object$y, family)
     if (is.null(weights)) {
@@ -150,6 +154,7 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
                 mf <- object$menv@get("input", data = newdata)
                 x <- model.matrix(attr(mf, "terms"), data = mf)
             }
+            if (control$center) x <- object$center(x)
         }
 
         lp <- offset
@@ -178,6 +183,13 @@ gamboost.formula <- function(formula, data = list(), weights = NULL, ...) {
     ### construct design matrix etc.
     object <- boost_dpp(formula, data, weights)
 
+    object$center <- function(xmat) { 
+        cm <- colMeans(object$x)
+        num <- which(sapply(object$menv@get("input"), class) == "numeric")
+        cm[!attr(object$x, "assign") %in% num] <- 0
+        scale(xmat, center = cm, scale = FALSE)
+    }
+
     ### fit the ensemble
     RET <- gamboost_fit(object, ...)
 
@@ -198,6 +210,8 @@ gamboost.matrix <- function(x, y, weights = NULL, ...) {
              sQuote("weights"), "differ")
 
     object <- gb_xyw(x, y, weights)
+    object$center <- function(xmat) 
+        scale(xmat, center = colMeans(x), scale = FALSE)
     gamboost_fit(object, ...)
 }
 

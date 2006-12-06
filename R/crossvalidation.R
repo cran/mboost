@@ -43,7 +43,7 @@ plot.cvrisk <- function(x, ylab = attr(x, "risk"), ylim = range(x),
 
     cm <- colMeans(x)
     plot(1:ncol(x), cm, ylab = ylab, ylim = ylim, 
-         type = "b", lwd = 2, axes = FALSE, 
+         type = "n", lwd = 2, axes = FALSE, 
          xlab = "Number of boosting iterations",
          main = main, ...)
     axis(1, at = 1:ncol(x), labels = colnames(x))  
@@ -53,6 +53,7 @@ plot.cvrisk <- function(x, ylab = attr(x, "risk"), ylim = range(x),
     rm(out)
     ms <- which.min(cm)
     lines(c(ms, ms), c(0, cm[ms]), lty = 2)
+    lines(1:ncol(x), cm, type = "b")
 }
 
 mstop.cvrisk <- function(object, ...)

@@ -135,3 +135,23 @@ if (require("survival")) {
 
     stopifnot(all.equal(cx$loglik[2], logLik(gl)))
 }
+
+### check centering
+y <- rnorm(20)
+xn <- rnorm(20)
+xnm <- xn - mean(xn)
+xf <- gl(2, 10)
+gc <- glmboost(y ~ xn + xf, control = boost_control(center = TRUE))
+g <- glmboost(y ~ xnm + xf)
+cgc <- coef(gc)
+cg <- coef(g)
+names(cgc) <- NULL
+names(cg) <- NULL
+stopifnot(all.equal(cgc, cg))
+
+pc1 <- predict(gc)
+pc2 <- predict(gc, newdata = data.frame(xn = xn, xf = xf))
+pc3 <- predict(g)
+stopifnot(all.equal(pc1, pc2))
+stopifnot(all.equal(pc2, pc3))
+

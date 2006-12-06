@@ -1,4 +1,12 @@
 
+		CHANGES in `mboost' VERSION 0.4-15 (2006-12-06)
+
+  o  fix plot problems in plot.cvrisk
+
+  o  allow for centering of the numerical covariates in glmboost and
+     gamboost
+
+
 		CHANGES in `mboost' VERSION 0.4-14 (2006-10-27)
 
   o  AIC(..., "classical") is now faster for non-gaussian families
@@ -53,7 +61,7 @@
   o  documentation updates
 
 
-		CHANGES in `mboost' VERSION 0.4-8 (2006-06-05)
+		CHANGES in `mboost' VERSION 0.4-8 (2006-07-05)
 
   o  Huber() is `Huber Error', not `Huber Absolute Error'
 

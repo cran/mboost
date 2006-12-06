@@ -85,3 +85,21 @@ ga <- gamboost(y ~ xf + x.2 - 1, data = df,
                control = boost_control(mstop = 100, nu = 1))
 stopin(fitted(lm(y ~ xf + x.2 - 1, data = df)), fitted(ga))
 
+### check centering
+y <- rnorm(20)
+xn <- rnorm(20)
+xnm <- xn - mean(xn)
+xf <- gl(2, 10)
+gc <- gamboost(y ~ xn + xf, control = boost_control(center = TRUE))
+g <- gamboost(y ~ xnm + xf)
+cgc <- coef(gc)
+cg <- coef(g)  
+names(cgc) <- NULL
+names(cg) <- NULL 
+stopifnot(all.equal(cgc, cg))
+
+pc1 <- predict(gc)
+pc2 <- predict(gc, newdata = data.frame(xn = xn, xf = xf))
+pc3 <- predict(g)
+stopifnot(all.equal(pc1, pc2))
+stopifnot(all.equal(pc2, pc3))
