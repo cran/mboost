@@ -7,7 +7,8 @@
 }
 \usage{
 boost_control(mstop = 100, nu = 0.1, constraint = FALSE, 
-              risk = c("inbag", "oobag", "none"), savedata = TRUE)
+              risk = c("inbag", "oobag", "none"), 
+              savedata = TRUE, center = FALSE)
 }
 \arguments{
   \item{mstop}{ an integer giving the number of initial boosting iterations. }
@@ -21,6 +22,9 @@ boost_control(mstop = 100, nu = 0.1, constraint = FALSE,
                zero weights) and \code{none} to no risk computations at all.}
   \item{savedata}{ a logical, should the data be saved in the 
                    returned object?}
+  \item{center}{ a logical indicating if the numerical covariates should be mean 
+                 centered before fitting. Only implemented for \code{\link{glmboost}} and
+                 \code{\link{gamboost}}.}
 }
 \details{
 

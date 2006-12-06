@@ -11,6 +11,10 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
 
     ### init data and weights
     x <- object$x
+    if (control$center) {
+        x <- object$center(x)
+        object$x <- x
+    }
     y <- object$yfit
     check_y_family(object$y, family)
     if (is.null(weights)) {
@@ -126,6 +130,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
                 mf <- object$menv@get("input", data = newdata)
                 x <- model.matrix(attr(mf, "terms"), data = mf)
             }
+            if (control$center) x <- object$center(x)
         }
 
         tmp <- RET
@@ -151,6 +156,13 @@ glmboost.formula <- function(formula, data = list(), weights = NULL,
     ### construct design matrix etc.
     object <- boost_dpp(formula, data, weights, contrasts.arg = contrasts.arg)
 
+    object$center <- function(xmat) {
+        cm <- colMeans(object$x)
+        num <- which(sapply(object$menv@get("input"), class) == "numeric")
+        cm[!attr(object$x, "assign") %in% num] <- 0       
+        scale(xmat, center = cm, scale = FALSE)
+    }
+
     ### fit the ensemble
     RET <- glmboost_fit(object, ...)
 
@@ -171,6 +183,8 @@ glmboost.matrix <- function(x, y, weights = NULL, ...) {
              sQuote("weights"), "differ")
 
     object <- gb_xyw(x, y, weights)
+    object$center <- function(xmat) 
+        scale(xmat, center = colMeans(x), scale = FALSE)
     glmboost_fit(object, ...)
 }
 

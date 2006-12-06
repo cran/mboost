@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
-Date: 2006-10-27
-Version: 0.4-14
+Date: $Date: 2006/12/06 09:46:04 $
+Version: 0.4-15
 Author: Torsten Hothorn and Peter Buhlmann
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
 Description: Functional gradient descent algorithms 
@@ -14,4 +14,4 @@ Depends: R (>= 2.3.0), methods, modeltools, party (>= 0.8-6)
 Suggests: mlbench, ipred
 SaveImage: yes
 License: GPL
-Packaged: Fri Oct 27 10:45:17 2006; hothorn
+Packaged: Wed Dec  6 12:34:33 2006; hothorn
