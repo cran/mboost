@@ -6,7 +6,8 @@
     o  fire a warning when AIC is called in cases the hat matrix is
        meaningless
 
-    o  check AIC for glmboost with non-gaussian family
+    o  check AIC (& logLik) for glmboost with non-gaussian family 
+       (!!! Poisson !!!)
 
     o  check cvrisk for blackboost & bodyfat
 
