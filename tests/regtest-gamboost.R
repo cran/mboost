@@ -84,6 +84,11 @@ df <- data.frame(y = 3 * x[,2] + (1:4)[xf], x = x)
 ga <- gamboost(y ~ xf + x.2 - 1, data = df, 
                control = boost_control(mstop = 100, nu = 1))
 stopin(fitted(lm(y ~ xf + x.2 - 1, data = df)), fitted(ga))
+ga <- gamboost(y ~ xf + sin(x.1) + x.2, data = df, 
+               dfbase = c(1, rep(1, 3), 4, 1),
+               control = boost_control(mstop = 100, nu = 1))
+stopin(fitted(lm(y ~ xf + sin(x.1) + x.2, data = df)), fitted(ga))
+
 
 ### check centering
 y <- rnorm(20)

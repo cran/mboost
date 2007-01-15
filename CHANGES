@@ -1,4 +1,15 @@
 
+		CHANGES in `mboost' VERSION 0.4-17 (2007-01-15)
+
+  o  fix problem with `dfbase' in `gamboost', spotted by 
+     Karin Eckel <Karin.Eckel@imbe.imed.uni-erlangen.de>
+
+
+		CHANGES in `mboost' VERSION 0.4-16 (2007-01-12)
+
+  o  work around stats4:::AIC
+
+
 		CHANGES in `mboost' VERSION 0.4-15 (2006-12-06)
 
   o  fix plot problems in plot.cvrisk
