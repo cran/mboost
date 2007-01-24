@@ -8,6 +8,23 @@
   year		= {1994}
 }
 
+@Book{		  hatib90,
+  author	= {T. Hastie and R. Tibshirani},
+  title		= {Generalized Additive Models},
+  publisher	= {Chapman \& Hall},
+  address       = {London},
+  year		= {1990}
+}
+
+@Book{		  hastetal01,
+  author	= {T. Hastie and R. Tibshirani and J. Friedman},
+  title		= {The Elements of Statistical Learning; Data
+                  Mining,Inference and Prediction},
+  publisher	= {Springer},
+  address       = {New York},
+  year		= {2001}
+}
+
 @Book{		  vdlrob03,
   author	= {M.J. van der Laan and J.M. Robins},
   title		= {Unified Methods for Censored Longitudinal Data and
@@ -25,6 +42,17 @@
   volume	= {7},
   optnumber	= {3},
   pages		= {355-373}
+}
+
+@Article{zou06,
+  author = 	 {H. Zou},
+  title = 	 {The adaptive {L}asso and its oracle properties},
+  journal = 	 {Journal of the American Statistical Association},
+  year = 	 {2006},
+  volume = 	 {101},
+  OPTnumber = 	 {},
+  pages = 	 {1418-1429},
+  note =         {}
 }
 
 @Article{	  raetetal01,
@@ -58,6 +86,18 @@
   pages		= {172-181}
 }
 
+@Article{	  ridgew00,
+  author	= {G. Ridgeway},
+  title		= {Discussion of {A}dditive logistic regression: a
+                  statistical view of boosting {(J. Friedman, T. Hastie,
+                  R. Tibshirani, auths.)}}, 
+  journal	= {The Annals of Statistics},
+  year		= {2000},
+  volume	= {28},
+  optnumber	= {},
+  pages		= {393-400}
+}
+
 @Article{	  ridgew02,
   author	= {G. Ridgeway},
   title		= {Looking for Lumps: {B}oosting and bagging for density
@@ -76,6 +116,14 @@
   year		= 2005
 }
 
+@TechReport{	  pb06b,
+  author	= {P. B\"uhlmann},
+  title		= {Twin Boosting: improved feature selection and prediction},
+  institution	= {ETH Z\"urich},
+  year		= {2006},
+  url           = {ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/TwinBoosting.pdf}
+}
+
 @Book{		  tuk77,
   author	= {J.W. Tukey},
   title		= {Exploratory Data Analysis},
@@ -87,13 +135,12 @@
 @Article{	  meipb06,
   author	= {N. Meinshausen and P. B{\"u}hlmann},
   title		= {High-dimensional graphs and variable selection with the
-		  Lasso},
+		  {L}asso},
   journal	= {The Annals of Statistics},
   year		= {2006},
   volume	= {34},
-  optnumber	= {},
-  pages		= {},
-  note          = {in press}
+  number	= {3},
+  pages		= {1436-1462}
 }
 
 @Article{	  hayu01,
@@ -149,7 +196,7 @@
 }
 
 @TechReport{	  bustsh05,
-  author	= {A. Buja and W. Stuetzle and Yi Shen},
+  author	= {A. Buja and W. Stuetzle and Y. Shen},
   title		= {Loss functions for binary class probability estimation:
 		  structure and applications},
   institution   = {University of Washington},
@@ -157,12 +204,38 @@
   url           = {http://www.stat.washington.edu/wxs/Learning-papers/paper-proper-scoring.pdf}
 }
 
+@TechReport{	  bartra06,
+  author	= {P.L. Bartlett and M. Traskin},
+  title		= {AdaBoost is consistent},
+  institution   = {University of California},
+  year		= {2006},
+  url           = {http://www.stat.berkeley.edu/tech-reports/722.pdf}
+}
+
+@TechReport{	  measeetal06,
+  author	= {D. Mease and A.J. Wyner and A. Buja},
+  title		= {Cost-weighted boosting with jittering and
+                  over/under-sampling: JOUS-Boost}, 
+  institution   = {University of Pennsylvania},
+  year		= {2006},
+  url           = {http://www-stat.wharton.upenn.edu/~buja/PAPERS/paper-jous-boost.pdf}
+}
+
 @TechReport{	  zhuetal05,
   author	= {J. Zhu and S. Rosset and H. Zou and T. Hastie},
   title		= {Multiclass {Adaboost}},
   institution   = {Stanford University},
   year		= {2005},
-  url           = {http://www-stat.stanford.edu/~hastie/pub.htm}
+  url           = {http://www-stat.stanford.edu/~hastie/Papers/samme.pdf}
+}
+
+@TechReport{	  parha06,
+  author	= {M.-Y. Park and T. Hastie},
+  title		= {An L1 regularization-path algorithm for generalized
+                  linear models},
+  institution   = {Stanford University},
+  year		= {2006},
+  url           = {http://www-stat.stanford.edu/~hastie/Papers/glmpath.jrssb.pdf}
 }
 
 @TechReport{	  yaoetal05,
@@ -171,6 +244,14 @@
   institution	= {University of California, Berkeley},
   year		= 2005,
   url           = {http://math.berkeley.edu/~yao/publications/earlystop.pdf}
+}
+
+@TechReport{	  huangetal06,
+  author	= {J. Huang and S. Ma and C.-H. Zhang},
+  title		= {Adaptive {L}asso for sparse high-dimensional regression},
+  institution	= {University of Iowa},
+  year		= 2006,
+  url           = {}
 }
 
 @TechReport{	  munketal05,
@@ -260,7 +341,7 @@
   booktitle	= {Advances in Large Margin Classifiers},
   pages		= {},
   year		= {2000},
-  editor	= {A. Smola, A.J. and P. Bartlett and B. Sch\"olkopf, B. and
+  editor	= {A. Smola and P. Bartlett and B. Sch\"olkopf, B. and
 		  D. Schuurmans},
   optvolume	= {},
   optnumber	= {},
@@ -273,8 +354,21 @@
   optannote	= {}
 }
 
+@InProceedings{	  lozetal06,
+  author	= {A.C. Lozano and S.R. Kulkarni and R.E. Schapire},
+  title		= {Convergence and consistency of regularized boosting
+                  algorithms with stationary $\beta$-mixing observations},
+  booktitle	= {Advances in Neural Information Processing Systems},
+  pages		= {819-826},
+  year		= 2006,
+  editor	= {Y. Weiss and B. Sch{\"o}lkopf and J. Platt},
+  volume	= {18},
+  series	= {},
+  publisher	= {MIT Press}
+}
+
 @Article{	  bjm05,
-  author	= {P.L. Bartlett and M.I. Jordan, M.I. and J.D. McAuliffe},
+  author	= {P.L. Bartlett and M.I. Jordan and J.D. McAuliffe},
   title		= {Convexity, classification, and risk bounds},
   journal	= {Journal of the American Statistical Association},
   year		= {2006},
@@ -370,10 +464,10 @@
 		  and an application to boosting},
   optcrossref	= {},
   optkey	= {},
-  booktitle	= {EuroCOLT: European Conference on Computational Learning
+  booktitle	= {Proceedings of the Second European Conference on Computational Learning
 		  Theory},
   pages		= {},
-  year		= {1994},
+  year		= {1995},
   series        = {Lecture Notes in Computer Science},
   opteditor	= {},
   optvolume	= {},
@@ -428,6 +522,16 @@
   pages		= {197-227}
 }
 
+@Article{	  schaetal98,
+  author	= {R.E. Schapire and Y. Freund and P. Bartlett and W.S. Lee},
+  title		= {Boosting the margin: a new explanation for the
+                  effectiveness of voting methods},
+  journal	= {The Annals of Statistics},
+  year		= {1998},
+  volume	= {26},
+  pages		= {1651-1686}
+}
+
 @Article{	  schasin00,
   author	= {R.E. Schapire and Y. Singer},
   title		= {Boostexter: a boosting-based system for text
@@ -436,6 +540,16 @@
   year		= {2000},
   volume	= {39},
   pages		= {135-168}
+}
+
+@Article{	  kolpa02,
+  author	= {V. Koltchinskii and D. Panchenko},
+  title		= {Empirical margin distributions and bounding the
+                  generalization error of combined classifiers},
+  journal	= {The Annals of Statistics},
+  year		= {2002},
+  volume	= {30},
+  pages		= {1-50}
 }
 
 @InProceedings{	  iyetal00,
@@ -542,18 +656,13 @@
   pages		= {1001-1024},
 }
 
-@TechReport{	  zhaoyu06,
+@Article{	  zhaoyu06,
   author	= {P. Zhao and B. Yu},
   title		= {On model selection consistency of {L}asso},
-  institution	= {University of California, Berkeley},
+  journal	= {Journal of Machine Learning Research},
   year		= {2006},
-  optkey	= {},
-  opttype	= {},
-  optnumber	= {},
-  optaddress	= {},
-  optmonth	= {},
-  optnote	= {},
-  optannote	= {}
+  volume	= {7},
+  pages		= {2541-2563},
 }
 
 @TechReport{	  zhaoyu05,
@@ -570,65 +679,59 @@
   optannote	= {}
 }
 
-@TechReport{	  tutzbi05,
+@Article{         leititutz06,
+  year          = 2007, 
+  author        = {F. Leitenstorfer and G. Tutz},
+  title         = {Generalized Monotonic Regression Based on {B}-Splines with an 
+                   Application to Air Pollution Data},
+  journal       = {Biostatistics},
+  note          = {in press},
+}
+
+@Article{	  tutzbi05,
+  year          = {2007},
   author	= {G. Tutz and H. Binder},
   title		= {Boosting {R}idge regression},
-  institution	= {SFB 386, LMU M{\"u}nchen},
-  url           = {http://www.stat.uni-muenchen.de/sfb386/papers/dsp/paper418.pdf},
-  year		= {2005},
-  optkey	= {},
-  opttype	= {},
-  optnumber	= {},
-  optaddress	= {},
-  optmonth	= {},
-  optnote	= {},
-  optannote	= {}
+  journal       = {Computational Statistics \& Data Analysis},
+  note          = {in press}
 }
 
-@TechReport{	  tutzre05,
+@Article{         tutzbi06,
+  year          = 2006,
+  author        = {G. Tutz and H. Binder},
+  title         = {Generalized additive modelling with implicit variable 
+                   selection by likelihood based boosting},
+  journal       = {Biometrics},
+  volume        = 62,
+  pages         = {961-971}
+}
+
+@Article{	  tutzre05,
+  year          = {2007},
   author	= {G. Tutz and F. Reithinger},
   title		= {Flexible semiparametric mixed models},
-  institution	= {SFB 386, LMU M{\"u}nchen},
-  url           = {http://www.stat.uni-muenchen.de/sfb386/papers/dsp/paper448.pdf},
-  year		= {2005},
-  optkey	= {},
-  opttype	= {},
-  optnumber	= {},
-  optaddress	= {},
-  optmonth	= {},
-  optnote	= {},
-  optannote	= {}
+  journal       = {Statistics in Medicine},
+  note          = {in press},
 }
 
-@TechReport{	  tutzle05,
-  author	= {G. Tutz and F. Leitenstorfer},
-  title		= {Generalized smooth monotonic regression},
-  institution	= {SFB 386, LMU M{\"u}nchen},
-  url           = {http://www.statistik.lmu.de/sfb386/papers/dsp/paper417.pdf},
-  year		= {2005},
-  optkey	= {},
-  opttype	= {},
-  optnumber	= {},
-  optaddress	= {},
-  optmonth	= {},
-  optnote	= {},
-  optannote	= {}
-}
-
-@TechReport{	  letutz06,
+@Article{	  tutzle05,
+  year          = 2007,
   author	= {F. Leitenstorfer and G. Tutz},
-  title		= {Smoothing with curvature constraints based on boosting
-		  techniques},
-  institution	= {SFB 386, Munich},
-  year		= {2006},
-  url           = {http://www.statistik.lmu.de/sfb386/papers/dsp/paper467.pdf},
-  optkey	= {},
-  opttype	= {},
-  optnumber	= {},
-  optaddress	= {},
-  optmonth	= {},
-  optnote	= {},
-  optannote	= {}
+  title		= {Generalized smooth monotonic regression in additive modelling},
+  journal       = {Journal of Computational and Graphical Statistics},
+  note          = {in press}
+}
+
+@InProceedings{   letutz06,
+  author = {F. Leitenstorfer and G. Tutz},
+  title          = {Smoothing with curvature constraints based on boosting
+                  techniques},
+  booktitle     = {Proceedings in Computational Statistics (COMPSTAT)},
+  year           = {2006},
+  editor        = {A. Rizzi and M. Vichi},
+  publisher     = {Physica-Verlag},
+  pages         = {1267-1276},
+  address       = {Heidelberg}
 }
 
 @Article{	  tutzhe05,
@@ -641,17 +744,6 @@
   pages		= {391-408}
 }
 
-@Article{	  tutzle06,
-  author	= {G. Tutz and F. Leitenstorfer},
-  title		= {Response shrinkage estimators in binary regression},
-  year		= {2006},
-  journal	= {Computational Statistics \& Data Analysis},
-  volume	= {},
-  optnumber	= {},
-  pages		= {},
-  note		= {in press}
-}
-
 @Article{	  pbyu03,
   author	= {P. B\"uhlmann and B. Yu},
   title		= {Boosting with the {$L_2$} loss: {R}egression and
@@ -661,6 +753,18 @@
   volume	= {98},
   optnumber	= {},
   pages		= {324-339}
+}
+
+@Article{	  pbyu00,
+  author	= {P. B\"uhlmann and B. Yu},
+  title		= {Discussion of Additive logistic regression: a
+                  statistical view (J. Friedman, T. Hastie and
+                  R. Tibshirani, auths.)},
+  journal	= {The Annals of Statistics},
+  year		= {2000},
+  volume	= {28},
+  optnumber	= {},
+  pages		= {377-386}
 }
 
 @Article{	  brei95,
@@ -721,6 +825,16 @@
   volume	= {9},
   optnumber	= {},
   pages		= {1545-1588}
+}
+
+@Article{	  hatib86,
+  author	= {T. Hastie and R. Tibshirani},
+  title		= {Generalized Additive Models (with discussion)},
+  journal	= {Statistical Science},
+  year		= {1986},
+  volume	= {1},
+  optnumber	= {},
+  pages		= {297-318}
 }
 
 @Article{	  fht00,
@@ -816,11 +930,10 @@
 }
 
 @Manual{	  pkg:mboost,
-  title		= {mboost: Gradient Boosting for Fitting Generalized Linear,
-		  Additive and Interaction Models},
+  title		= {mboost: Model-Based Boosting},
   author	= {Torsten Hothorn and Peter B{\"u}hlmann},
   year		= {2006},
-  note		= {{R} package version 0.4-8},
+  note		= {{R} package version 0.5-0},
   url		= {http://CRAN.R-project.org/}
 }
 
@@ -828,7 +941,7 @@
   title		= {party: A Laboratory for Recursive Part(y)itioning},
   author	= {Torsten Hothorn and Kurt Hornik and Achim Zeileis},
   year		= {2006},
-  note		= {{R} package version 0.8-6,
+  note		= {{R} package version 0.9-8,
 		  \url{http://CRAN.R-project.org/}}
 }
 
@@ -838,7 +951,9 @@
 		  Framework},
   journal	= {Journal of Computational and Graphical Statistics},
   year		= 2006,
-  note		= {in press}
+  volume        = 15,
+  number        = 3,
+  pages         = {651-674}
 }
 
 @Article{	  bioc2004,
@@ -846,7 +961,7 @@
 		  Bolstad and M. Dettling and S. Dudoit and B. Ellis and L.
 		  Gautier and Y. Ge and J. Gentry and K. Hornik and T.
 		  Hothorn and M. Huber and S. Iacus and R. Irizarry and F.
-		  Leisch and C. Li and M. Maechler and A. J. Rossini and G.
+		  Leisch and C. Li and M. M{\"a}chler and A. J. Rossini and G.
 		  Sawitzki and C. Smith and G. Smyth and L. Tierney and J. Y.
 		  Yang and J. Zhang},
   title		= {Bioconductor: open software development for computational
@@ -865,7 +980,7 @@
   booktitle	= {Proceedings of the Twelfth International Conference on
 		  Machine Learning},
   editors	= {A. Prieditis and S. Russell},
-  pages		= {522--530},
+  pages		= {522-530},
   publisher	= {Morgan Kaufmann Publishers Inc.},
   address	= {San Francisco, CA}
 }
@@ -887,6 +1002,30 @@
   url		= {http://CRAN.R-project.org}
 }
 
+@Manual{	  pkg:GAMBoost,
+  title		= {Generalized additive models by likelihood based boosting},
+  author	= {Harald Binder},
+  year		= {2006},
+  note		= {{R} package version 0.9-3},
+  url		= {http://CRAN.R-project.org}
+}
+
+@Manual{         pkg:boost,
+  title = {boost: Boosting Methods for Real and Simulated Data},
+  author = {Marcel Dettling},
+  year = {2006},
+  note = {R package version 1.0-0},
+  url = {http://CRAN.R-project.org}
+}
+
+@Manual{         pkg:lars,
+    title = {lars: Least Angle Regression, Lasso and Forward Stagewise},
+    author = {Trevor Hastie and Bradley Efron},
+    year = {2004},
+    note = {R package version 0.9-5},
+    url = {http://CRAN.R-project.org}
+}
+
 @Article{	  sauerbreietal2006,
   title		= {Multivariable regression model building by using
 		  fractional polynomials: {D}escription of {SAS}, {STATA} and
@@ -895,7 +1034,9 @@
 		  Royston},
   journal	= {Computational Statistics \& Data Analysis},
   year		= 2006,
-  note		= {in press}
+  volume        = 50,
+  number        = 12,
+  pages         = {3464-3485},
 }
 
 @Manual{	  r2006,
@@ -910,7 +1051,86 @@
 
 @article{BuhlmannHothorn06,
   author = {P. B{\"u}hlmann and T. Hothorn},
-  title = {Boosting: {A} Statistical Perspective},
+  title = {Boosting algorithms: regularization, prediction and model fitting},
   year = 2006,
-  note = {submitted manuscript}
+  note = {submitted manuscript},
+  url = {ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
+}
+
+@article{Sueltmannetal2005,   
+   author    = {H. S{\"u}ltmann and A. von Heydebreck and
+                W. Huber and R. Kuner and A. Bune{\ss}
+                and M. Vogt and B. Gunawan and M. Vingron
+                and L. F{\"u}zes{\'i} and A. Poustka},
+   title     = {Gene expression in kidney cancer is associated with novel
+                tumor subtypes, cytogenetic abnormalities and
+                metastasis formation},
+   journal   = {Clinical Cancer Research},
+   year      = {2005},
+   volume    = 11,
+   number = 2,
+   pages = {646-655},
+}
+
+@article{LiLuan2005,
+    author = {H. Li and Y. Luan},
+    title = {Boosting proportional hazards models using smoothing
+             splines, with applications to high-dimensional microarray data},
+    journal = {Bioinformatics},
+    volume = 21,
+    number = 10,
+    year = 2005,
+    pages = {2403-2409}
+}
+
+@article{MolinaroDudiotvdLaan2003,
+   key       = {394},
+   author    = {Annette M. Molinaro and Sandrine Dudoit and    
+       Mark J. van der Laan},
+   title     = {Tree-Based Multivariate Regression and Density Estimation
+       with Right-Censored Data},
+   year      = {2004},
+   journal   = {Journal of Multivariate Analysis},
+   pages    = {154-177},
+   volume   = {90},
+   number  = {1}
+}
+
+@Article{Hothorn:2006:Bioinformatics:16940323,
+  key = {576},
+  author = {Hothorn, T and B{\"u}hlmann, P},
+  title = {Model-based Boosting in High Dimensions},
+  journal = {Bioinformatics},
+  year = {2006},
+  volume = 22,  
+  number = 22,  
+  pmid = {16940323},
+  month = {Nov},
+  doi = {doi:10.1093/bioinformatics/btl462},
+  pages = {2828-2829}
+}
+
+@Article{Hothorn:2006:AmStat,
+  key = {575},  
+  author        = {Torsten Hothorn and Kurt Hornik and
+                   Mark A. van de Wiel and Achim Zeileis},
+  title         = {A {L}ego System for Conditional Inference},
+  journal       = {The American Statistician},
+  year          = {2006},
+  volume        = {60},
+  issue         = {3},
+  pages         = {257-263},
+  doi           = {10.1198/000313006X118430},
+  URL = {http://statmath.wu-wien.ac.at/~zeileis/papers/Hothorn+Hornik+VanDeWiel-2006.pdf}
+}
+
+@Article{McCaffreyRidgewayMorral2004,
+    author = {D. F. McCaffrey and G. Ridgeway and A. R.  G. Morral},
+    title = {Propensity score estimation with boosted regression for evaluating 
+             causal effects in observational studies},
+    journal = {Psychological Methods},
+    year = 2004,
+    volume = 9,
+    number = 4,
+    pages = {403-425}
 }

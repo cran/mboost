@@ -114,10 +114,15 @@ mdplot <- function(obs, pred, main = "", ...) {
          main, cex.axis = CEX, cex.main = CEX, cex.lab = CEX, ...)
     abline(h = 0, lty = 3)
 }
+@
 
+<<loaddata, echo = FALSE, results = tex>>=
 ### load data from internet. See `mboost/inst/datapreproc/readAML_Bullinger.R' for
 ### how the data were generated from the raw data.
-load(url("http://www.imbe.med.uni-erlangen.de/~hothorn/AML_Bullinger.rda", open = "r"))
+handle <- try(url("http://www.imbe.med.uni-erlangen.de/~hothorn/AML_Bullinger.rda", open = "r"))
+if (inherits(handle, "try-error"))
+    cat("Cannot download data from the net. This vignette needs a working internet connection. \n \\end{document} \n")
+load(handle)
 @
 
 \paragraph{Data preprocessing}

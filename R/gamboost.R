@@ -4,28 +4,22 @@
 ### smoothing splines
 ### 
 
-### hat matrix for smoothing splines
-hatMatTH <- function(x, w = NULL, df = 5) {
-    n <- NROW(x)
-    indx <- diag(n)
-    x <- signif(x, 10)
-    apply(indx, 2, function(y) 
-        predict(smoothbase(x = x, ux = unique(sort(x)), y = y, w = w, df = df),
-                x = x)$y)
-}
-
-predict.smooth.spline.fit <- stats:::predict.smooth.spline.fit
-
 ### Fitting function
-gamboost_fit <- function(object, dfbase = 4, family = GaussReg(), 
+gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"), 
+                         dfbase = 4, family = GaussReg(), 
                          control = boost_control(), weights = NULL) {
+
+    baselearner <- match.arg(baselearner)
 
     ### data
     x <- object$x
     if (control$center) {
         x <- object$center(x)
-        object$x <- x
+        ### object$x <- x
     }
+
+    vars <- unique(object$assign)
+
     y <- object$yfit
     check_y_family(object$y, family)
     if (is.null(weights)) {
@@ -37,8 +31,8 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
             stop(sQuote("weights"), " is not of length ", NROW(y))
     }
 
-    if (length(dfbase) == 1) dfbase <- rep(dfbase, ncol(x))
-    if (length(dfbase) != ncol(x)) 
+    if (length(dfbase) == 1) dfbase <- rep(dfbase, length(vars))
+    if (length(dfbase) != length(vars)) 
         stop("length of ", sQuote("dfbase"), 
              " does not equal the number of covariates")
 
@@ -75,9 +69,18 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
     fit <- offset <- family@offset(y, weights)
     u <- ustart <- ngradient(y, fit, weights)
 
-    xs <- signif(x, 10)
-    ux <- vector(mode = "list", length = ncol(x))
-    for (i in 1:ncol(x)) ux[[i]] <- unique(sort(xs[,i]))
+    ### dpp
+    fitfct <- vector(mode = "list", length = length(vars))
+    for (i in 1:length(vars)) {
+        xj <- x[,object$assign == vars[i]]
+        if (dfbase[i] == 0) next
+        intfact <- vars[i] == 0 || object$classes[vars[i]] != "numeric"
+        if (intfact || length(unique(xj)) < 5) {
+            fitfct[[i]] <- ols()(xj, weights)
+            next
+        }
+        fitfct[[i]] <- do.call(baselearner, list(df = dfbase[i]))(xj, weights)
+    }
 
     ### start boosting iteration
     for (m in 1:mstop) {
@@ -85,11 +88,10 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
         sums <- 0
         xselect <- 0
         ### fit least squares to residuals _componentwise_
-        for (i in (1:ncol(x))[dfbase > 0]) {
-            ss <- try(smoothbase(x = xs[,i], ux = ux[[i]], 
-                                 y = u, w = weights, df = dfbase[i]))
-            if (inherits(ss, "try-error")) next()
-            tsums <- sum((ss$yfit - u)^2)
+        for (i in (1:length(vars))[dfbase > 0]) {
+            ss <- try(fitfct[[i]](y = u))
+            if (inherits(ss, "try-error")) next
+            tsums <- sum((fitted(ss) - u)^2)
             if (tsums < sums || sums == 0) {
                 sums <- tsums
                 xselect <- i
@@ -101,7 +103,7 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
             stop("could not fit base learner in boosting iteration ", m)
 
         ### update step
-        fit <- fit + nu * basess$yfit
+        fit <- fit + nu * fitted(basess)
 
         ### L2 boost with constraints (binary classification)
         if (constraint)
@@ -109,6 +111,10 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
 
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit, weights)
+
+        ### check if learning is still possible
+        if (all(u < 0) || all(u > 0)) 
+            warning("All elements of the negative gradient vector have the same sign in iteration ", m, ".")
 
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)
@@ -159,15 +165,13 @@ gamboost_fit <- function(object, dfbase = 4, family = GaussReg(),
 
         lp <- offset
         for (m in 1:mstop)
-            lp <- lp + nu * predict(ensss[[m]], 
-                                    x = x[,ens[m,"xselect"]])$y
+            lp <- lp + nu * predict(ensss[[m]], newdata = x[,object$assign == vars[ens[m,]]])
         if (constraint) lp <- sign(lp) * pmin(abs(lp), 1)    
         return(lp)
     }
 
     ### function for computing hat matrices of individual predictors
-    RET$hat <- function(j) hatMatTH(x[,j,drop = FALSE],
-                                    w = weights, df = dfbase)
+    RET$hat <- function(j) hatvalues(ensss[[which(ens[,1] == j)[1]]])
 
     class(RET) <- c("gamboost", "gb")
     return(RET)
@@ -182,6 +186,9 @@ gamboost.formula <- function(formula, data = list(), weights = NULL, ...) {
 
     ### construct design matrix etc.
     object <- boost_dpp(formula, data, weights)
+
+    object$classes <- sapply(object$menv@get("input"), class)
+    object$assign <- attr(object$x, "assign")
 
     object$center <- function(xmat) { 
         cm <- colMeans(object$x)
@@ -212,6 +219,10 @@ gamboost.matrix <- function(x, y, weights = NULL, ...) {
     object <- gb_xyw(x, y, weights)
     object$center <- function(xmat) 
         scale(xmat, center = colMeans(x), scale = FALSE)
+    object$classes <- rep("numeric", ncol(x))
+    as <- attr(x, "assign")
+    object$assign <- as
+    if (is.null(as)) object$assign <- 1:ncol(x)
     gamboost_fit(object, ...)
 }
 

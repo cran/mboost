@@ -11,7 +11,8 @@
 \usage{
 \method{gamboost}{formula}(formula, data = list(), weights = NULL, ...)
 \method{gamboost}{matrix}(x, y, weights = NULL, ...)
-gamboost_fit(object, dfbase = 4, family = GaussReg(), 
+gamboost_fit(object, baselearner = c("ssp", "bsp", "ols"), 
+             dfbase = 4, family = GaussReg(), 
              control = boost_control(), weights = NULL)
 }
 \arguments{
@@ -22,6 +23,11 @@ gamboost_fit(object, dfbase = 4, family = GaussReg(),
   \item{x}{ design matrix.}
   \item{y}{ vector of responses. }
   \item{object}{ an object of class \code{boost_data}, see \code{\link{boost_dpp}}. }
+  \item{baselearner}{ an character specifying the component-wise base-learner to be used: 
+      \code{ssp} means smoothing splines, \code{bsp} B-splines (see \code{\link[splines]{bs}}
+      and \code{ols} means linear models. Please note that only 
+      the characteristics of component-wise smoothing
+      splines have been investigated theoretically and practically until now.}
   \item{dfbase}{ an integer vector giving the degrees of freedom for the smoothing 
                  spline, either globally for all variables (when its length is one)
                  or separately for each single covariate. }
@@ -56,7 +62,9 @@ gamboost_fit(object, dfbase = 4, family = GaussReg(),
   324--339.
 
   Peter Buhlmann and Torsten Hothorn (2006),
-  Boosting: A statistical perspective. Submitted manuscript.
+  Boosting algorithms: regularization, prediction and model fitting.
+  Submitted manuscript.                                     
+  \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }
 \examples{

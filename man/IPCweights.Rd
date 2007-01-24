@@ -35,7 +35,9 @@ IPCweights(x, maxweight = 5)
     \emph{Biostatistics} \bold{7}(3), 355--373.
 
     Peter Buhlmann and Torsten Hothorn (2006),
-    Boosting: A statistical perspective. Submitted manuscript.
+    Boosting algorithms: regularization, prediction and model fitting.
+    Submitted manuscript.                                     
+    \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }
 \keyword{survival}

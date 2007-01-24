@@ -155,3 +155,21 @@ pc3 <- predict(g)
 stopifnot(all.equal(pc1, pc2))
 stopifnot(all.equal(pc2, pc3))
 
+### Poisson models
+
+df <- data.frame(x1 = runif(100), x2 = runif(100))
+f <- -1 + 3 * df$x2
+df$y <- round(exp(f) )
+ctrl <- boost_control(mstop = 2000, nu = 0.1)
+
+gmod <- glm(y ~ x1 + x2, data = df, family = poisson())
+gbmod <- glmboost(y ~ x1 + x2, data = df, family = Poisson(), control = ctrl)
+
+llg <- logLik(gmod)
+attributes(llg) <- NULL
+stopifnot(all.equal(logLik(gbmod), llg))
+
+### hat matrix is only approximate!
+stopifnot(abs(AIC(gmod) - attr(AIC(gbmod, "classical"), "AIC")[mstop(gbmod)]) < 1)
+
+stopifnot(max(abs(predict(gmod) -  predict(gbmod))) < 1e-4)

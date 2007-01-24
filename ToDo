@@ -1,15 +1,8 @@
 
     o  use better colours
 
-    o  dfbase == 1 means fitting lm with intercept, can we work around?
-
     o  fire a warning when AIC is called in cases the hat matrix is
        meaningless
-
-    o  check AIC (& logLik) for glmboost with non-gaussian family 
-       (!!! Poisson !!!)
-
-    o  check cvrisk for blackboost & bodyfat
 
     o  update benchmarks in cache with cvrisk
 
@@ -27,10 +20,18 @@
 
     o  reweight generic?
 
-    o  check loss fuer Poisson!
-
     o  hatvalues + AIC geht so nur fuer GaussReg!
     o  hat matrices fuer GAMS (Hastie & Tib)
-    o  check hatvalues, hatmatrix for boosting with non-gaussian family
 
     o  weighted median for offset in Huber / Laplace, see Hmisc:::wtd.quantile
+
+    o  boost_control(trace = FALSE) implementieren
+
+    o  family@check_y part of family objects
+
+    o  AIC(..., "corrected") monoton steigend???
+
+    o  need party?
+
+    o  better separation of dpp and fitting (response updates in blackboost
+       and centering in gamboost / glmboost)

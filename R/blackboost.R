@@ -13,15 +13,15 @@ blackboost_fit <- function(object, tree_controls,
 
     ### number of observations in the learning sample
     ### make sure this gets _copied_
-    tmp <- .Call("copymem",  object@responses, package = "mboost")
-    y <- .Call("copymem", party:::get_variables(object@responses)[[1]], 
+    obj <- .Call("copymem",  object, package = "mboost")
+    y <- .Call("copymem", party:::get_variables(obj@responses)[[1]], 
                package = "mboost")
     check_y_family(y, family)
     if (is.factor(y)) {
         y <- (2 * (as.numeric(y) - 1)) - 1
-        object@responses <- party:::initVariableFrame(data.frame(y = y), NULL)
+        obj@responses <- party:::initVariableFrame(data.frame(y = y), NULL)
     }
-    if (is.null(weights)) weights <- object@weights
+    if (is.null(weights)) weights <- obj@weights
     storage.mode(weights) <- "double"
     oobweights <- as.numeric(weights == 0)
 
@@ -49,16 +49,16 @@ blackboost_fit <- function(object, tree_controls,
     fit <- offset <- family@offset(y, weights)
     u <- ustart <- ngradient(y, fit, weights)
 
-    where <- rep(1, object@nobs)
+    where <- rep(1, obj@nobs)
     storage.mode(where) <- "integer"
 
     ### start boosting iteration
     for (m in 1:mstop) {
   
         ### fit tree to residuals
-        .Call("R_modify_response", as.double(u), object@responses, 
+        .Call("R_modify_response", as.double(u), obj@responses, 
               PACKAGE = "party")
-        ens[[m]] <- .Call("R_TreeGrow", object, weights, fitmem, tree_controls,
+        ens[[m]] <- .Call("R_TreeGrow", obj, weights, fitmem, tree_controls,
                           where, PACKAGE = "party")
 
         ### check if first node is terminal, i.e., if at least 
@@ -69,7 +69,7 @@ blackboost_fit <- function(object, tree_controls,
 
         ### update step
         if (risk == "oobag")
-            where <- .Call("R_get_nodeID", ens[[m]], object@inputs, 0.0,
+            where <- .Call("R_get_nodeID", ens[[m]], obj@inputs, 0.0,
                            PACKAGE = "party")
         fit <- fit + nu * unlist(.Call("R_getpredictions", ens[[m]], where, 
                                        PACKAGE = "party"))
@@ -80,6 +80,10 @@ blackboost_fit <- function(object, tree_controls,
 
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit, weights)
+
+        ### check if learning is still possible
+        if (all(u < 0) || all(u > 0)) 
+            warning("All elements of the negative gradient vector have the same sign in iteration ", m, ".")
 
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)
@@ -105,7 +109,6 @@ blackboost_fit <- function(object, tree_controls,
                 tree_controls = tree_controls
     )
 
-    object@responses <- tmp
     ### save learning sample
     if (control$savedata) RET$data <- object
 
