@@ -72,6 +72,12 @@ check_y_family <- function(y, family) {
             stop("response is not an object of class ", sQuote("Surv"), 
                  " but ", sQuote("family = CoxPH()"))
     }
+    if (isTRUE(all.equal(attributes(family), 
+                  attributes(Poisson())))) {
+        if (any(y < 0) || any((y - round(y)) > 0))
+            stop("response is not an integer variable but ", 
+                 sQuote("family = Poisson()"))
+    }
 }
 
 ### check for negative gradient corresponding to L2 loss
@@ -102,13 +108,15 @@ gm.gamboost <- function(object) {
 
     mstop <- nrow(object$ensemble)
     x <- object$data$x
+    as <- attr(x, "assign")
+    vars <- unique(as)
     RET <- matrix(0, nrow = NROW(x), ncol = mstop)
     nu <- object$control$nu
 
     jsel <- object$ensemble[,"xselect"]
 
     for (m in 1:mstop)
-        RET[,m] <- nu * predict(object$ensembless[[m]], x[,jsel[m]])$y
+        RET[,m] <- nu * predict(object$ensembless[[m]], newdata = x[,as == vars[jsel[m]]])
 
     RET[,1] <- RET[,1] + object$offset
 
@@ -119,6 +127,8 @@ gm.gamboost <- function(object) {
 gamplot <- function(object) {
 
      x <- object$data$x
+     as <- attr(x, "assign")
+     vars <- unique(as)
      lp <- matrix(0, ncol = NCOL(x), nrow = NROW(x))
      ens <- object$ensemble
      ensss <- object$ensembless
@@ -127,7 +137,7 @@ gamplot <- function(object) {
      for (m in 1:mstop) {
          xselect <- ens[m,"xselect"]
          lp[,xselect] <- lp[,xselect] + nu * predict(ensss[[m]], 
-                                     x = x[,xselect])$y
+                                     newdata = x[,as == vars[xselect]])
      }
      colnames(lp) <- colnames(x)
      lp
@@ -403,6 +413,7 @@ smoothbase <- function(x, ux, y, w, df) {
     }
     fit.object
 }
+
 
 predict.lmfit <- function(object, x) {
     if (length(object$coef) == 2)

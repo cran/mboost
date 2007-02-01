@@ -13,7 +13,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     x <- object$x
     if (control$center) {
         x <- object$center(x)
-        object$x <- x
+        ### object$x <- x
     }
     y <- object$yfit
     check_y_family(object$y, family)
@@ -87,6 +87,10 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
 
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit, weights)
+
+        ### check if learning is still possible
+        if (all(u < 0) || all(u > 0))
+            warning("All elements of the negative gradient vector have the same sign in iteration ", m, ".")
 
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)

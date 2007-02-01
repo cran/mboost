@@ -37,25 +37,26 @@ cvrisk(object, folds, grid = floor(seq(from = floor(mstop(object)/10),
   of bootstrap iterations. \code{plot} and \code{print} methods
   are available as well as a \code{mstop} methods.
 }
+\references{
+
+  Torsten Hothorn, Friedrich Leisch, Achim Zeileis and Kurt Hornik (2006),
+  The Design and Analysis of Benchmark Experiments.
+  \emph{Journal of Computational and Graphical Statistics} \bold{14}(3), 
+  675--699.
+}
 \examples{
 
   data("bodyfat", package = "mboost")
-  tbodyfat <- bodyfat
- 
-  indep <- names(tbodyfat)[-2]  
-  tbodyfat[indep] <- lapply(bodyfat[indep], function(x)
-        x <- x - mean(x)
-  )
   
   ### fit linear model to data
-  model <- glmboost(DEXfat ~ ., data = tbodyfat, 
-                    control = boost_control(mstop = 100))
+  model <- glmboost(DEXfat ~ ., data = bodyfat, 
+                    control = boost_control(center = TRUE))
 
   ### AIC-based selection of number of boosting iterations
   AIC(model)
 
   ### 10-fold cross-validation
-  n <- nrow(tbodyfat)
+  n <- nrow(bodyfat)
   k <- 10
   ntest <- floor(n / k)
   cv10f <- matrix(c(rep(c(rep(0, ntest), rep(1, n)), k - 1), 
@@ -66,6 +67,7 @@ cvrisk(object, folds, grid = floor(seq(from = floor(mstop(object)/10),
   plot(cvm)
 
   ### 25 bootstrap iterations
+  set.seed(290875)
   bs25 <- rmultinom(25, n, rep(1, n)/n)
   cvm <- cvrisk(model, folds = bs25)
   print(cvm)
@@ -74,7 +76,7 @@ cvrisk(object, folds, grid = floor(seq(from = floor(mstop(object)/10),
   layout(matrix(1:2, ncol = 2))
   plot(cvm)
 
-  ### there seems to be some nonlinearity involved ...
+  ### trees
   blackbox <- blackboost(DEXfat ~ ., data = bodyfat)
   cvtree <- cvrisk(blackbox, folds = bs25)
   plot(cvtree)

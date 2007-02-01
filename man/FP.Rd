@@ -34,9 +34,6 @@ FP(x, p = c(-2, -1, -0.5, 0.5, 1, 2, 3))
     diagnostic models: transformation of the predictors by using fractional polynomials. 
     \emph{Journal of the Royal Statistical Society A}, \bold{162}, 71--94.
 
-    Peter Buhlmann and Torsten Hothorn (2006),
-    Boosting: A statistical perspective. Submitted manuscript.
-
 }
 \examples{
 

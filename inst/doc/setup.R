@@ -9,7 +9,7 @@ cat("\n\n\t%%%% DON'T EDIT THIS FILE\n\n")
 options(prompt = "R> ", width = 60, continue = "     ", digits = 5)
 if (!file.exists("figures"))
     dir.create("figures")
-cat("\\setkeys{Gin}{width = 0.97\\textwidth}")
+cat("\\setkeys{Gin}{width = 0.95\\textwidth}")
 set.seed(290875)
 
 perfplot <- function(x, grid, alpha = NULL, border = 1, 

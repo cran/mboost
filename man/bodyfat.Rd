@@ -50,7 +50,9 @@
     \bold{13}(3), 626--634.
 
     Peter Buhlmann and Torsten Hothorn (2006),
-    Boosting: A statistical perspective. Submitted manuscript.
+    Boosting algorithms: regularization, prediction and model fitting.
+    Submitted manuscript.                                     
+    \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }
 \examples{

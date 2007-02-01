@@ -74,8 +74,8 @@ Binomial <- function()
 ### Poisson
 Poisson <- function()
     Family(ngradient = function(y, f, w = 1) y - exp(f),
-           loss = function(y, f) -y*f + exp(f),
-           offset = weighted.mean,
+           loss = function(y, f) -dpois(y, exp(f), log = TRUE),
+           offset = function(y, w) log(weighted.mean(y, w)),
            name = "Poisson Likelihood")
 
 ### L1Huber
