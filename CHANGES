@@ -1,4 +1,9 @@
 
+		CHANGES in `mboost' VERSION 0.5-0 (2007-02-02)
+
+  o  depends party 0.9-9
+
+
 		CHANGES in `mboost' VERSION 0.5-0 (2007-01-30)
 
   o  new `baselearner' argument to `gamboost' allowing to
