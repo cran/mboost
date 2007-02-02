@@ -19,7 +19,7 @@ blackboost_fit <- function(object, tree_controls,
     check_y_family(y, family)
     if (is.factor(y)) {
         y <- (2 * (as.numeric(y) - 1)) - 1
-        obj@responses <- party:::initVariableFrame(data.frame(y = y), NULL)
+        obj@responses <- party:::initVariableFrame(data.frame(y = y), NULL, response = TRUE)
     }
     if (is.null(weights)) weights <- obj@weights
     storage.mode(weights) <- "double"
