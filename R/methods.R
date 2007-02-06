@@ -137,8 +137,14 @@ plot.gbAIC <- function(x, y = NULL, ...) {
          ylab = ifelse(attr(x, "corrected"), "Corrected AIC", "AIC"),
          type = "l", ...)
     points(mstop, x)
+    ylim <- list(...)$ylim
+    if (!is.null(ylim)) {
+        ymin <- ylim[1] * ifelse(ylim[1] < 0, 2, 0.5)
+    } else {
+        ymin <- x - x/2
+    }
     lines(c(mstop, mstop), 
-          c(x - x/2, x), lty = 2)
+          c(ymin, x), lty = 2)
 }
 
 mstop <- function(object, ...) UseMethod("mstop")

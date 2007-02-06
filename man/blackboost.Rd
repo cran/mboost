@@ -1,5 +1,7 @@
 \name{blackboost}
 \alias{blackboost}
+\alias{blackboost.formula}
+\alias{blackboost.matrix}
 \alias{blackboost_fit}
 \title{ Gradient Boosting with Regression Trees }
 \description{
@@ -7,12 +9,14 @@
   trees are utilized as base learners.
 }
 \usage{
-blackboost(formula, data = list(), weights = NULL, 
-    tree_controls = ctree_control(teststat = "max",
-        testtype = "Teststatistic",
-        mincriterion = 0,
-        maxdepth = 2), ...)
-blackboost_fit(object, tree_controls, fitmem, family = GaussReg(), 
+\method{blackboost}{formula}(formula, data = list(), weights = NULL, ...)
+\method{blackboost}{matrix}(x, y, weights = NULL, ...)
+blackboost_fit(object, tree_controls = 
+    ctree_control(teststat = "max",
+                  testtype = "Teststatistic",
+                  mincriterion = 0,
+                  maxdepth = 2),
+    fitmem = ctree_memory(object, TRUE), family = GaussReg(), 
     control = boost_control(), weights = NULL)
 }
 \arguments{
@@ -20,6 +24,8 @@ blackboost_fit(object, tree_controls, fitmem, family = GaussReg(),
   \item{data}{ a data frame containing the variables in the model. }
   \item{weights}{ an optional vector of weights to be used in the fitting
                   process. }
+  \item{x}{ design matrix. }
+  \item{y}{ vector of responses. }
   \item{object}{ an object of class \code{boost_data}, see \code{\link{boost_dpp}}. }
   \item{tree_controls}{ an object of class \code{\link[party]{TreeControl}}, which can be
                   obtained using \code{\link[party]{ctree_control}}. 

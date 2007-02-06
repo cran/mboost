@@ -61,7 +61,9 @@ glmboost_fit(object, family = GaussReg(),
   \emph{The Annals of Statistics}, \bold{34}.
 
   Peter Buhlmann and Torsten Hothorn (2006),
-  Boosting: A statistical perspective. Submitted manuscript.
+  Boosting algorithms: regularization, prediction and model fitting.
+  Submitted manuscript.
+  \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }
 \examples{

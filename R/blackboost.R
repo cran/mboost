@@ -6,7 +6,11 @@
 
 
 ### Fitting function
-blackboost_fit <- function(object, tree_controls,
+blackboost_fit <- function(object, 
+                           tree_controls = ctree_control(teststat = "max",
+                               testtype = "Teststatistic",
+                               mincriterion = 0,
+                               maxdepth = 2),
                            fitmem = ctree_memory(object, TRUE), 
                            family = GaussReg(), control = boost_control(), 
                            weights = NULL) {
@@ -81,10 +85,6 @@ blackboost_fit <- function(object, tree_controls,
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit, weights)
 
-        ### check if learning is still possible
-        if (all(u < 0) || all(u > 0)) 
-            warning("All elements of the negative gradient vector have the same sign in iteration ", m, ".")
-
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)
         if (risk == "inbag") mrisk[m] <- riskfct(y, fit, weights)
@@ -115,12 +115,7 @@ blackboost_fit <- function(object, tree_controls,
     ### prediction function (linear predictor only)
     RET$predict <- function(newdata = NULL, mstop = mstop, ...) {
 
-        if (is.null(newdata)) {
-            newinp <- object@inputs
-        } else {
-            newinp <- object@menv@get("input", data = newdata)
-            newinp <- party:::initVariableFrame(newinp, trafo = NULL)
-        }
+        newinp <- party:::newinputs(object, newdata)
 
         p <- offset
         for (m in 1:mstop) {
@@ -163,19 +158,29 @@ predict.blackboost <- function(object, newdata = NULL,
     return(lp)
 }
 
-blackboost <- function(formula, data = list(), weights = NULL, 
-                      tree_controls = ctree_control(teststat = "max",
-                          testtype = "Teststatistic",
-                          mincriterion = 0,
-                          maxdepth = 2), ...) {
+blackboost <- function(x, ...) UseMethod("blackboost")
+
+blackboost.formula <- function(formula, data = list(), weights = NULL, ...) {
 
     ### construct design matrix etc.
     object <- party:::ctreedpp(formula, data, ...)
     fitmem <- ctree_memory(object, TRUE)
 
     ### fit the ensemble
-    RET <- blackboost_fit(object, tree_controls = tree_controls, 
-                         fitmem = fitmem, weights = weights, ...)
+    RET <- blackboost_fit(object, fitmem = fitmem, weights = weights, ...)
+
+    RET$call <- match.call()
+
+    return(RET)
+}
+
+blackboost.matrix <- function(x, y, weights = NULL, ... ) {
+
+    object <- party:::LearningSample(object = x, response = y)
+    fitmem <- ctree_memory(object, TRUE)
+
+    ### fit the ensemble
+    RET <- blackboost_fit(object, fitmem = fitmem, weights = weights, ...)
 
     RET$call <- match.call()
 

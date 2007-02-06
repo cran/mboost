@@ -112,10 +112,6 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit, weights)
 
-        ### check if learning is still possible
-        if (all(u < 0) || all(u > 0)) 
-            warning("All elements of the negative gradient vector have the same sign in iteration ", m, ".")
-
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)
         if (risk == "inbag") mrisk[m] <- riskfct(y, fit, weights)
@@ -223,7 +219,9 @@ gamboost.matrix <- function(x, y, weights = NULL, ...) {
     as <- attr(x, "assign")
     object$assign <- as
     if (is.null(as)) object$assign <- 1:ncol(x)
-    gamboost_fit(object, ...)
+    RET <- gamboost_fit(object, ...)
+    RET$call <- match.call()
+    return(RET)
 }
 
 
