@@ -1,6 +1,6 @@
 
-R version 2.4.1 (2006-12-18)
-Copyright (C) 2006 The R Foundation for Statistical Computing
+R version 2.5.0 Under development (unstable) (2007-02-26 r40806)
+Copyright (C) 2007 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -110,4 +110,14 @@ Iter   TrainDeviance   ValidDeviance   StepSize   Improve
 
 [1] 2.753747
 There were 28 warnings (use warnings() to see them)
+> 
+> ### check different interfaces
+> data("iris")
+> x <- as.matrix(iris[,colnames(iris) != "Species"])
+> y <- iris$Species
+> p1 <- predict(blackboost(x = x, y = y), newdata = x)
+> p2 <- predict(blackboost(Species ~ ., data = iris), newdata = iris)
+> stopifnot(identical(abs(max(p1 - p2)), 0))
+> 
+> 
 > 

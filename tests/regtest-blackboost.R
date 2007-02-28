@@ -38,3 +38,13 @@ if (!inherits(tst, "try-error")) {
     stopifnot(ae < be)
     }
 }
+
+### check different interfaces
+data("iris")
+x <- as.matrix(iris[,colnames(iris) != "Species"])
+y <- iris$Species
+p1 <- predict(blackboost(x = x, y = y), newdata = x)
+p2 <- predict(blackboost(Species ~ ., data = iris), newdata = iris)
+stopifnot(identical(abs(max(p1 - p2)), 0))
+
+

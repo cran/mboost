@@ -61,8 +61,11 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     ### and standardized input variables
     xw <- x * weights
     xtx <- colSums(x^2 * weights)
+    sxtx <- sqrt(xtx)
     MPinv <- (1 / xtx) * t(xw)
     MPinvS <- (1 / sqrt(xtx)) * t(xw)
+    if (all(is.na(MPinv)) || all(is.na(MPinvS)))
+        warning("cannot compute column-wise inverses of design matrix")
 
     fit <- offset <- family@offset(y, weights)
     u <- ustart <- ngradient(y, fit, weights)
@@ -73,10 +76,10 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
         ### fit least squares to residuals _componentwise_, i.e.,
         ### compute regression coefficients for each _standardized_
         ### input variable and select the best variable
-        xselect <- which.max(abs(MPinvS %*% u))
+        xselect <- which.max(abs(mu <- MPinvS %*% u))
 
         ### estimate regression coefficient (not standardized)
-        coef <- MPinv[xselect,] %*% u
+        coef <- mu[xselect] / sxtx[xselect] ### was: MPinv[xselect,] %*% u
 
         ### update step
         fit <- fit + (nu * coef) * x[,xselect]
@@ -87,10 +90,6 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
 
         ### negative gradient vector, the new `residuals'
         u <- ngradient(y, fit, weights)
-
-        ### check if learning is still possible
-        if (all(u < 0) || all(u > 0))
-            warning("All elements of the negative gradient vector have the same sign in iteration ", m, ".")
 
         ### evaluate risk, either for the learning sample (inbag)
         ### or the test sample (oobag)
@@ -189,7 +188,9 @@ glmboost.matrix <- function(x, y, weights = NULL, ...) {
     object <- gb_xyw(x, y, weights)
     object$center <- function(xmat) 
         scale(xmat, center = colMeans(x), scale = FALSE)
-    glmboost_fit(object, ...)
+    RET <- glmboost_fit(object, ...)
+    RET$call <- match.call()
+    return(RET)
 }
 
 ### methods: coefficients
