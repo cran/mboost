@@ -415,8 +415,9 @@ smoothbase <- function(x, ux, y, w, df) {
 }
 
 
-predict.lmfit <- function(object, x) {
+predict.lmfit <- function(object, newdata) {
+    x <- newdata
     if (length(object$coef) == 2)
-        return(list(y = cbind(1, x) %*% object$coef))
-    return(list(y = x * object$coef))
+        return(as.vector(cbind(1, x) %*% object$coef))
+    return(as.vector(x * object$coef))
 }

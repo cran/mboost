@@ -16,6 +16,14 @@ ssp <- function(df = 4) {
 
         fit <- function(y) {
             ret <- smoothbase(x = xs, ux = ux, y = y, w = weights, df = df)
+            if (df == 1) {
+                ret$hatvalues <- function() {
+                    if (length(ret$coef) == 1) return(xs %*% t(xs) / sum(xs^2))
+                    X <- cbind(1, xs)
+                    X %*% solve(t(X) %*% X) %*% t(X)
+                }
+                return(ret)
+            }
             ret$hatvalues <- function()
                 hatMatTH(x = x, w = weights, df = df)
             class(ret) <- "ssp"
@@ -33,6 +41,9 @@ predict.ssp <- function(object, newdata, ...)
     stats:::predict.smooth.spline.fit(object, x = newdata, ...)$y
 
 hatvalues.ssp <- function(model, ...)
+    model$hatvalues()
+
+hatvalues.lmfit <- function(model, ...)
     model$hatvalues()
 
 bsp <- function(df = 4) {

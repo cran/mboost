@@ -59,12 +59,12 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     ### for each _column_ of the design matrix x, compute the corresponding
     ### Moore-Penrose inverse (which is a scalar in this case) for the raw
     ### and standardized input variables
-    xw <- x * weights
+    xw <- t(x * weights)
     xtx <- colSums(x^2 * weights)
     sxtx <- sqrt(xtx)
-    MPinv <- (1 / xtx) * t(xw)
-    MPinvS <- (1 / sqrt(xtx)) * t(xw)
-    if (all(is.na(MPinv)) || all(is.na(MPinvS)))
+    ### MPinv <- (1 / xtx) * xw
+    MPinvS <- (1 / sxtx) * xw
+    if (all(is.na(MPinvS)))
         warning("cannot compute column-wise inverses of design matrix")
 
     fit <- offset <- family@offset(y, weights)
@@ -79,7 +79,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
         xselect <- which.max(abs(mu <- MPinvS %*% u))
 
         ### estimate regression coefficient (not standardized)
-        coef <- mu[xselect] / sxtx[xselect] ### was: MPinv[xselect,] %*% u
+        coef <- mu[xselect] / sxtx[xselect]
 
         ### update step
         fit <- fit + (nu * coef) * x[,xselect]
@@ -114,8 +114,9 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
                 response = y, 		### the response variable
                 weights = weights,	### weights used for fitting
                 update = updatefun,	### a function for fitting with new weights
-                MPinv = MPinv 		### Moore-Penrose inverse of x
+                MPinv = MPinvS / sxtx	### Moore-Penrose inverse of x
     )
+
     ### save learning sample
     if (control$savedata) RET$data <- object
     class(RET) <- c("glmboost", "gb")
@@ -143,7 +144,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
         return(drop(lp))
     }
     ### function for computing hat matrices of individual predictors
-    RET$hat <- function(j) x[,j] %*% MPinv[j, ,drop = FALSE]
+    RET$hat <- function(j) x[,j] %*% RET$MPinv[j, ,drop = FALSE]
 
     return(RET)
 }

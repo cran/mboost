@@ -57,3 +57,13 @@ bf_glm_2 <- glmboost(bffm, data = bodyfat, control = boost_control(center = TRUE
 cv2 <- cvrisk(bf_glm_2, folds = bs)
 
 stopifnot(mstop(cv1) == mstop(cv2))
+
+### dfbase=1 was not working correctly for ssp
+### spotted by Matthias Schmid <Matthias.Schmid@imbe.imed.uni-erlangen.de>
+data("bodyfat", package = "mboost")
+ctrl <- boost_control(mstop = 100, center = TRUE)
+ga <- gamboost(DEXfat ~ ., data = bodyfat, dfbase = 1, control = ctrl)
+gl <- glmboost(DEXfat ~ ., data = bodyfat, control = ctrl)
+stopifnot(max(abs(predict(ga) - predict(gl))) < 1e-8)
+AIC(gl)
+
