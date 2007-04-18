@@ -148,9 +148,9 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
 
         if (!is.null(newdata)) {
             if (is.null(object$menv)) {
-                if (!is.matrix(newdata) || any(dim(newdata) != dim(x)))
-                    stop(sQuote("newdata"), " is not a matrix with dimensions ",
-                         dim(x))
+                if (!is.matrix(newdata) || ncol(newdata) != ncol(x))
+                    stop(sQuote("newdata"), " is not a matrix with ", ncol(x),
+                         "columns")
                 x <- newdata
             } else {
                 mf <- object$menv@get("input", data = newdata)

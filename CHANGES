@@ -1,4 +1,13 @@
 
+		CHANGES in `mboost' VERSION 0.5-4 (2007-04-18)
+
+  o  plot() method for `glmboost' objects visualizing the
+     coefficient path (feature request by Axel Benner <benner@dkfz.de>).
+
+  o  predict(newdata = <matrix>) was broken for gamboost(), 
+     thanks to Max Kuhn <Max.Kuhn@pfizer.com> for spotting this.
+
+
 		CHANGES in `mboost' VERSION 0.5-3 (2007-03-23)
 
   o  predict() for gamboost(..., dfbase = 1) was not working correctly

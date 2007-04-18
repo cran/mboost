@@ -54,7 +54,13 @@ cvrisk(object, folds,
                     control = boost_control(center = TRUE))
 
   ### AIC-based selection of number of boosting iterations
-  AIC(model)
+  maic <- AIC(model)
+  maic
+
+  ### inspect coefficient path and AIC-based stopping criterion
+  par(mai = par("mai") * c(1, 1, 1, 1.8))
+  plot(model)
+  abline(v = mstop(maic), col = "lightgray")
 
   ### 10-fold cross-validation
   n <- nrow(bodyfat)

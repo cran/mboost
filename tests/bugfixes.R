@@ -67,3 +67,9 @@ gl <- glmboost(DEXfat ~ ., data = bodyfat, control = ctrl)
 stopifnot(max(abs(predict(ga) - predict(gl))) < 1e-8)
 AIC(gl)
 
+### prediction with matrices was broken for gamboost,
+### spotted by <Max.Kuhn@pfizer.com>
+x <- matrix(rnorm(1000), ncol = 10)
+y <- rnorm(100)
+fit <- gamboost(x = x, y = y, control = boost_control(mstop = 10))
+a <- predict(fit, newdata = x[1:10,])

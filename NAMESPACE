@@ -12,6 +12,7 @@ exportClasses("boost_family")
 exportMethods("show")
 
 S3method(print, glmboost)
+S3method(plot, glmboost)
 S3method(glmboost, formula)
 S3method(glmboost, matrix)
 S3method(gamboost, formula)

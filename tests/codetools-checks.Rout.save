@@ -1,5 +1,5 @@
 
-R version 2.5.0 Under development (unstable) (2007-02-26 r40806)
+R version 2.5.0 beta (2007-04-10 r41119)
 Copyright (C) 2007 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
@@ -22,14 +22,6 @@ Type 'q()' to quit R.
 +     print(checkUsagePackage("mboost"))
 + }
 Loading required package: codetools
-
-Attaching package: 'codetools'
-
-
-	The following object(s) are masked from package:base :
-
-	 callCC 
-
 Loading required package: modeltools
 Loading required package: stats4
 Loading required package: party

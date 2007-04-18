@@ -1,5 +1,5 @@
 
-R version 2.5.0 Under development (unstable) (2007-03-06 r40817)
+R version 2.5.0 beta (2007-04-10 r41119)
 Copyright (C) 2007 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
@@ -119,4 +119,10 @@ Loading required package: colorspace
 Optimal number of boosting iterations: 45 
 Degrees of freedom (for mstop = 45): 1.917234 
 > 
+> ### prediction with matrices was broken for gamboost,
+> ### spotted by <Max.Kuhn@pfizer.com>
+> x <- matrix(rnorm(1000), ncol = 10)
+> y <- rnorm(100)
+> fit <- gamboost(x = x, y = y, control = boost_control(mstop = 10))
+> a <- predict(fit, newdata = x[1:10,])
 > 

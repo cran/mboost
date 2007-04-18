@@ -35,3 +35,6 @@
 
     o  better separation of dpp and fitting (response updates in blackboost
        and centering in gamboost / glmboost)
+
+    o  look at coffee dataset
+       http://sensor.ing.unibs.it/_people/pardo/dataset.html
