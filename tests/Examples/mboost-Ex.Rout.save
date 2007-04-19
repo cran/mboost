@@ -1,5 +1,5 @@
 
-R version 2.5.0 Under development (unstable) (2007-02-26 r40806)
+R version 2.5.0 beta (2007-04-10 r41119)
 Copyright (C) 2007 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
@@ -346,10 +346,16 @@ Loss function: abs(y - f)
 +                     control = boost_control(center = TRUE))
 > 
 >   ### AIC-based selection of number of boosting iterations
->   AIC(model)
+>   maic <- AIC(model)
+>   maic
 [1] 3.352738
 Optimal number of boosting iterations: 45 
 Degrees of freedom (for mstop = 45): 1.917234 
+> 
+>   ### inspect coefficient path and AIC-based stopping criterion
+>   par(mai = par("mai") * c(1, 1, 1, 1.8))
+>   plot(model)
+>   abline(v = mstop(maic), col = "lightgray")
 > 
 >   ### 10-fold cross-validation
 >   n <- nrow(bodyfat)
@@ -407,6 +413,7 @@ Warning: no admissible split found
 > 
 > 
 > 
+> graphics::par(get("par.postscript", pos = 'CheckExEnv'))
 > cleanEx(); nameEx("gamboost");
 > ### * gamboost
 > 
@@ -475,6 +482,7 @@ Degrees of freedom (for mstop = 25): 4.563027
 > ### Name: glmboost
 > ### Title: Gradient Boosting with Component-wise Linear Models
 > ### Aliases: glmboost glmboost.formula glmboost.matrix glmboost_fit
+> ###   plot.glmboost
 > ### Keywords: models regression
 > 
 > ### ** Examples
@@ -518,6 +526,7 @@ attr(,"offset")
  -17.579095    3.932409 
 > 
 >     ### plot fit
+>     layout(matrix(1:2, ncol = 2))
 >     plot(dist ~ speed, data = cars)
 >     lines(cars$speed, predict(cars.gb), col = "red")
 > 
@@ -565,9 +574,14 @@ attr(,"offset")
 >     legend("topleft", col = c("red", "green", "blue"), lty = 1,
 +            legend = c("Gaussian", "Laplace", "Huber"), bty = "n")
 > 
+>     ### plot coefficient path of glmboost
+>     par(mai = par("mai") * c(1, 1, 1, 2.5))
+>     plot(cars.gb)
 > 
 > 
 > 
+> 
+> graphics::par(get("par.postscript", pos = 'CheckExEnv'))
 > cleanEx(); nameEx("methods");
 > ### * methods
 > 
@@ -679,7 +693,7 @@ attr(,"offset")
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  15.569 0.104 15.841 0 0 
+Time elapsed:  18.749 0.116 19.361 0 0 
 > grDevices::dev.off()
 null device 
           1 

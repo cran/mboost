@@ -207,6 +207,24 @@ coef.glmboost <- function(object, ...) {
     RET
 }
 
+### coef path
+coefpath <- function(object, ...) UseMethod("coefpath")
+coefpath.glmboost <- function(object, ...) {
+
+    vars <- colnames(object$data$x)
+    xselect <- object$ensemble[,"xselect"]
+    svars <- vars[tabulate(xselect) > 0]
+    ret <- matrix(0, nrow = mstop(object), ncol = length(svars))
+    colnames(ret) <- svars
+    for (j in unique(xselect)) {
+        indx <- which(xselect == j)
+        ret[indx, svars[svars == vars[j]]] <- 
+            object$ensemble[indx, "coef"]
+    }
+    RET <- ret * object$control$nu
+    apply(RET, 2, cumsum)
+}
+
 ### methods: hatvalues. 
 hatvalues.glmboost <- function(model, ...) {
 
@@ -241,4 +259,19 @@ print.glmboost <- function(x, ...) {
     print(cf)
     cat("\n")
     invisible(x)
+}
+
+plot.glmboost <- function(x, main = deparse(x$call), 
+                          col = NULL, ...) {
+
+    cp <- coefpath(x)
+    cp <- cp[,order(cp[nrow(cp),])]
+    if (is.null(col))
+        col <- hcl(h = seq(0, 270, length = ncol(cp)), c = 90, l = 70)
+    matplot(cp, type = "l", lty = 1, xlab = "Number of boosting iterations", 
+            ylab = "Coefficients", main = main, col = col, ...)
+    abline(h = 0, lty = 1, col = "lightgray")
+    axis(4, at = cp[nrow(cp),], labels = colnames(cp), 
+         las = 1)
+    
 }

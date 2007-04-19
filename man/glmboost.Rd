@@ -3,6 +3,7 @@
 \alias{glmboost.formula}
 \alias{glmboost.matrix}
 \alias{glmboost_fit}
+\alias{plot.glmboost}
 \title{ Gradient Boosting with Component-wise Linear Models }
 \description{
   Gradient boosting for optimizing arbitrary loss functions where component-wise
@@ -14,6 +15,7 @@
 \method{glmboost}{matrix}(x, y, weights = NULL, ...)
 glmboost_fit(object, family = GaussReg(), 
              control = boost_control(), weights = NULL)
+\method{plot}{glmboost}(x, main = deparse(x$call), col = NULL, ...)
 }
 \arguments{
   \item{formula}{ a symbolic description of the model to be fit. }
@@ -24,14 +26,17 @@ glmboost_fit(object, family = GaussReg(),
           to the \code{contrasts} replacement function and whose names are
           the names of columns of \code{data} containing factors. 
           See \code{\link{model.matrix.default}}.}
-  \item{x}{ design matrix. }
+  \item{x}{ design matrix or an object of class \code{glmboost} for plotting. }
   \item{y}{ vector of responses. }
-  \item{object}{ an object of class \code{boost_data}, see \code{\link{boost_dpp}}. }
+  \item{object}{ an object of class \code{boost_data}, see \code{\link{boost_dpp}}.} 
   \item{family}{ an object of class \code{\link{boost_family-class}}, 
                 implementing the negative gradient corresponding
                 to the loss function to be optimized, by default, squared error loss
                 for continuous responses is used.}
   \item{control}{ an object of class \code{\link{boost_control}}.}
+  \item{main}{ a title for the plot.}
+  \item{col}{ (a vector of) colors for plotting the lines representing 
+             the coefficient paths.}
   \item{\dots}{ additional arguments passed to callies. }
 }
 \details{
@@ -49,6 +54,9 @@ glmboost_fit(object, family = GaussReg(),
 \value{
   An object of class \code{glmboost} with \code{\link{print}}, \code{\link{coef}},
   \code{\link{AIC}} and \code{\link{predict}} methods being available.
+  For inputs with longer variable names, you might want to change
+  \code{par("mai")} before calling the \code{plot} method of \code{glmboost}
+  objects visualizing the coefficients path.
 }
 \references{
 
@@ -78,6 +86,7 @@ glmboost_fit(object, family = GaussReg(),
     coef(lm(dist ~ speed, data = cars))
 
     ### plot fit
+    layout(matrix(1:2, ncol = 2))
     plot(dist ~ speed, data = cars)
     lines(cars$speed, predict(cars.gb), col = "red")
 
@@ -98,6 +107,10 @@ glmboost_fit(object, family = GaussReg(),
     lines(cars$speed, predict(cars.gbh), col = "blue")
     legend("topleft", col = c("red", "green", "blue"), lty = 1,
            legend = c("Gaussian", "Laplace", "Huber"), bty = "n")
+
+    ### plot coefficient path of glmboost
+    par(mai = par("mai") * c(1, 1, 1, 2.5))
+    plot(cars.gb)
 
 }
 \keyword{models}
