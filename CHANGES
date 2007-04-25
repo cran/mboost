@@ -1,4 +1,11 @@
 
+		CHANGES in `mboost' VERSION 0.5-5 (2007-04-25)
+
+  o  `westbc' regenerated
+
+  o  LazyLoad: yes (no SaveImage: yes)
+
+
 		CHANGES in `mboost' VERSION 0.5-4 (2007-04-18)
 
   o  plot() method for `glmboost' objects visualizing the
