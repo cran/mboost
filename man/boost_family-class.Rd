@@ -6,7 +6,7 @@
 \description{Objects of class "boost\_family" define negative gradients of 
              loss functions to be optimized.}
 \section{Objects from the Class}{
-Objects can be created by calls of the form \code{\link{Family}(...)}}
+Objects can be created by calls of the form \code{\link{Family}(...)}
 }
 \section{Slots}{
 	 \describe{
