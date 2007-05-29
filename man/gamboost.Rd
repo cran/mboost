@@ -61,9 +61,9 @@ gamboost_fit(object, baselearner = c("ssp", "bsp", "ols"),
   \emph{Journal of the American Statistical Association}, \bold{98},
   324--339.
 
-  Peter Buhlmann and Torsten Hothorn (2006),
+  Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  Submitted manuscript.                                     
+  Statistical Science, accepted.
   \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }

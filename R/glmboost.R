@@ -230,7 +230,9 @@ hatvalues.glmboost <- function(model, ...) {
 
     if (!checkL2(model)) return(hatglm(model))
     xf <- t(model$MPinv) * model$control$nu
-    op <- .Call("R_trace_glmboost", model$data$x, xf,
+    x <- model$data$x
+    if (model$control$center) x <- model$data$center(x)
+    op <- .Call("R_trace_glmboost", x, xf,
                 as.integer(model$ensemble[, "xselect"]),
                 PACKAGE = "mboost")
     RET <- diag(op[[1]])

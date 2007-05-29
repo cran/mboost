@@ -1,0 +1,45 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.4)
+The top-level auxiliary file: spatial_boosting.aux
+The style file: biometrics.bst
+Database file #1: sp.bib
+You've used 1 entry,
+            2948 wiz_defined-function locations,
+            609 strings with 4976 characters,
+and the built_in function-call counts, 546 in all, are:
+= -- 43
+> -- 10
+< -- 1
++ -- 4
+- -- 3
+* -- 32
+:= -- 88
+add.period$ -- 3
+call.type$ -- 1
+change.case$ -- 6
+chr.to.int$ -- 1
+cite$ -- 1
+duplicate$ -- 42
+empty$ -- 48
+format.name$ -- 4
+if$ -- 106
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 9
+newline$ -- 14
+num.names$ -- 4
+pop$ -- 15
+preamble$ -- 1
+purify$ -- 5
+quote$ -- 0
+skip$ -- 18
+stack$ -- 0
+substring$ -- 32
+swap$ -- 19
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 9
+warning$ -- 0
+while$ -- 4
+width$ -- 0
+write$ -- 21

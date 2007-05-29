@@ -148,6 +148,7 @@ cg <- coef(g)
 names(cgc) <- NULL
 names(cg) <- NULL
 stopifnot(all.equal(cgc, cg))
+stopifnot(all.equal(mstop(AIC(gc, "corrected")), mstop(AIC(g, "corrected"))))
 
 pc1 <- predict(gc)
 pc2 <- predict(gc, newdata = data.frame(xn = xn, xf = xf))

@@ -1,4 +1,7 @@
 
+
+    o  data$x NACH center = TRUE: alles checken!
+
     o  use better colours
 
     o  fire a warning when AIC is called in cases the hat matrix is

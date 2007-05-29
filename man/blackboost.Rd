@@ -78,9 +78,9 @@ blackboost_fit(object, tree_controls =
   \emph{Computing Science and Statistics}, \bold{31}, 
   172--181.
 
-  Peter Buhlmann and Torsten Hothorn (2006),
+  Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  Submitted manuscript.
+  Statistical Science, accepted.
   \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }

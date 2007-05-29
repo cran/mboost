@@ -68,9 +68,9 @@ glmboost_fit(object, family = GaussReg(),
   Peter Buhlmann (2006), Boosting for high-dimensional linear models. 
   \emph{The Annals of Statistics}, \bold{34}.
 
-  Peter Buhlmann and Torsten Hothorn (2006),
+  Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  Submitted manuscript.
+  Statistical Science, accepted.
   \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }

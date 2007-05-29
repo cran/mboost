@@ -49,9 +49,9 @@
     Thickness, Circumferences, and Bone Breadths. \emph{Obesity Research},
     \bold{13}(3), 626--634.
 
-    Peter Buhlmann and Torsten Hothorn (2006),
+    Peter Buhlmann and Torsten Hothorn (2007),
     Boosting algorithms: regularization, prediction and model fitting.
-    Submitted manuscript.                                     
+    Statistical Science, accepted.
     \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }

@@ -1,0 +1,220 @@
+
+<<style, echo = FALSE, results = tex>>=
+style <- "Biometrics"
+#style <- "Z"
+if (style == "Z")
+    cat("\\input{headerZ}\n")
+if (style == "Biometrics")
+    cat("\\input{headerBiometrics}\n")
+@
+
+%% need no \usepackage{Sweave}
+\SweaveOpts{engine=R, eps=FALSE, echo=FALSE, results=hide}
+
+<<packages>>=
+rseed <- 20061103
+@
+
+\section{Introduction} \label{sec:introduction}
+
+Generalised linear model: 
+\[
+ \eta_i = \beta_0+\beta_1x_{i1}+\ldots+\beta_px_{ip}
+\]
+Outline idea of componentwise boosting.
+
+Extend the model to contain a spatial effect:
+\[
+ \eta_i = \beta_0+\beta_1x_{i1}+\ldots+\beta_px_{ip}+f_{spat}(s_i)
+\]
+where $s_i=(s_{ix},s_{iy})$ is a coordinate vector.
+
+Comment on the influence of spatial correlations on variable selection properties.
+
+More flexible models are obtained, if some of the linear effects are replaced by 
+nonparametric effects. This yields geoadditive models of the form
+\[
+ \eta_i = \beta_0+\beta_1x_{i1}+\ldots+\beta_px_{ip}+f_1(z_{i1})+\ldots+f_q(z_{iq})+f_{spat}(s_i)
+\]
+Model selection becomes even more complicated: Besides selecting from the parametric effects, 
+we also have to decide which of the nonparametrics should be included in the model.
+
+Frage: Sollen wir die Splines so parametrisieren, dass sie nur Abweichungen von der Geraden enthalten?
+
+A different type of extension are generalised linear models with spatially varying effects, i.e.
+\[
+ \eta_i = \beta_0+\beta_1x_{i1}+\ldots+\beta_px_{ip}+f_0(s_i)+z_{i1}f_1(s_i)+\ldots+z_{iq}f_q(s_i)
+\]
+
+\section{Spatial Regression Models} \label{sec:models}
+
+\subsection{Generalised Linear Models with Spatial Component} \label{subsec:glm}
+
+Model the spatial effect as a tensor product P-spline with first or second order difference penalty.
+Fix ideas in the univariate setting.
+
+Approximate a nonparametric function with a linear combination of B-spline basis functions of degree $l$:
+\[
+ f(z) = \sum_{j=1}^d\zeta_jB_j^l(z).
+\]
+To enforce smoothness, a penalty is added to the likelihood.
+Since the $k$-th order derivative of a B-spline is determined by the $k$-th order
+differences in the sequence of regression coefficients $\zeta_j$, a suitable penalty term is obtained as
+\[
+ \lambda P(\zeta) = \lambda\sum_{j=k+1}^d\Delta_k(\beta_j)
+\]
+where $\zeta=(\zeta_1,\ldots,\zeta_d)'$ and $\Delta_k$ denotes the $k$-th order difference operator, e.g.
+\[
+ \Delta_1(\zeta_j) = \zeta_j-\zeta_{j-1}\qquad \mbox{or}\qquad\Delta_2(\zeta_j)=\zeta_j-2\zeta_{j-1}+\zeta_{j-2}
+\]
+for first and second order differences, respectively.
+
+The penalty terms are quadratic forms
+\[
+ \lambda P(\zeta) = \zeta'K\zeta
+\]
+where $K=D_k'D_k$ and $D_k$ is a $k$-th order difference matrix of appropriate dimension.
+
+Extend the concept to two dimensions: Replace the univariate basis functions by their tensor products
+\[
+ f_{spat}(s_x,s_y)=\sum_{j_x=1}^{d_x}\sum_{j_y=1}^{d_y}\zeta_{j_x,j_y}B_{j_x,j_y}(s_x,s_y)
+\]
+where
+\[
+ B_{j_x,j_y}(s_x,s_y)= B_{j_x}(s_x)B_{j_y}(s_y}.
+\]
+Similar as for univariate nonparametric effects, this leads to a representation of the vector of spatial effects as the product of a 
+design matrix $Z$ containing the evaluations of the tensor product basis functions and the vector of regression coefficients
+\[
+ \zeta=(\zeta_{11},\ldots,\zeta_{d_x,1},\ldots,\zeta_{1,d_y},\ldots,\zeta_{d_x,d_y})'.
+\]
+This vector is the vectorised representation of the bivariate field of regression coefficients. To construct a penalty term in
+analogy to univariate penalised splines, we consider penalties in $x$ and $y$ direction first. The former can be obtained by
+constructing a univariate penalty matrix $K_x$ of dimension $(d_x\times d_x)$ and applying this matrix to each of the subvectors of $\zeta$.
+In matrix notation, this can be facilitated by blowing up $K_x$ based on the Kronecker product with $d_y$ dimensional identity matrix, yielding the 
+penalty term
+\[
+ \zeta'(K_x\otimes I_{d_y})\zeta.  
+\]
+Similarly, a penalty term in $y$-direction is obtained as
+\[
+ \zeta'(I_{d_x}\otimes K_y)\zeta.  
+\]
+Note that in the latter expression the univariate penalty matrix $K_y$ has to be premultiplied with the identity matrix due to the ordering 
+of the elements in $\zeta$. Summing up both components finally leads to the bivariate penalty term
+\[
+ \zeta'K\zeta = \zeta'(K_x\otimes I_{d_y}+I_{d_x}\otimes K_y)\zeta
+\]
+which penalises large variation in both $x$ and $y$ direction.
+
+
+write predictor in matrix notation.
+
+
+\subsection{Generalised Geoadditive Models} \label{subsec:geoadditive}
+
+Can obviously be build from the previous components.
+Each nonparametric effect is approximated by a univariate P-spline, while the spatial effect is modelled
+as bivariate tensorproduct spline.
+
+Predictor in matrix notation.
+
+\subsection{Models with Space-Varying Effects} \label{subsec:spacevarying}
+
+Models with space-varying coefficients are an extension of varying coefficient models,
+where the usual continuous effect modifier is replaced by a spatial effect modifier. In terms of model formulation,
+this only leads to minor modifications of the design matrix of the spatial effect. For simplicity, consider a model with predictor
+\[
+ \eta_i=f_0(s_i)+z_{i1}f_1(s_i)+\ldots+z_{iq}f_q(s_i)
+\]
+where all effects $f_0,\ldotsf_q$ are space-dependent. Then each of the spatial effects can be represented using 
+the bivariate penalised spline methdology introduced previously. Then the corresponding vectors of function evaluations 
+$f_j=(z_{1j}f_j(s_{1}),\ldots,z_{nj}f_j(s_n))$ with $z_{i0}\equiv1$ can be expressed as
+\[
+ f_j = \diag(z_{1j},\ldots,z_{nj})Z_{spat}\zeta_j = Z_j\zeta_j
+\]
+where $Z_{spat}$ is the spatial design matrix build from the tensor product basis functions. Note that
+$Z_{spat}$ does not depend on the index $j$, i.e. the corresponding covariate, if the same basis functions are imployed 
+for the construction of the spatial effect. This will typically be the case in practice, although other specifications are possible.
+
+Predictor in matrix notation
+
+\section{$L_2$-Boosting for Spatial Regression} \label{sec:boosting}
+
+\subsection{Specification of Base Learners}
+
+Discuss idea for one of the model terms only. General algorithm can be derived in
+complete analogy and will be presented in the following section in generic notation.
+
+To turn the nonparametric and spatial estimators into weak learners, we choose the smoothing parameter
+such that they have a prespecified small number of degrees of freedom. Degrees of freedom are a general
+measure for the complexity of the function estimates that allows to compare the smoothness even for 
+different types of effects (e.g. nonparametric versus spatial effects) and for covariates measured on extremely different scales.
+
+\[
+ \df(\lambda)=\trace(S_\lambda)=\trace(Z(Z'Z+\lambda K)^{-1}Z')=\trace((Z'Z+\lambda K)^{-1}Z'Z)
+\]
+The last expression is actually used for computing the degrees of freedom, since it involves matrices of a much smaller dimension.
+Note, that the degrees of freedom do not depend on the response variable.
+This is crucial for an efficient implementation of the Boosting algorithm, because there the response variable
+is iteratively replaced by working resiudals while proceeding through the fitting process.
+
+The value for the smoothness parameter corresponding to the requested degrees of freedom can be obtained via a simple
+line search. Again this line search has to be performed only once in a setup step for the algorithm prior to the actual estimation loop.
+
+Note that the use of the penalisation approach still has an advantage compared to the usage of a fixed, small-dimensional
+basis, which would also have a small number of degrees of freedom. However, the small basis approach
+may results in artefacts due to the sparsity of the basis. In contrast, our penalisation approach allows to
+set enough basis functions to allow for flexibility over the whole range of the data. 
+
+\subsection{A unified $L_2$-Boosting algorithm}
+
+Write the previous models in unified notation as
+\[
+ \eta_i=f_1(x_{i1})+\ldots+f_r(x_{ir})
+\]
+Examples: linear effect, nonparametric effect, spatial effect, space-varying effect.
+
+Then the componentwise $L_2$-boosting procedure can be summarised as follows:
+\begin{enumerate}
+ \item Initialise the model components as $\hat{f}_j^{[0]}(x_{ij})\equiv0$, $j=1,\ldots,r$. Set $m=0$.
+ \item Increase $m$ by 1. Compute the current working residuals
+ \[
+ U_i = \left(y_i-\sum_{j=1}^r\hat{f}_j^{[m-1]}(x_{ij})\right).
+ \]
+ \item Choose the function $f_j$ that minimises the $L_2$-loss, i.e.
+ \[
+ j = \argmin_{1\le j\le r}\sum_{i=1}^n(U_i-\sum_{j=1}^r\hat{f}_j^(x_{ij})^2
+ \]
+ \item Update the corresponding function estimate to
+ \[
+ \hat{f}^[m]_j(\cdot) = \hat{f}^[m]_j(\cdot) + \nu S_jU.
+ \]
+ For all remaining functions set $f_j^{[m]}(\cdot)=f_j^{[m-1]}(\cdot)$.
+ \item Iterate steps 2 to 4 until $m=m_{\stop}$.
+\end{enumerate}
+
+Fitting of the base learner also has a unified representation based on the hat matrix.
+
+Iteratvely proceed through the effects and choose the one that leads to the maximal improvement
+in terms of the loss function.
+
+\subsection{Early Stopping}
+
+\section{Applications} \label{sec:application}
+
+\subsection{Habitat Suitability for Breeding Bird Communities} \label{subsec:birds}
+
+\subsection{Forest Health} \label{subsec:forest}
+
+\subsection{Childhood Undernutrition in Developing Countries} \label{subsec:sambia}
+
+\section{A Simulation Study in Spatial Variable Selection} \label{sec:simulation}
+
+\section{Summary} \label{sec:summary}
+
+\cite{Buehlmann2006}
+
+\bibliography{sp}
+
+\end{document}

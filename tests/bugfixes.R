@@ -73,3 +73,29 @@ x <- matrix(rnorm(1000), ncol = 10)
 y <- rnorm(100)
 fit <- gamboost(x = x, y = y, control = boost_control(mstop = 10))
 a <- predict(fit, newdata = x[1:10,])
+
+### AIC for centered covariates didn't work
+y <- gl(2, 10)
+xn <- rnorm(20)
+xnm <- xn - mean(xn)
+xf <- gl(2, 10)
+gc <- glmboost(y ~ xn + xf, control = boost_control(center = TRUE), 
+               family = Binomial())
+g <- glmboost(y ~ xnm + xf, family = Binomial())
+cgc <- coef(gc)
+cg <- coef(g)
+names(cgc) <- NULL
+names(cg) <- NULL
+stopifnot(all.equal(cgc, cg))
+stopifnot(all.equal(mstop(AIC(gc, "classical")), mstop(AIC(g, "classical"))))
+
+gc <- gamboost(y ~ xn + xf, control = boost_control(center = TRUE), 
+               family = Binomial())
+g <- gamboost(y ~ xnm + xf, family = Binomial())
+stopifnot(all.equal(mstop(AIC(gc, "classical")), mstop(AIC(g, "classical"))))
+
+y <- rnorm(20)
+gc <- gamboost(y ~ xn + xf, control = boost_control(center = TRUE))
+g <- gamboost(y ~ xnm + xf)
+stopifnot(all.equal(mstop(AIC(gc, "corrected")), mstop(AIC(g, "corrected"))))
+
