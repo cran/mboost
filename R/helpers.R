@@ -91,6 +91,7 @@ gm.glmboost <- function(object) {
 
     mstop <- nrow(object$ensemble)
     x <- object$data$x
+    if (object$control$center) x <- object$data$center(x)
     RET <- matrix(0, nrow = NROW(x), ncol = mstop)
 
     jsel <- object$ensemble[,"xselect"]
@@ -108,6 +109,7 @@ gm.gamboost <- function(object) {
 
     mstop <- nrow(object$ensemble)
     x <- object$data$x
+    if (object$control$center) x <- object$data$center(x)
     as <- attr(x, "assign")
     vars <- unique(as)
     RET <- matrix(0, nrow = NROW(x), ncol = mstop)
@@ -127,6 +129,7 @@ gm.gamboost <- function(object) {
 gamplot <- function(object) {
 
      x <- object$data$x
+     if (object$control$center) x <- object$data$center(x)     
      as <- attr(x, "assign")
      vars <- unique(as)
      lp <- matrix(0, ncol = NCOL(x), nrow = NROW(x))
@@ -159,6 +162,7 @@ bhatmat <- function(n, H, xselect, fitm, fW) {
 hatglm <- function(model) {
 
      x <- model$data$x
+     if (model$control$center) x <- model$data$center(x)
      nr <- colSums(x^2)
      nu <- model$control$nu
      x <- t(t(x) / sqrt(nr)) * sqrt(nu)

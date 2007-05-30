@@ -70,9 +70,9 @@
   \emph{Journal of the Royal Statistical Society, Series B},
   \bold{20}(2), 271--293.
 
-  Peter Buhlmann and Torsten Hothorn (2006),
+  Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  Submitted manuscript.                                     
+  Statistical Science, accepted.
   \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
 
 }

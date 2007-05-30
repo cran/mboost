@@ -1,0 +1,76 @@
+
+\documentclass[12pt,letter]{article}
+%\documentclass[12pt,a4paper]{article}
+\usepackage{biometrics}
+\usepackage{amsmath,color}
+%\usepackage{a4wide,amsmath,epsfig,epsf,psfrag}
+\usepackage[nolists]{endfloat}
+\usepackage{natbib}
+\bibliographystyle{biometrics}
+\usepackage{hyperref}
+
+\renewcommand{\baselinestretch}{1.6}
+
+\definecolor{Red}{rgb}{0.7,0,0}
+\definecolor{Blue}{rgb}{0,0,0.8}
+\hypersetup{%
+  hyperindex = {true},
+  colorlinks = {true},
+  linktocpage = {true},
+  plainpages = {false},
+  linkcolor = {Blue},
+  citecolor = {Blue},
+  urlcolor = {Red},
+  pdfstartview = {Fit},
+  pdfpagemode = {UseOutlines},
+  pdfview = {XYZ null null null}
+}
+
+
+%  make sure that the document has 25 lines per page (it is 12 pt)
+
+\setlength{\textheight}{575pt}
+\setlength{\baselineskip}{23pt}
+
+\newcommand{\E}{E}
+\input{definitions}
+\newcommand{\Prob}{\mathsf{P}}
+
+%  IMPORTANT -- place the \title, \author, etc, \begin{summary}...
+%  \end{summary} \keywords statements in the order demonstrated below
+
+\title{Spatial Boosting}
+
+\author{Thomas Kneib}
+\address{
+  Institut f\"ur Statistik \\
+  Ludwig-Maximilians-Universit\"at M\"unchen \\
+  Ludwigstra{\ss}e 33, D-80539 M\"unchen, Germany}
+\email{thomas.kneib@stat.uni-muenchen.de}
+
+\author{Torsten Hothorn}
+\address{
+  Institut f\"ur Statistik \\
+  Ludwig-Maximilians-Universit\"at M\"unchen \\
+  Ludwigstra{\ss}e 33, D-80539 M\"unchen, Germany}
+
+\author{Gerhard Tutz}
+\address{
+  Institut f\"ur Statistik \\
+  Ludwig-Maximilians-Universit\"at M\"unchen \\
+  Ludwigstra{\ss}e 33, D-80539 M\"unchen, Germany}
+
+%\email{brubble@bedrock.edu}
+% with more than 2 authors, give only one email address
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{summary}
+\input{abstract}
+\end{summary}
+
+\keywords{bivariate smoothing, boosting, geographically weighted regression, penalised splines}

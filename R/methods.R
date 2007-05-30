@@ -39,7 +39,14 @@ fitted.gb <- function(object, type = c("lp", "response"), ...) {
     return(lp)
 }
 
-fitted.blackboost <- fitted.gb 
+fitted.blackboost <- function(object, type = c("lp", "response"), ...) {
+    type <- match.arg(type)
+    lp <- object$fit
+    y <- object$data@responses@variables[[1]]
+    if (type == "response" && is.factor(y))
+       return(factor(levels(y)[(lp > 0) + 1], levels = levels(y)))
+    return(lp)
+}
 
 ### methods: resid
 resid.gb <- function(object, ...)
