@@ -151,4 +151,38 @@ Degrees of freedom (for mstop = 45): 1.917234
 > g <- gamboost(y ~ xnm + xf)
 > stopifnot(all.equal(mstop(AIC(gc, "corrected")), mstop(AIC(g, "corrected"))))
 > 
+> ### check gamboost with weights (use weighted some of residuals for variable selection)
+> data("bodyfat", package = "mboost")
+> 
+> set.seed(290875)
+> n <- nrow(bodyfat)
+> w <- numeric(n)
+> w <- rmultinom(1, n, rep(1, n) / n)[,1]
+> ctrl <- boost_control(mstop = 20)
+> 
+> mod1 <- glmboost(DEXfat ~ ., data = bodyfat, weights = w)
+> aic1 <- AIC(mod1, "corrected")
+> attributes(aic1) <- NULL
+> 
+> mod2 <- glmboost(DEXfat ~ ., data = bodyfat[rep(1:n, w),])
+> aic2 <- AIC(mod2, "corrected")
+> attributes(aic2) <- NULL
+> 
+> stopifnot(all.equal(round(aic1, 3), round(aic2, 3)))
+> 
+> mod1 <- gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl)
+> aic1 <- AIC(mod1, "corrected")
+> attributes(aic1) <- NULL
+> 
+> mod2 <- gamboost(DEXfat ~ ., data = bodyfat[rep(1:n, w),], con = ctrl)
+> aic2 <- AIC(mod2, "corrected")
+> attributes(aic2) <- NULL
+> 
+> stopifnot(all.equal(round(aic1, 3), round(aic2, 3)))
+> 
+> mod1 <- blackboost(DEXfat ~ ., data = bodyfat, weights = w)            
+> mod2 <- blackboost(DEXfat ~ ., data = bodyfat[rep(1:n, w),])            
+> 
+> ratio <- mod1$risk / mod2$risk
+> stopifnot(ratio[1] > 0.95 && ratio[2] < 1.05)
 > 
