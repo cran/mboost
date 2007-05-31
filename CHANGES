@@ -1,4 +1,9 @@
 
+		CHANGES in `mboost' VERSION 0.5-8 (2007-05-31)
+
+  o  gamboost(..., weights = w) was broken
+
+
 		CHANGES in `mboost' VERSION 0.5-7 (2007-05-30)
 
   o  extract response correctly in fitted.blackboost

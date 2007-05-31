@@ -91,7 +91,7 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
         for (i in (1:length(vars))[dfbase > 0]) {
             ss <- try(fitfct[[i]](y = u))
             if (inherits(ss, "try-error")) next
-            tsums <- sum((fitted(ss) - u)^2)
+            tsums <- sum(weights * (fitted(ss) - u)^2)
             if (tsums < sums || sums == 0) {
                 sums <- tsums
                 xselect <- i
