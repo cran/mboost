@@ -43,7 +43,7 @@ fitted.baselist <- function(object) {
 
 ### what happens to weights
 ### when calculating knots etc?
-bbs <- function(x, z = NULL, df = 4, knots = NULL, degree = 3, differences = 2,
+bbs <- function(x, z = NULL, df = 4, knots = 20, degree = 3, differences = 2,
                 center = FALSE, xname = NULL, zname = NULL) {
 
     cc <- complete_cases(x = x, z = z)
@@ -51,8 +51,15 @@ bbs <- function(x, z = NULL, df = 4, knots = NULL, degree = 3, differences = 2,
     if (is.null(xname)) xname <- deparse(substitute(x))
     if (is.null(zname)) zname <- deparse(substitute(z))
 
-    if (is.factor(x) || (df <= 2 && !center)) 
+    if (is.factor(x) || (df <= 2 && !center))
         return(bols(x = x, z = z, xname = xname, zname = zname))
+
+    if (!is.numeric(z) && (is.factor(z) && length(unique(z)) != 2))
+        stop(sQuote("z"), " must be binary or numeric")
+
+    if(is.factor(z) && length(unique(z)) == 2)
+        ## FIXME is there a more elegant way to produce a binary with 0/1?
+        z <- as.numeric(z[, drop=T]) - 1
 
     if (!differences %in% 1:3)
         stop(sQuote("differences"), " are not in 1:3")
@@ -62,37 +69,14 @@ bbs <- function(x, z = NULL, df = 4, knots = NULL, degree = 3, differences = 2,
         stop(sQuote("degree"), " is less than ", sQuote("differences"), "-1")
     if (length(unique(x)) < 6)
         stop(sQuote(xname), " has less than 6 unique values")
-    
-    n.kn <- function(n) {
-        ## Number of inner knots
-        if(n < 50) n
-        else trunc({
-            a1 <- log( 50, 2)
-	    a2 <- log(100, 2)
-            a3 <- log(140, 2)
-	    a4 <- log(200, 2)
-	    if	(n < 200) 2^(a1+(a2-a1)*(n-50)/150)
-	    else if (n < 800) 2^(a2+(a3-a2)*(n-200)/600)
-	    else if (n < 3200)2^(a3+(a4-a3)*(n-800)/2400)
-	    else  200 + (n-3200)^0.2
-        })
-    }
-    
-    if (is.null(knots)) {
-        n <- length(x)
-        nk <- n.kn(n)    
-        knots <- seq(from = min(x, na.rm = TRUE), 
-                     to = max(x, na.rm = TRUE), length = nk)
-        knots <- knots[2:(length(knots) - 1)]   
-    } else {
-        if (length(unique(diff(knots))) > 1)
-            warning("non-equidistant ", sQuote("knots"), 
+
+    if (length(unique(diff(knots))) > 1)
+            warning("non-equidistant ", sQuote("knots"),
                     " might be inappropriate")
-    }
 
     if (length(knots) == 1) {
-        knots <- seq(from = min(x, na.rm = TRUE), 
-                     to = max(x, na.rm = TRUE), length = knots+2) 
+        knots <- seq(from = min(x, na.rm = TRUE),
+                     to = max(x, na.rm = TRUE), length = knots+2)
         knots <- knots[2:(length(knots) - 1)]
     }
     boundary.knots <- range(x, na.rm = TRUE)
@@ -102,7 +86,7 @@ bbs <- function(x, z = NULL, df = 4, knots = NULL, degree = 3, differences = 2,
             if (!is.null(z))
                 z <- z[cc]
         }
-        X <- bs(x, knots = knots, degree = degree, intercept = TRUE, 
+        X <- bs(x, knots = knots, degree = degree, intercept = TRUE,
                 Boundary.knots = boundary.knots)
         if (!is.null(z))
             X <- X * z
@@ -121,7 +105,7 @@ bbs <- function(x, z = NULL, df = 4, knots = NULL, degree = 3, differences = 2,
         K <- diag(ncol(X))
     } else {
         K <- diff(diag(ncol(X)), differences = differences)
-        K <- crossprod(K, K) 
+        K <- crossprod(K, K)
     }
 
     dpp <- function(weights) {
@@ -134,7 +118,7 @@ bbs <- function(x, z = NULL, df = 4, knots = NULL, degree = 3, differences = 2,
         Xsolve <- tcrossprod(solve(XtX + lambda * K), Xw)
 
         fitfun <- function(y) {
-            
+
             if (any(!cc)) y <- y[cc]
             coef <- Xsolve %*% y
 
@@ -143,13 +127,13 @@ bbs <- function(x, z = NULL, df = 4, knots = NULL, degree = 3, differences = 2,
                 nX <- newX(x = newdata[[xname]], z = newdata[[zname]], na.rm = FALSE)
                 nX %*% coef
             }
-            ret <- list(model = coef, predict = predictfun, fitted = Xna %*% coef)
-            class(ret) <- "basefit"
+            ret <- list(model = coef, predict = predictfun, fitted = function() Xna %*% coef)
+            class(ret) <- c("basefit", "baselm")
             ret
         }
         ret <- list(fit = fitfun, hatmatrix = function() X %*% Xsolve)
         class(ret) <- "basisdpp"
-        ret	
+        ret
     }
     attr(X, "dpp") <- dpp
     return(X)
@@ -159,30 +143,31 @@ predict.basefit <- function(object, newdata = NULL)
     object$predict(newdata)
 
 fitted.basefit <- function(object)
-    object$fitted
+    object$fitted()
+
+coef.baselm <- function(object)
+    object$model
 
 df2lambda <- function(X, df = 4, dmat = NULL, weights) {
 
-#    if (df <= 2) stop(sQuote("df"), " must be greater than two")
+#   if (df <= 2) stop(sQuote("df"), " must be greater than two")
 
     if (is.null(dmat)) {
         dmat <- diff(diag(ncol(X)), differences = 2)
         dmat <- crossprod(dmat, dmat)
     }
 
-    # singular value decomposition
-    A <- crossprod(X * weights, X)
-    decomp <- svd(A)
-    # A is equal to decomp$u %*% diag(decomp$d) %*% t(decomp$v)
-    u <- decomp$u
-    v <- decomp$v
+    # Cholesky decomposition
+
+    A <- crossprod(X * weights, X) + dmat*10e-10
+    Rm <- solve(chol(A))
+
+    decomp <- svd(crossprod(Rm,dmat)%*%Rm)
     d <- decomp$d
-    K <- crossprod(u,dmat)%*%v
 
     # df2lambda
-    dd <- diag(d)
     df2l <- function(lambda)
-        (sum(diag(d * solve( (dd+lambda*K) ) ))-df)^2
+        (sum( 1/(1+lambda*d) ) - df)^2
 
     lower.l <- 0
     upper.l <- 5000
@@ -191,20 +176,22 @@ df2lambda <- function(X, df = 4, dmat = NULL, weights) {
     while (lambda >= upper.l - 200 ) {
         upper.l <- upper.l * 1.5
 
-        tl <- try(lambda <- optimize(df2l, interval=c(lower.l,upper.l))$minimum, silent=T)
+        tl <- try(lambda <- optimize(df2l, interval=c(lower.l,upper.l))$minimum,
+        silent=T)
         if (class(tl)=="try-error") stop("problem of
-        converting df into lambda cannot be solved - please increase value of df")
+        converting df into lambda cannot be solved - please increase value of
+        df")
         lower.l <- upper.l-200
         if (lower.l > 1e+06){
             lambda <- 1e+06
             warning("lambda needs to be larger than 1e+06 for given value of df,
             setting lambda = 1e+06 \n trace of hat matrix differs from df by ",
-            round(sum(diag(d * solve( (dd+lambda*K) ) ))-df,6))
+            round(sum( 1/(1+lambda*d) )-df,6))
             break
             }
     }
 
-    ### tmp <- sum(diag(X %*% solve(crossprod(X * weights, X) + 
+    ### tmp <- sum(diag(X %*% solve(crossprod(X * weights, X) +
     ###                   lambda*dmat) %*% t(X * weights))) - df
     ### if (abs(tmp) > sqrt(.Machine$double.eps))
     ###   warning("trace of hat matrix is not equal df with difference", tmp)
@@ -212,55 +199,36 @@ df2lambda <- function(X, df = 4, dmat = NULL, weights) {
     lambda
 }
 
-bns <- function(x, z = NULL, df = 4, knots = NULL, differences = 2,
+bns <- function(x, z = NULL, df = 4, knots = 20, differences = 2,
                 xname = NULL, zname = NULL) {
 
     if (is.null(xname)) xname <- deparse(substitute(x))
     if (is.null(zname)) zname <- deparse(substitute(z))
 
-    if (is.factor(x) || df <= 2) 
+    if (is.factor(x) || df <= 2)
         return(bols(x = x, z = z, xname = xname, zname = zname))
 
-    if (!differences %in% 1:3) 
+    if (!is.numeric(z) && (is.factor(z) && length(unique(z)) != 2))
+        stop(sQuote("z"), " must be binary or numeric")
+
+    if(is.factor(z) && length(unique(z)) == 2)
+        ## FIXME is there a more elegant way to produce a binary with 0/1?
+        z <- as.numeric(z[, drop=T]) - 1
+
+    if (!differences %in% 1:3)
         stop(sQuote("differences"), " are not in 1:3")
     if (df < differences)
         stop(sQuote("df"), " is less than ", sQuote("differences"))
     if (length(unique(x)) < 6)
         stop(sQuote(xname), " has less than 6 unique values")
 
-    
-    n.kn <- function(n) {
-        ## Number of inner knots
-        if(n < 50) n
-        else trunc({
-            a1 <- log( 50, 2)
-	    a2 <- log(100, 2)
-            a3 <- log(140, 2)
-	    a4 <- log(200, 2)
-	    if	(n < 200) 2^(a1+(a2-a1)*(n-50)/150)
-	    else if (n < 800) 2^(a2+(a3-a2)*(n-200)/600)
-	    else if (n < 3200)2^(a3+(a4-a3)*(n-800)/2400)
-	    else  200 + (n-3200)^0.2
-        })
-    }
-        
-    
-    if(is.null(knots)) {
-        n <- length(x)
-        nk <- n.kn(n)    
-        knots <- seq(from = min(x, na.rm = TRUE), 
-                     to = max(x, na.rm = TRUE), length = nk)
-        knots <- knots[2:(length(knots) - 1)]   
-    } else {
-        if (length(unique(diff(knots))) > 1)
-            warning("non-equidistant ", sQuote("knots"), 
+    if (length(unique(diff(knots))) > 1)
+            warning("non-equidistant ", sQuote("knots"),
                     " might be inappropriate")
-    }    
-    
-    
+
     if (length(knots) == 1) {
-        knots <- seq(from = min(x, na.rm = TRUE), 
-                     to = max(x, na.rm = TRUE), length = knots + 2) 
+        knots <- seq(from = min(x, na.rm = TRUE),
+                     to = max(x, na.rm = TRUE), length = knots + 2)
         knots <- knots[2:(length(knots) - 1)]
         #knots <- c(min(x)-sd(x),knots,max(x)+sd(x))
     }
@@ -275,7 +243,7 @@ bns <- function(x, z = NULL, df = 4, knots = NULL, differences = 2,
     X <- newX(x, z)
 
     K <- diff(diag(ncol(X)), differences = differences)
-    K <- crossprod(K, K) 
+    K <- crossprod(K, K)
 
     dpp <- function(weights) {
 
@@ -293,8 +261,8 @@ bns <- function(x, z = NULL, df = 4, knots = NULL, differences = 2,
                 nX <- newX(x = newdata[[xname]], z = newdata[[zname]])
                 nX %*% coef
             }
-            ret <- list(model = coef, predict = predictfun, fitted = X %*% coef)
-            class(ret) <- "basefit"
+            ret <- list(model = coef, predict = predictfun, fitted = function() X %*% coef)
+            class(ret) <- c("basefit", "baselm")
             ret
         }
         ret <- list(fit = fitfun, hatmatrix = function() X %*% Xsolve)
@@ -308,10 +276,10 @@ bns <- function(x, z = NULL, df = 4, knots = NULL, differences = 2,
 bss <- function(x, df = 4, xname = NULL) {
 
     if (is.null(xname)) xname = deparse(substitute(x))
-    if (is.factor(x) || df <= 2) 
+    if (is.factor(x) || df <= 2)
         return(bols(x = x, xname = xname))
 
-    xs <- signif(x, 10)   
+    xs <- signif(x, 10)
     ux <- unique(sort(xs))
 
     dpp <- function(weights) {
@@ -320,17 +288,16 @@ bss <- function(x, df = 4, xname = NULL) {
             object <- smoothbase(x = xs, ux = ux, y = y, w = weights, df = df)
 
             predictfun <- function(newdata = NULL) {
-                if (is.null(newdata)) return(object$yfit)
+                if (is.null(newdata)) return(stats:::predict.smooth.spline.fit(object, x = xs)$y)
                 stats:::predict.smooth.spline.fit(object, x = newdata[[xname]])$y
             }
 
-            ret <- list(basemodel = object, predict = predictfun, 
-                        fitted = object$yfit)
+            ret <- list(basemodel = object, predict = predictfun, fitted = predictfun)
             class(ret) <- "basefit"
             ret
-        }  
+        }
 
-        ret <- list(fit = fitfun, hatmatrix = function() 
+        ret <- list(fit = fitfun, hatmatrix = function()
                                       hatMatTH(x = x, w = weights, df = df))
         class(ret) <- "basisdpp"
         ret
@@ -340,9 +307,18 @@ bss <- function(x, df = 4, xname = NULL) {
     return(x)
 }
 
-bspatial <- function(x, y, z = NULL, df = 5, xknots = NULL, yknots = NULL, 
+bspatial <- function(x, y, z = NULL, df = 5, xknots = 20, yknots = 20,
                      degree = 3, differences = 2, center = FALSE, xname = NULL,
                      yname = NULL, zname = NULL) {
+
+    if (!is.numeric(x) || !is.numeric(y))
+        stop(sQuote("x"), " and ", sQuote("y"), " must be numeric")
+    if (!is.numeric(z) && (is.factor(z) && length(unique(z)) != 2))
+        stop(sQuote("z"), " must be binary or numeric")
+
+    if(is.factor(z) && length(unique(z)) == 2)
+        ## FIXME is there a more elegant way to produce a binary with 0/1?
+        z <- as.numeric(z[, drop=T]) - 1
 
     if (is.null(xname)) xname = deparse(substitute(x))
     if (is.null(yname)) yname = deparse(substitute(y))
@@ -357,48 +333,22 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = NULL, yknots = NULL,
         stop(sQuote(xname), " has less than 6 unique values")
     if (length(unique(y)) < 6)
         stop(sQuote(yname), " has less than 6 unique values")
-        
-        
-    n.kn <- function(n) {
-        ## Number of inner knots
-        if(n < 50) n
-        else trunc({
-            a1 <- log( 50, 2)
-	    a2 <- log(100, 2)
-            a3 <- log(140, 2)
-	    a4 <- log(200, 2)
-	    if	(n < 200) 2^(a1+(a2-a1)*(n-50)/150)
-	    else if (n < 800) 2^(a2+(a3-a2)*(n-200)/600)
-	    else if (n < 3200)2^(a3+(a4-a3)*(n-800)/2400)
-	    else  200 + (n-3200)^0.2
-        })
-    }
-        
-    
-    if(is.null(xknots)) {
-        n <- length(x)
-        nk <- n.kn(n)    
-        xknots <- seq(from = min(x, na.rm = TRUE), 
-                     to = max(x, na.rm = TRUE), length = nk + 2)
-        xknots <- xknots[2:(length(xknots) - 1)]   
-    }    
-    if(is.null(yknots)) {
-        n <- length(y)
-        nk <- n.kn(n)    
-        yknots <- seq(from = min(y, na.rm = TRUE), 
-                     to = max(y, na.rm = TRUE), length = nk + 2)
-        yknots <- yknots[2:(length(yknots) - 1)]   
-    }        
-        
+
+    if (length(unique(diff(xknots))) > 1)
+            warning("non-equidistant ", sQuote("xknots"),
+                    " might be inappropriate")
+    if (length(unique(diff(yknots))) > 1)
+            warning("non-equidistant ", sQuote("yknots"),
+                    " might be inappropriate")
 
     if (length(xknots) == 1) {
-        xknots <- seq(from = min(x, na.rm = TRUE), 
-                     to = max(x, na.rm = TRUE), length = xknots + 2) 
+        xknots <- seq(from = min(x, na.rm = TRUE),
+                     to = max(x, na.rm = TRUE), length = xknots + 2)
         xknots <- xknots[2:(length(xknots) - 1)]
     }
     if (length(yknots) == 1) {
-        yknots <- seq(from = min(y, na.rm = TRUE), 
-                     to = max(y, na.rm = TRUE), length = yknots + 2) 
+        yknots <- seq(from = min(y, na.rm = TRUE),
+                     to = max(y, na.rm = TRUE), length = yknots + 2)
         yknots <- yknots[2:(length(yknots) - 1)]
     }
     newX <- function(x, y, z) {
@@ -415,9 +365,9 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = NULL, yknots = NULL,
     yd <- length(yknots) + degree + 1
 
     Kx <- diff(diag(xd), differences = differences)
-    Kx <- crossprod(Kx, Kx) 
+    Kx <- crossprod(Kx, Kx)
     Ky <- diff(diag(yd), differences = differences)
-    Ky <- crossprod(Ky, Ky) 
+    Ky <- crossprod(Ky, Ky)
     K <- kronecker(Kx, diag(yd)) + kronecker(diag(xd), Ky)
 
     L <- 0
@@ -429,7 +379,7 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = NULL, yknots = NULL,
         X <- X%*%L
         K <- diag(ncol(X))
     }
- 
+
     dpp <- function(weights) {
 
         lambda <- df2lambda(X, df = df, dmat = K, weights = weights)
@@ -449,9 +399,9 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = NULL, yknots = NULL,
                 }
                 nX %*% coef
             }
-            ret <- list(model = coef, predict = predictfun, 
-                        fitted = X %*% coef)
-            class(ret) <- "basefit"
+            ret <- list(model = coef, predict = predictfun,
+                        fitted = function() X %*% coef)
+            class(ret) <- c("basefit", "baselm")
             ret
         }
         ret <- list(fit = fitfun, hatmatrix = function() X %*% Xsolve)
@@ -462,68 +412,89 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = NULL, yknots = NULL,
     return(X)
 }
 
-bols <- function(x, z = NULL, xname = NULL, zname = NULL) {
+bols <- function(x, z = NULL, xname = NULL, zname = NULL, center = FALSE,
+                 df = NULL) {
 
-    if (is.null(xname)) xname = deparse(substitute(x))
-    if (is.null(zname)) zname = deparse(substitute(z))
+     if (is.null(xname)) xname = deparse(substitute(x))
+     if (is.null(zname)) zname = deparse(substitute(z))
 
-    cc <- complete_cases(x = x, z = z)
+     cc <- complete_cases(x = x, z = z)
 
-    newX <- function(x, z = NULL, na.rm = TRUE) {
-        if (na.rm) {
-            x <- x[cc]
-            if (!is.null(z))
-                z <- z[cc]
-        }
-        X <- model.matrix(~ x)
-        if (any(!cc) & !na.rm) {
-            Xtmp <- matrix(NA, ncol = ncol(X), nrow = length(cc))
-            Xtmp[cc,] <- X
-            X <- Xtmp
-        }
-        if (!is.null(z)) X <- X * z
-        X
-    }
-    X <- newX(x, z)
-    Xna <- X
-    if (any(!cc))
-        Xna <- newX(x, z, na.rm = FALSE)
+     newX <- function(x, z = NULL, na.rm = TRUE) {
+         if (na.rm) {
+             x <- x[cc]
+             if (!is.null(z))
+                 z <- z[cc]
+         }
 
-    dpp <- function(weights) {
+         X <- model.matrix(~ x)
+         if (center)
+            X <- X[, -1, drop = FALSE]
 
-        if (any(!cc)) weights <- weights[cc]
-        Xw <- X * weights
-        Xsolve <- tcrossprod(solve(crossprod(Xw, X)), Xw)
+         if (any(!cc) & !na.rm) {
+             Xtmp <- matrix(NA, ncol = ncol(X), nrow = length(cc))
+             Xtmp[cc,] <- X
+             X <- Xtmp
+         }
+         if (!is.null(z)) X <- X * z
+         X
+     }
+     X <- newX(x, z)
+     Xna <- X
+     if (any(!cc))
+         Xna <- newX(x, z, na.rm = FALSE)
 
-        fitfun <- function(y) {
-           
-            if (any(!cc)) y <- y[cc]
-            coef <- Xsolve %*% y
+     K <- diag(ncol(X))
 
-            predictfun <- function(newdata = NULL) {
-                if (is.null(newdata)) return(Xna %*% coef)
-                nX <- newX(x = newdata[[xname]], z = newdata[[zname]], 
-                           na.rm = FALSE)
-                nX %*% coef
-            }
-            ret <- list(model = coef, predict = predictfun, 
-                        fitted = Xna %*% coef)
-            class(ret) <- "basefit"
-            ret
-        }
-        ret <- list(fit = fitfun, hatmatrix = function() X %*% Xsolve)
-        class(ret) <- "basisdpp"
-        ret
-    }
-    attr(X, "dpp") <- dpp
-    return(X)
+     dpp <- function(weights) {
+
+         if (any(!cc)) weights <- weights[cc]
+         Xw <- X * weights
+         XtX <- crossprod(Xw, X)
+
+         if (is.null(df) || df >= ncol(K)) {
+             Xsolve <- tcrossprod(solve(crossprod(Xw, X)), Xw)
+         } else {
+             lambda <- df2lambda(X, df = df, dmat = K, weights = weights)
+             Xsolve <- tcrossprod(solve(XtX + lambda * K), Xw)
+         }
+
+         fitfun <- function(y) {
+
+             if (any(!cc)) y <- y[cc]
+             coef <- Xsolve %*% y
+
+             predictfun <- function(newdata = NULL) {
+                 if (is.null(newdata)) return(Xna %*% coef)
+                 nX <- newX(x = newdata[[xname]], z = newdata[[zname]],
+                            na.rm = FALSE)
+                 nX %*% coef
+             }
+             ret <- list(model = coef, predict = predictfun,
+                         fitted = function() Xna %*% coef)
+             class(ret) <- c("basefit", "baselm")
+             ret
+         }
+         ret <- list(fit = fitfun, hatmatrix = function() X %*% Xsolve)
+         class(ret) <- "basisdpp"
+         ret
+     }
+     attr(X, "dpp") <- dpp
+     return(X)
 }
 
-brandom <- function(x, z = NULL, df = 4, xname = NULL, 
+brandom <- function(x, z = NULL, df = 4, xname = NULL,
                     zname = NULL) {
 
     if (is.null(xname)) xname = deparse(substitute(x))
     if (is.null(zname)) zname = deparse(substitute(z))
+
+    if (!is.numeric(z) && (is.factor(z) && length(unique(z)) != 2))
+        stop(sQuote("z"), " must be binary or numeric")
+
+    if(is.factor(z) && length(unique(z)) == 2)
+        ## FIXME is there a more elegant way to produce a binary with 0/1?
+        z <- as.numeric(z[, drop=T]) - 1
 
     newX <- function(x, z = NULL) {
         if (!is.factor(x)) stop(sQuote("x"), " is not a factor")
@@ -553,11 +524,63 @@ brandom <- function(x, z = NULL, df = 4, xname = NULL,
                 nX <- newX(x = newdata[[xname]], z = newdata[[zname]])
                 nX %*% coef
             }
-            ret <- list(model = coef, predict = predictfun, fitted = X %*% coef)
-            class(ret) <- "basefit"
+            ret <- list(model = coef, predict = predictfun, fitted = function() X %*% coef)
+            class(ret) <- c("basefit", "baselm")
             ret
         }
         ret <- list(fit = fitfun, hatmatrix = function() X %*% Xsolve)
+        class(ret) <- "basisdpp"
+        ret
+    }
+    attr(X, "dpp") <- dpp
+    return(X)
+}
+
+btree <- function(x, z = NULL, tree_controls = ctree_control(stump = TRUE,
+    mincriterion = 0), xname = NULL, zname = NULL) {
+
+    if (is.null(xname)) xname <- deparse(substitute(x))
+    if (is.null(zname)) zname <- deparse(substitute(z))
+
+    X <- model.matrix(~x - 1)
+
+    dpp <- function(weights) {
+
+        ### construct design matrix etc.
+        y <- vector(length = length(x), mode = "numeric")
+        fm <- as.formula(paste("y ~ ",
+            paste(xname, ifelse(!is.null(z), zname, ""),
+            collapse = "+")))
+        df <- data.frame(y, x)
+        names(df) <- c("y", xname)
+        object <- party:::ctreedpp(fm, data = df)
+        fitmem <- ctree_memory(object, TRUE)
+        where <- rep.int(0, length(x))
+        storage.mode(where) <- "integer"
+        storage.mode(weights) <- "double"
+
+        fitfun <- function(y) {
+
+            .Call("R_modify_response", as.double(y), object@responses,
+                 PACKAGE = "party")
+            tree <- .Call("R_TreeGrow", object, weights, fitmem, tree_controls,
+                          where, PACKAGE = "party")
+
+            predictfun <- function(newdata = NULL) {
+                if (is.null(newdata)) {
+                    wh <- .Call("R_get_nodeID", tree, object@inputs, 0.0, PACKAGE = "party")
+                    return(unlist(.Call("R_getpredictions", tree, wh, PACKAGE = "party")))
+                }
+                newinp <- party:::newinputs(object, newdata)
+                wh <- .Call("R_get_nodeID", tree, newinp, 0.0,
+                        PACKAGE = "party")
+                unlist(.Call("R_getpredictions", tree, wh, PACKAGE = "party"))
+            }
+            ret <- list(model = tree, predict = predictfun, fitted = predictfun)
+            class(ret) <- "basefit"
+            ret
+        }
+        ret <- list(fit = fitfun, hatmatrix = function() NA)
         class(ret) <- "basisdpp"
         ret
     }

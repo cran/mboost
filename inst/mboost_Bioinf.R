@@ -5,14 +5,19 @@ options(width = 50)
 require("mboost")
 require("Biobase")
 ### West et al data: binary classification
-data("westbc", package = "mboost")
+data("Westbc", package = "mboost")
+
+westbc <- new("ExpressionSet", 
+              phenoData = new("AnnotatedDataFrame", data = Westbc$pheno),
+              assayData = assayDataNew(exprs = Westbc$assay))
+
 if (!require("kidpack")) {
     install.packages("kidpack", repos = "http://bioconductor.org/packages/monograph")
     require("kidpack")
 }
 library("survival")
 data("westbc", package = "mboost")
-data("eset")
+data("eset", package = "kidpack")
 remove <- is.na(pData(phenoData(eset))$survival.time)
 eset <- eset[,!remove]
 library("party")

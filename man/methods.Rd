@@ -1,6 +1,7 @@
 \name{methods}
 \alias{print.glmboost}
 \alias{coef.glmboost}
+\alias{coef.gamboost}
 \alias{print.gamboost}
 \alias{AIC.gamboost}
 \alias{AIC.glmboost}
@@ -21,6 +22,7 @@
 \method{print}{glmboost}(x, ...)
 \method{print}{gamboost}(x, ...)
 \method{coef}{glmboost}(object, ...)
+\method{coef}{gamboost}(object, ...)
 \method{AIC}{gamboost}(object, method = c("corrected", "classical"), ..., k = 2)
 \method{AIC}{glmboost}(object, method = c("corrected", "classical"), 
     df = c("trace", "actset"), ..., k = 2)
@@ -60,7 +62,8 @@
   These functions can be used to extract details from fitted models. \code{print}
   shows a dense representation of the model fit and \code{coef} extracts the
   regression coefficients of a linear model fitted using the \code{\link{glmboost}}
-  function.
+  function (for \code{\link{gamboost}} objects, \code{coef} only works
+  when \code{\link{bols}} is used as baselearner).
   
   The \code{predict} function can be used to predict the status of the response variable
   for new observations whereas \code{fitted} extracts the regression fit for the observations
@@ -92,12 +95,10 @@
 
   Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  \emph{Statistical Science}, accepted.
-  \url{http://www.imstat.org/sts/future_papers.html}
+  \emph{Statistical Science}, \bold{22}(4), 477--505.
 
   Travor Hastie (2007), Discussion of ``Boosting Algorithms: Regularization, Prediction and Model Fitting'' 
-  by Peter Buhlmann and Torsten Hothorn. \emph{Statistical Science}, accepted.
-  \url{http://www.imstat.org/sts/future_papers.html}
+  by Peter Buhlmann and Torsten Hothorn. \emph{Statistical Science}, \bold{22}(4), 505.
 
 }
 \examples{
