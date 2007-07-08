@@ -4,21 +4,35 @@
 ### smoothing splines
 ### 
 
+basedef <- function(x, baselearner, dfbase) {
+
+    for (xn in names(x)) {
+        dpp <- attr(x[[xn]], "dpp")
+        if (is.function(dpp)) next()
+        if (is.numeric(x[[xn]]) && dfbase > 2) {
+            args <- list(x = x[[xn]], df = dfbase, xname = xn)
+            if (baselearner == "bols") args$df <- NULL
+            x[[xn]] <- do.call(baselearner, args)
+        } else {
+            x[[xn]] <- bols(x[[xn]], xname = xn)
+        }
+    }
+    x
+}
+
 ### Fitting function
-gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"), 
-                         dfbase = 4, family = GaussReg(), 
+gamboost_fit <- function(object, baselearner = c("bss", "bbs", "bols", "bns"), 
+                         dfbase = 4, family = GaussReg(),
                          control = boost_control(), weights = NULL) {
 
     baselearner <- match.arg(baselearner)
+    if (control$center) 
+        warning("inputs are not centered in ", sQuote("gamboost"))
 
-    ### data
-    x <- object$x
-    if (control$center) {
-        x <- object$center(x)
-        ### object$x <- x
-    }
-
-    vars <- unique(object$assign)
+    ### data and baselearner
+    x <- object$input
+    class(x) <- "list"
+    x <- basedef(x, baselearner = baselearner, dfbase = dfbase)
 
     y <- object$yfit
     check_y_family(object$y, family)
@@ -31,16 +45,17 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
             stop(sQuote("weights"), " is not of length ", NROW(y))
     }
 
-    if (length(dfbase) == 1) dfbase <- rep(dfbase, length(vars))
-    if (length(dfbase) != length(vars)) 
-        stop("length of ", sQuote("dfbase"), 
-             " does not equal the number of covariates")
-
     ### hyper parameters
     mstop <- control$mstop
     risk <- control$risk
     constraint <- control$constraint
     nu <- control$nu
+    trace <- control$trace
+    tracestep <- options("width")$width / 2
+
+    ### surrogate variables for handling missing values: add later
+    nsurrogate <- 0
+    nsurrogate <- min(nsurrogate, length(x))
 
     ### extract negative gradient and risk functions
     ngradient <- family@ngradient
@@ -57,50 +72,46 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
     oobweights <- as.numeric(weights == 0)
 
     ### the ensemble
-    ens <- matrix(NA, nrow = mstop, ncol = 1)
-    colnames(ens) <- "xselect"
+    ens <- matrix(NA, nrow = mstop, ncol = nsurrogate + 1)
+    if (nsurrogate > 0) {
+        colnames(ens) <- c("xselect", 
+            paste("xselect_surr", 1:nsurrogate, sep = "_"))
+    } else {
+        colnames(ens) <- "xselect"
+    }
     ensss <- vector(mode = "list", length = mstop)
 
     ### vector of empirical risks for all boosting iterations
     ### (either in-bag or out-of-bag)
     mrisk <- numeric(mstop)
     mrisk[1:mstop] <- NA   
+    tsums <- numeric(length(x))
+    ss <- vector(mode = "list", length = length(x))
 
     fit <- offset <- family@offset(y, weights)
     u <- ustart <- ngradient(y, fit, weights)
 
     ### dpp
-    fitfct <- vector(mode = "list", length = length(vars))
-    for (i in 1:length(vars)) {
-        xj <- x[,object$assign == vars[i]]
-        if (dfbase[i] == 0) next
-        intfact <- vars[i] == 0 || object$classes[vars[i]] != "numeric"
-        if (intfact || length(unique(xj)) < 5) {
-            fitfct[[i]] <- ols()(xj, weights)
-            next
-        }
-        fitfct[[i]] <- do.call(baselearner, list(df = dfbase[i]))(xj, weights)
-    }
+    fitfct <- vector(mode = "list", length = length(x))
+    for (i in 1:length(x))
+        fitfct[[i]] <- attr(x[[i]], "dpp")(weights)
 
     ### start boosting iteration
     for (m in 1:mstop) {
   
-        sums <- 0
-        xselect <- 0
         ### fit least squares to residuals _componentwise_
-        for (i in (1:length(vars))[dfbase > 0]) {
-            ss <- try(fitfct[[i]](y = u))
-            if (inherits(ss, "try-error")) next
-            tsums <- sum(weights * (fitted(ss) - u)^2)
-            if (tsums < sums || sums == 0) {
-                sums <- tsums
-                xselect <- i
-                basess <- ss
-            }
+        for (i in 1:length(x)) {
+            tsums[i] <- -1
+            ss[[i]] <- try(fitfct[[i]]$fit(y = u))
+            if (inherits(ss[[i]], "try-error")) next
+            tsums[i] <- mean(weights * (fitted(ss[[i]]) - u)^2, na.rm = TRUE)
         }
 
-        if (xselect == 0) 
+        if (all(tsums < 0)) 
             stop("could not fit base learner in boosting iteration ", m)
+        xselect <- order(tsums)[1:(nsurrogate + 1)]
+        basess <- ss[xselect]
+        class(basess) <- "baselist"
 
         ### update step
         fit <- fit + nu * fitted(basess)
@@ -121,6 +132,9 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
         ens[m,] <- xselect
         ensss[[m]] <- basess
 
+        ### print status information
+        if (trace) 
+            do_trace(m, risk = mrisk, step = tracestep, width = mstop)
     }
 
     updatefun <- function(object, control, weights) 
@@ -147,27 +161,20 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
     RET$predict <- function(newdata = NULL, mstop = mstop, ...) {
 
         if (!is.null(newdata)) {
-            if (is.null(object$menv)) {
-                if (!is.matrix(newdata) || ncol(newdata) != ncol(x))
-                    stop(sQuote("newdata"), " is not a matrix with ", ncol(x),
-                         "columns")
-                x <- newdata
-            } else {
-                mf <- object$menv@get("input", data = newdata)
-                x <- model.matrix(attr(mf, "terms"), data = mf)
-            }
-            if (control$center) x <- object$center(x)
+            if (is.null(colnames(newdata)))
+                stop("missing column names for ", sQuote("newdata"))
+            if (is.matrix(newdata)) newdata <- as.data.frame(newdata)
         }
 
         lp <- offset
         for (m in 1:mstop)
-            lp <- lp + nu * predict(ensss[[m]], newdata = x[,object$assign == vars[ens[m,]]])
+            lp <- lp + nu * predict(ensss[[m]], newdata = newdata)
         if (constraint) lp <- sign(lp) * pmin(abs(lp), 1)    
         return(lp)
     }
 
     ### function for computing hat matrices of individual predictors
-    RET$hat <- function(j) hatvalues(ensss[[which(ens[,1] == j)[1]]])
+    RET$hat <- function(j) fitfct[[j]]$hatmatrix()
 
     class(RET) <- c("gamboost", "gb")
     return(RET)
@@ -178,22 +185,14 @@ gamboost_fit <- function(object, baselearner = c("ssp", "bsp", "ols"),
 gamboost <- function(x, ...) UseMethod("gamboost")
 
 ### formula interface
-gamboost.formula <- function(formula, data = list(), weights = NULL, ...) {
+gamboost.formula <- function(formula, data = list(), weights = NULL, 
+                             na.action = na.omit, ...) {
 
     ### construct design matrix etc.
-    object <- boost_dpp(formula, data, weights)
-
-    object$classes <- sapply(object$menv@get("input"), class)
-    object$assign <- attr(object$x, "assign")
-
-    object$center <- function(xmat) { 
-        cm <- colMeans(object$x)
-        num <- which(sapply(object$menv@get("input"), class) == "numeric")
-        cm[!attr(object$x, "assign") %in% num] <- 0
-        scale(xmat, center = cm, scale = FALSE)
-    }
+    object <- boost_dpp(formula, data, weights, na.action)
 
     ### fit the ensemble
+    object$input <- object$menv@get("input")
     RET <- gamboost_fit(object, ...)
 
     RET$call <- match.call()
@@ -207,23 +206,19 @@ gamboost.matrix <- function(x, y, weights = NULL, ...) {
     if (NROW(y) != NROW(x))
         stop("number of observations in", sQuote("x"), "and",
              sQuote("y"), "differ")
+    if (is.null(colnames(x)))
+        stop("missing column names for ", sQuote("x"))
     if (is.null(weights)) weights <- rep(1, NROW(x))
     if (length(weights) != NROW(x))
         stop("number of observations in", sQuote("x"), "and",
              sQuote("weights"), "differ")
 
     object <- gb_xyw(x, y, weights)
-    object$center <- function(xmat) 
-        scale(xmat, center = colMeans(x), scale = FALSE)
-    object$classes <- rep("numeric", ncol(x))
-    as <- attr(x, "assign")
-    object$assign <- as
-    if (is.null(as)) object$assign <- 1:ncol(x)
+    object$input <- as.data.frame(x)
     RET <- gamboost_fit(object, ...)
     RET$call <- match.call()
     return(RET)
 }
-
 
 ### methods: print
 print.gamboost <- function(x, ...) {
@@ -244,4 +239,35 @@ print.gamboost <- function(x, ...) {
     cat("\n")
     invisible(x)
 
+}
+
+plot.gamboost <- function(x, which = NULL, ask = TRUE && dev.interactive(), 
+    type = "b", ylab = expression(f[partial]), add_rug = TRUE, ...) {
+
+    lp <- mboost:::gamplot(x)
+    input <- x$data$input
+    ### <FIXME>: y ~ bbs(x) means that we only have access to x via
+    ### the environment of its dpp function
+    tmp <- lapply(input, function(x) 
+        eval(expression(x), envir = environment(attr(x, "dpp"))))
+    input <- as.data.frame(tmp)
+    names(input) <- names(tmp)
+    ### </FIXME>
+    if (is.null(which)) which <- colnames(input)
+
+    if (ask) {
+        op <- par(ask = TRUE)
+        on.exit(par(op))
+    }
+
+    out <- sapply(which, function(w) {
+        xp <- input[[w]]
+        yp <- lp[,w]
+        ox <- order(xp)
+        plot(xp[ox], yp[ox], xlab = w, type = type, 
+             ylab = ylab, ylim = range(lp[,which]), ...)
+        abline(h = 0, lty = 3)
+        if (add_rug) rug(input[[w]])
+    })
+    rm(out)
 }

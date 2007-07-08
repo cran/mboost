@@ -31,6 +31,8 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
     risk <- control$risk
     constraint <- control$constraint
     nu <- control$nu
+    trace <- control$trace
+    tracestep <- options("width")$width / 2
 
     ### extract negative gradient and risk functions
     ngradient <- family@ngradient
@@ -98,6 +100,10 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
 
         ### save the model, i.e., the selected coefficient and variance
         ens[m,] <- c(xselect, coef)
+
+        ### print status information
+        if (trace) 
+            do_trace(m, risk = mrisk, step = tracestep, width = mstop)
     }
 
     updatefun <- function(object, control, weights)
@@ -138,7 +144,7 @@ glmboost_fit <- function(object, family = GaussReg(), control = boost_control(),
         }
 
         tmp <- RET
-        tmp$ensemble <- tmp$ensemble[1:mstop,,drop = TRUE]
+        tmp$ensemble <- tmp$ensemble[1:mstop,,drop = FALSE]
         lp <- offset + x %*% coef(tmp)
         if (constraint) lp <- sign(lp) * pmin(abs(lp), 1)    
         return(drop(lp))
@@ -155,10 +161,17 @@ glmboost <- function(x, ...) UseMethod("glmboost")
 
 ### formula interface
 glmboost.formula <- function(formula, data = list(), weights = NULL, 
-                             contrasts.arg = NULL, ...) {
+                             contrasts.arg = NULL, na.action = na.pass, ...) {
+
+    ### control and contrasts.arg might be confused here
+    if (!is.null(contrasts.arg)) {
+        if (extends(class(contrasts.arg), "boost_control"))
+            stop(sQuote("contrasts.arg"), " is not a list of contrasts")
+    }
 
     ### construct design matrix etc.
-    object <- boost_dpp(formula, data, weights, contrasts.arg = contrasts.arg)
+    object <- boost_dpp(formula, data, weights, contrasts.arg = contrasts.arg, 
+                        na.action = na.action)
 
     object$center <- function(xmat) {
         cm <- colMeans(object$x)
@@ -213,7 +226,7 @@ coefpath.glmboost <- function(object, ...) {
 
     vars <- colnames(object$data$x)
     xselect <- object$ensemble[,"xselect"]
-    svars <- vars[tabulate(xselect) > 0]
+    svars <- vars[tabulate(xselect, nbins = length(vars)) > 0]
     ret <- matrix(0, nrow = mstop(object), ncol = length(svars))
     colnames(ret) <- svars
     for (j in unique(xselect)) {
@@ -268,8 +281,9 @@ plot.glmboost <- function(x, main = deparse(x$call),
 
     cp <- coefpath(x)
     cp <- cp[,order(cp[nrow(cp),])]
+    cf <- cp[nrow(cp),]
     if (is.null(col))
-        col <- hcl(h = seq(0, 270, length = ncol(cp)), c = 90, l = 70)
+        col <- hcl(h = 40, l = 50, c= abs(cf) / max(abs(cf)) * 490)
     matplot(cp, type = "l", lty = 1, xlab = "Number of boosting iterations", 
             ylab = "Coefficients", main = main, col = col, ...)
     abline(h = 0, lty = 1, col = "lightgray")

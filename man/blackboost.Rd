@@ -29,18 +29,18 @@ blackboost_fit(object, tree_controls =
   \item{object}{ an object of class \code{boost_data}, see \code{\link{boost_dpp}}. }
   \item{tree_controls}{ an object of class \code{\link[party]{TreeControl}}, which can be
                   obtained using \code{\link[party]{ctree_control}}. 
-                  Defines hyper parameters for the trees which are used as base learners. 
+                  Defines hyper-parameters for the trees which are used as base learners. 
                   It is wise
                   to make sure to understand the consequences of altering any of its
                   arguments.}
   \item{fitmem}{ an object of class \code{\link[party]{TreeFitMemory}}.}
   \item{family}{ an object of class \code{\link{boost_family-class}},
                 implementing the negative gradient corresponding
-                to the loss function to be optimized, by default, 
+                to the loss function to be optimized. By default, 
                 squared error loss
                 for continuous responses is used.}
   \item{control}{ an object of class \code{\link{boost_control}}
-                  which defines the hyper parameters of the
+                  which defines the hyper-parameters of the
                   boosting algorithm.}
   \item{\dots}{ additional arguments passed to callies. }
 }
@@ -59,9 +59,10 @@ blackboost_fit(object, tree_controls =
   The regression fit is a black box prediction machine and thus 
   hardly interpretable. 
 
-  Usually, the formula based interface \code{blackboost} should be used,
-  the fitting procedure without data preprocessing is assessible
-  via \code{blackboost_fit}, for example for cross-validation.
+  Usually, the formula based interface \code{blackboost} should be used.
+  When necessary (for example for cross-validation), function
+  \code{blackboost_fit} operating on objects of class \code{boost_data} 
+  is faster alternative.
 
 }
 \value{
@@ -80,8 +81,8 @@ blackboost_fit(object, tree_controls =
 
   Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  Statistical Science, accepted.
-  \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
+  \emph{Statistical Science}, accepted.
+  \url{http://www.imstat.org/sts/future_papers.html}
 
 }
 \examples{

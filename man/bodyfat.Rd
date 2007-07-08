@@ -36,7 +36,7 @@
   methodological efforts needed. Therefore, a simple regression equation
   for predicting DXA measurements of body fat is of special interest for the practitioner.
   Backward-elimination was applied to select
-  important variables from the available anthropometrical measurements and
+  important variables from the available anthropometrical measurements, and
   Garcia (2005) report a final linear model utilizing
   hip circumference, knee breadth and a compound covariate which is defined as
   the sum of log chin skinfold, log triceps skinfold and log subscapular skinfold.
@@ -44,15 +44,16 @@
 }
 \source{
 
-    A. L. Garcia, K. Wagner, T. Hothorn, C. Koebnick, H.-J. F. Zunft and
-    U. Tippo (2005). Improved Prediction of Body Fat by Measuring Skinfold
-    Thickness, Circumferences, and Bone Breadths. \emph{Obesity Research},
+    Ada L. Garcia, Karen Wagner, Torsten Hothorn, Corinna Koebnick, 
+    Hans-Joachim F. Zunft and Ulrike Trippo (2005),
+    Improved prediction of body fat by measuring skinfold
+    thickness, circumferences, and bone breadths. \emph{Obesity Research},
     \bold{13}(3), 626--634.
 
     Peter Buhlmann and Torsten Hothorn (2007),
     Boosting algorithms: regularization, prediction and model fitting.
-    Statistical Science, accepted.
-    \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
+    \emph{Statistical Science}, accepted.
+    \url{http://www.imstat.org/sts/future_papers.html}
 
 }
 \examples{
@@ -62,6 +63,12 @@
     ### final model proposed by Garcia et al. (2005)
     fmod <- lm(DEXfat ~ hipcirc + anthro3a + kneebreadth, data = bodyfat)
     coef(fmod)  
+
+    ### plot additive model for same variables
+    amod <- gamboost(DEXfat ~ hipcirc + anthro3a + kneebreadth, 
+                     data = bodyfat, baselearner = "bbs")
+    layout(matrix(1:3, ncol = 3))
+    plot(amod[mstop(AIC(amod, "corrected"))], ask = FALSE)
 
 }
 \keyword{datasets}

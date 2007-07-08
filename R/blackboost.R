@@ -35,6 +35,11 @@ blackboost_fit <- function(object,
     risk <- control$risk
     constraint <- control$constraint
     nu <- control$nu
+    trace <- control$trace
+    tracestep <- options("width")$width / 2
+
+    if (control$center)
+        warning("inputs are not centered in ", sQuote("gamboost"))
 
     ### the ensemble, essentially a list of trees
     ens <- vector(mode = "list", length = mstop)
@@ -90,6 +95,9 @@ blackboost_fit <- function(object,
         if (risk == "inbag") mrisk[m] <- riskfct(y, fit, weights)
         if (risk == "oobag") mrisk[m] <- riskfct(y, fit, oobweights)
 
+        ### print status information
+        if (trace) 
+            do_trace(m, risk = mrisk, step = tracestep, width = mstop)
     }
 
     updatefun <- function(object, control, weights)
@@ -149,9 +157,15 @@ blackboost_fit <- function(object,
 
 ### methods: prediction
 predict.blackboost <- function(object, newdata = NULL, 
-                              type = c("lp", "response"), ...) {
+                              type = c("lp", "response"), allIterations = FALSE, ...) {
     y <- party:::get_variables(object$data@responses)[[1]]
     type <- match.arg(type)
+    if (allIterations) {
+        if (type != "lp") 
+            stop(sQuote("allIterations"), " only available for ", 
+                 sQuote("type = \"lp\""))
+        return(fastp(object, newdata))
+    }
     lp <- object$predict(newdata = newdata, mstop = mstop(object), ...)
     if (type == "response" && is.factor(y))
         return(factor(levels(y)[(lp > 0) + 1], levels = levels(y)))

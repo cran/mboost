@@ -1,4 +1,47 @@
 
+		CHANGES in `mboost' VERSION 1.0-0 (2007-11-13)
+
+  o  documentation updates
+
+
+		CHANGES in `mboost' VERSION 0.9-0 (internal)
+
+  o  tests update and release the new version on CRAN
+
+  o  predict(..., allIterations = TRUE) returns the matrix
+     of predictors for all boosting iterations
+
+
+		CHANGES in `mboost' VERSION 0.6-2 (internal)
+
+  o  move `mboost' to R-forge
+
+  o  improvements in `gamboost':
+     - P-splines as base learners available
+     - new formula interface for specifying the base learner
+     - new plot.gamboost
+
+  o  add the number of selected variables as degrees of freedom
+     (as mentioned in the discussion of Hastie to Buhlmann & Hothorn)
+
+  o  status information during fitting is now available via
+     boost_control(trace = TRUE) but is switched off by default
+
+  o  acknowledge constributions by Thomas Kneib and Matthias Schmid
+     in DESCRIPTION
+
+
+		CHANGES in `mboost' VERSION 0.6-1 (internal)
+
+  o  gamboost() now allows for user-specified base learners
+     via the formula interface
+
+  o  gamboost.matrix(x = x, ...) requires colnames being set 
+     for `x'
+
+  o  na.action = na.omit fix for g{al}mboost()
+
+
 		CHANGES in `mboost' VERSION 0.5-8 (2007-05-31)
 
   o  gamboost(..., weights = w) was broken

@@ -18,6 +18,7 @@
 Family(ngradient, loss = NULL, risk = NULL, 
        offset = function(y, w) 0, 
        fW = function(f) rep(1, length(f)), 
+       check_y = function(y) TRUE,
        weights = TRUE, name = "user-specified")
 AdaExp()
 Binomial()
@@ -31,7 +32,7 @@ CoxPH()
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{ngradient}{ a function with arguments \code{y}, \code{f} and \code{w} implementing the
-                    \emph{negative} gradient of the \code{loss} function (which is to be minimized!). }
+                    \emph{negative} gradient of the \code{loss} function (which is to be minimized). }
   \item{loss}{ an optional loss function with arguments \code{y} and \code{f} to be minimized (!). }
   \item{risk}{ an optional risk function with arguments \code{y}, \code{f} and \code{w},
                the weighted mean of the loss function by default. }
@@ -40,6 +41,7 @@ CoxPH()
   \item{fW}{ transformation of the fit for the diagonal weights matrix for an
              approximation of the boosting hat matrix for loss functions other than
              squared error.}
+  \item{check_y}{ a function for checking the class / mode of a response variable.}
   \item{weights}{ a logical indicating if weights are allowed. }
   \item{name}{ a character giving the name of the loss function for pretty printing. }
   \item{d}{ delta parameter for Huber loss function. If omitted, it is chosen adaptively.}

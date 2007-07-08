@@ -2,8 +2,10 @@
 \alias{print.glmboost}
 \alias{coef.glmboost}
 \alias{print.gamboost}
-\alias{AIC.gb}
+\alias{AIC.gamboost}
+\alias{AIC.glmboost}
 \alias{predict.gb}
+\alias{predict.blackboost}
 \alias{mstop}
 \alias{mstop.gbAIC}
 \alias{mstop.gb}
@@ -19,12 +21,17 @@
 \method{print}{glmboost}(x, ...)
 \method{print}{gamboost}(x, ...)
 \method{coef}{glmboost}(object, ...)
-\method{AIC}{gb}(object, method = c("corrected", "classical"), ...)
+\method{AIC}{gamboost}(object, method = c("corrected", "classical"), ..., k = 2)
+\method{AIC}{glmboost}(object, method = c("corrected", "classical"), 
+    df = c("trace", "actset"), ..., k = 2)
 \method{mstop}{gbAIC}(object, ...)
 \method{mstop}{gb}(object, ...)
 \method{mstop}{cvrisk}(object, ...)
 \method{mstop}{blackboost}(object, ...)
-\method{predict}{gb}(object, newdata = NULL, type = c("lp", "response"), ...)
+\method{predict}{gb}(object, newdata = NULL, type = c("lp", "response"), 
+       allIterations = FALSE, ...)
+\method{predict}{blackboost}(object, newdata = NULL, type = c("lp", "response"), 
+       allIterations = FALSE, ...)
 \method{fitted}{gb}(object, type = c("lp", "response"), ...)
 \method{logLik}{gb}(object, ...)
 }
@@ -36,8 +43,16 @@
   \item{type}{ a character indicating whether the fit or the response
                (classes) should be predicted in case of classification 
                problems. }
+  \item{allIterations}{ computes the (linear) predictor for all boosting
+               iterations simultaneously and returns a matrix.}
   \item{method}{ a character specifying if the corrected AIC criterion or
-                 a classical (-2 logLik + 2 * df) should be computed.}
+                 a classical \newline (-2 logLik + k * df) should be computed.}
+  \item{df}{ a character specifying how degrees of freedom should be computed:
+             \code{trace} defines degrees of freedom by the trace of the
+             boosting hat matrix and \code{actset} uses the number of
+             non-zero coefficients for each boosting iteration.}
+  \item{k}{  numeric, the \emph{penalty} per parameter to be used; the default
+             \code{k = 2} is the classical AIC. Only used when \code{method = "classical"}.}
   \item{\dots}{ additional arguments passed to callies. }
 }
 \details{
@@ -49,14 +64,19 @@
   
   The \code{predict} function can be used to predict the status of the response variable
   for new observations whereas \code{fitted} extracts the regression fit for the observations
-  in the learning sample.
+  in the learning sample. When \code{allIterations = TRUE}, the matrix
+  of all (linear) predictors for boosting iterations 1 to \code{mstop} is returned.
 
   For (generalized) linear and additive models, the \code{AIC} function can be used
   to compute both the classical and corrected AIC (Hurvich et al., 1998, only available
   when \code{family = GaussReg()} was used), 
   which is useful for the determination
   of the optimal number of boosting iterations to be applied (which can be extracted via
-  \code{mstop}).
+  \code{mstop}). The degrees of freedom are either computed via the trace of the
+  boosting hat matrix (which is rather slow even for moderate sample sizes)
+  or the number of variables (non-zero coefficients) that entered the model so far 
+  (faster but only meaningful for linear models fitted via \code{\link{gamboost}} 
+  (see Hastie, 2007).
 
   Note that \code{logLik} and \code{AIC} only make sense when the corresponding
   \code{\link{Family}} implements the appropriate loss function.  
@@ -72,8 +92,12 @@
 
   Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  Statistical Science, accepted.
-  \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
+  \emph{Statistical Science}, accepted.
+  \url{http://www.imstat.org/sts/future_papers.html}
+
+  Travor Hastie (2007), Discussion of ``Boosting Algorithms: Regularization, Prediction and Model Fitting'' 
+  by Peter Buhlmann and Torsten Hothorn. \emph{Statistical Science}, accepted.
+  \url{http://www.imstat.org/sts/future_papers.html}
 
 }
 \examples{

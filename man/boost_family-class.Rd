@@ -13,7 +13,7 @@ Objects can be created by calls of the form \code{\link{Family}(...)}
     \item{\code{ngradient}:}{ a function with arguments \code{y} and \code{f} 
                               implementing the \emph{negative} gradient of 
                               the \code{loss} function. }
-    \item{\code{loss}:}{ a loss function with arguments \code{y} and \code{f} (to be minimized!). }
+    \item{\code{loss}:}{ a loss function with arguments \code{y} and \code{f} (to be minimized). }
     \item{\code{risk}:}{ a risk function with arguments \code{y}, \code{f} and \code{w},
                the weighted mean of the loss function by default. }
     \item{\code{offset}:}{ a function with argument \code{y} and \code{w} (weights)
@@ -22,6 +22,7 @@ Objects can be created by calls of the form \code{\link{Family}(...)}
     \item{\code{fW}:}{ transformation of the fit for the diagonal weights matrix for an
              approximation of the boosting hat matrix for loss functions other than
              squared error.}
+      \item{check\_y:}{ a function for checking the class / mode of a response variable.}
     \item{\code{name}:}{ a character giving the name of the loss function 
                          for pretty printing. }
     \item{\code{charloss}:}{ a character, the deparsed loss function.}
