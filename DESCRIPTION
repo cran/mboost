@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
 Date: $Date: 2007/07/08 15:52:23 $
-Version: 1.0-0
+Version: 1.0-1
 Author: Torsten Hothorn and Peter Buhlmann with
   contributions by Thomas Kneib and Matthias Schmid
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
@@ -16,4 +16,4 @@ Depends: R (>= 2.4.0), methods, modeltools (>= 0.2.10), party (>= 0.9-10),
 Suggests: mlbench, ipred, Biobase
 LazyLoad: yes
 License: GPL-2
-Packaged: Tue Nov 13 18:14:52 2007; hothorn
+Packaged: Sun Dec  9 15:15:45 2007; hothorn
