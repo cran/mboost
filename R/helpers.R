@@ -1,4 +1,3 @@
-
 ### two possible interpretations of weights:
 ### 1) case counts: observation i is w_i times in the sample
 ### 2) relative weights: observation i is given weight w_i
@@ -9,17 +8,21 @@ rescale_weights <- function(w) {
 }
 
 ### data preprocessing
-boost_dpp <- function(formula, data, weights = NULL, ...) {
+boost_dpp <- function(formula, data, weights = NULL, na.action = na.omit, ...) {
 
-    env <- ModelEnvFormula(formula, data, ...)
+    if (is.null(weights)) {
+        env <- ModelEnvFormula(formula, data, na.action = na.action, ...)
+        weights <- rep.int(1, NROW(env@get("response")))
+    } else {
+        env <- ModelEnvFormula(formula, data, na.action = na.action, 
+                               other = list(weights = ~ weights), ...)
+        weights <- env@get("weights")[[1]]
+    }
     y <- env@get("response")
     if (length(y) != 1)
         stop("cannot deal with multivariate response variables")
     y <- y[[1]]
     x <- env@get("designMatrix")
-
-    if (is.null(weights))
-        weights <- rep.int(1, NROW(x))
 
     if (is.factor(y)) {
         if (nlevels(y) != 2)
@@ -55,30 +58,8 @@ gb_xyw <- function(x, y, w) {
 }
 
 ### check measurement scale of response for some losses
-check_y_family <- function(y, family) {
-
-    if (isTRUE(all.equal(attributes(family), 
-                  attributes(Binomial())))) {
-        if (!is.factor(y))
-            warning("response is not a factor but ", 
-                    sQuote("family = Binomial()"))
-        if (nlevels(y) != 2)
-            warning("response is not a factor at two levels but ", 
-                    sQuote("family = Binomial()"))
-    }
-    if (isTRUE(all.equal(attributes(family), 
-                  attributes(CoxPH())))) {
-        if (!inherits(y, "Surv"))
-            stop("response is not an object of class ", sQuote("Surv"), 
-                 " but ", sQuote("family = CoxPH()"))
-    }
-    if (isTRUE(all.equal(attributes(family), 
-                  attributes(Poisson())))) {
-        if (any(y < 0) || any((y - round(y)) > 0))
-            stop("response is not an integer variable but ", 
-                 sQuote("family = Poisson()"))
-    }
-}
+check_y_family <- function(y, family)
+    family@check_y(y)
 
 ### check for negative gradient corresponding to L2 loss
 checkL2 <- function(object)
@@ -108,17 +89,12 @@ gm.glmboost <- function(object) {
 gm.gamboost <- function(object) {
 
     mstop <- nrow(object$ensemble)
-    x <- object$data$x
-    if (object$control$center) x <- object$data$center(x)
-    as <- attr(x, "assign")
-    vars <- unique(as)
-    RET <- matrix(0, nrow = NROW(x), ncol = mstop)
+    x <- object$data$input
+    RET <- matrix(0, nrow = NROW(x[[1]]), ncol = mstop)
     nu <- object$control$nu
 
-    jsel <- object$ensemble[,"xselect"]
-
     for (m in 1:mstop)
-        RET[,m] <- nu * predict(object$ensembless[[m]], newdata = x[,as == vars[jsel[m]]])
+        RET[,m] <- nu * fitted(object$ensembless[[m]])
 
     RET[,1] <- RET[,1] + object$offset
 
@@ -126,23 +102,26 @@ gm.gamboost <- function(object) {
 }
 
 ### partial fits
-gamplot <- function(object) {
+gamplot <- function(object, newdata = NULL) {
 
-     x <- object$data$x
-     if (object$control$center) x <- object$data$center(x)     
-     as <- attr(x, "assign")
-     vars <- unique(as)
-     lp <- matrix(0, ncol = NCOL(x), nrow = NROW(x))
+     if (is.null(newdata)) {
+         x <- object$data$input
+         pr <- function(obj) fitted(obj)
+     } else {
+         x <- newdata
+         pr <- function(obj) predict(obj, newdata = x)
+     }
+     lp <- matrix(0, ncol = length(object$data$input), 
+                  nrow = NROW(x[[1]]))
      ens <- object$ensemble
      ensss <- object$ensembless
      nu <- object$control$nu
      mstop <- nrow(ens)
      for (m in 1:mstop) {
          xselect <- ens[m,"xselect"]
-         lp[,xselect] <- lp[,xselect] + nu * predict(ensss[[m]], 
-                                     newdata = x[,as == vars[xselect]])
+         lp[,xselect] <- lp[,xselect] + nu * pr(ensss[[m]])
      }
-     colnames(lp) <- colnames(x)
+     colnames(lp) <- colnames(object$data$input)
      lp
 }
 
@@ -285,7 +264,7 @@ sknotl <- function(x, nk = NULL) {
 	    a4 <- log(200, 2)
 	    if	(n < 200) 2^(a1+(a2-a1)*(n-50)/150)
 	    else if (n < 800) 2^(a2+(a3-a2)*(n-200)/600)
-	    else if (n < 3200)2^(a3+(a4-a3)*(n-800)/2400)
+    else if (n < 3200)2^(a3+(a4-a3)*(n-800)/2400)
 	    else  200 + (n-3200)^0.2
         })
     }
@@ -424,4 +403,86 @@ predict.lmfit <- function(object, newdata) {
     if (length(object$coef) == 2)
         return(as.vector(cbind(1, x) %*% object$coef))
     return(as.vector(x * object$coef))
+}
+
+### trace boosting iterations
+do_trace <- function(m, risk, step = options("width")$width / 2, 
+                     width = 1000) {
+
+    if ((m - 1) %/% step == (m - 1) / step) {
+        mchr <- formatC(m, format = "d", width = nchar(width) + 1, 
+                        big.mark = "'")
+        cat(paste("[", mchr, "] ",sep = ""))
+    } else {
+        if ((m %/% step != m / step) && m != width) {
+            cat("*")
+        } else {
+            if (m == width) cat(rep(" ", step - width %% step - 1))
+            cat("* -- risk:", risk[m], "\n")
+        }
+    }
+}
+
+### compute the predictor for all boosting iterations fast
+fastp <- function(object, newdata) UseMethod("fastp")
+
+fastp.glmboost <- function(object, newdata = NULL) {
+
+     if (!is.null(newdata)) {
+         if (is.null(object$data)) {
+             x <- newdata
+         } else {
+             mf <- object$data$menv@get("input", data = newdata)
+             x <- model.matrix(attr(mf, "terms"), data = mf)
+         }
+         if (object$control$center) x <- object$center(x)
+    } else {
+         mf <- object$data$menv@get("input")
+         x <- model.matrix(attr(mf, "terms"), data = mf)
+         if (object$control$center) x <- object$center(x)
+    }
+
+    lp <- matrix(0, nrow = NROW(x), ncol = mstop(object))
+    jsel <- object$ensemble[,"xselect"]
+    cf <- object$ensemble[,"coef"] * object$control$nu
+
+    tmp <- object$offset
+    for (m in 1:mstop(object)) {
+        lp[,m] <- tmp + cf[m] * x[,jsel[m]]
+        tmp <- lp[,m]
+    }
+    return(lp)
+}
+
+fastp.gamboost <- function(object, newdata = NULL) {
+
+    n <- length(predict(object$ensembless[[1]], newdata = newdata))
+    lp <- matrix(0, nrow = n, ncol = mstop(object))
+    nu <- object$control$nu
+
+    tmp <- object$offset
+    for (m in 1:mstop(object)) {
+        lp[,m] <- tmp + nu * predict(object$ensembless[[m]], 
+                   newdata = newdata)
+        tmp <- lp[,m]
+    }
+    return(lp)
+}
+
+fastp.blackboost <- function(object, newdata = NULL) {
+
+    newinp <- party:::newinputs(object$data, newdata)
+    lp <- matrix(0, nrow = newinp@nobs, ncol = mstop(object))
+    for (m in 1:mstop(object)) {
+        wh <- .Call("R_get_nodeID", object$ensemble[[m]], newinp, 0.0,
+                    PACKAGE = "party")
+        if (m == 1) {
+            tmp <- object$offset   
+        } else {
+            tmp <- lp[,m-1]
+        }
+        lp[,m] <- tmp + object$control$nu * unlist(.Call("R_getpredictions",
+            object$ensemble[[m]], wh, PACKAGE = "party"))
+    }
+    lp
 }

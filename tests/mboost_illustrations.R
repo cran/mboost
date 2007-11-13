@@ -86,7 +86,7 @@ bf_gam <- bf_gam[mstop(aic)]
 fpartial <- mboost:::gamplot(bf_gam)
 layout(matrix(1:4, ncol = 2, byrow = TRUE))
 par(mai = par("mai") * c(1, 1, 0.5, 1))
-x <- boost_dpp(DEXfat ~ ., data = bodyfat)$x
+x <- bf_gam$data$input
 varorder <- rev(order(colMeans(abs(fpartial))))[1:4]
 
 out <- sapply(varorder, function(i) {
@@ -200,7 +200,7 @@ aic
 ### chunk number 24: wpbc-gamboost-plot
 ###################################################
 fpartial <- mboost:::gamplot(wpbc_gam[mopt])
-x <- boost_dpp(status ~ ., data = wpbc2)$x
+x <- wpbc_gam$data$input
 layout(matrix(1:4, nrow = 2, byrow = TRUE))
 par(mai = par("mai") * c(1, 1, 0.5, 1))
 out <- sapply(rev(order(colMeans(abs(fpartial))))[1:4], function(i) {
@@ -220,8 +220,8 @@ source("setup.R")
 ### chunk number 26: wpbc-glmboost-PIC
 ###################################################
 ### calculate IPC weights
-zensored <- wpbc$status == "R"
-iw <- IPCweights(Surv(wpbc$time, zensored))
+censored <- wpbc$status == "R"
+iw <- IPCweights(Surv(wpbc$time, censored))
 wpbc3 <- wpbc[,names(wpbc) != "status"]
 
 
@@ -249,13 +249,5 @@ plot(log(wpbc3$time), predict(wpbc_surv),
      xlab = "Time to recurrence (log-scale)", 
      ylab = "Predicted time to recurrence")
 abline(a = 0, b = 1, lty = 2, lwd = 0.5)
-
-
-###################################################
-### chunk number 30: wpbc-CoxPH eval=FALSE
-###################################################
-## ctrl <- boost_control(center = TRUE)
-## glmboost(Surv(wpbc$time, wpbc$status == "N") ~ ., data = wpbc, family = CoxPH(), 
-##          control = ctrl)
 
 

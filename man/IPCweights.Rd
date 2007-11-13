@@ -31,13 +31,13 @@ IPCweights(x, maxweight = 5)
     Springer, New York.
 
     Torsten Hothorn, Peter Buhlmann, Sandrine Dudoit,
-    Annette Molinaro and Mark J. van der Laan (2006), Survival Ensembles.
+    Annette Molinaro and Mark J. van der Laan (2006), Survival ensembles.
     \emph{Biostatistics} \bold{7}(3), 355--373.
 
     Peter Buhlmann and Torsten Hothorn (2007),
     Boosting algorithms: regularization, prediction and model fitting.
-    Statistical Science, accepted.
-    \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
+    \emph{Statistical Science}, accepted.
+    \url{http://www.imstat.org/sts/future_papers.html}
 
 }
 \keyword{survival}

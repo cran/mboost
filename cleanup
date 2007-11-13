@@ -20,9 +20,13 @@ for f in ./inst/doc/*~; do
     rm -f $f
 done
 
+rm -rf ./inst/doc/figures
+
 for f in ./tests/*~; do
     rm -f $f
 done
+
+rm -f ./inst/tests/figures
 
 for f in ./tests/*.ps; do
     rm -f $f

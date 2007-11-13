@@ -20,19 +20,18 @@
 \references{
 
   Peter Buhlmann (2006), Boosting for high-dimensional linear models.
-  \emph{The Annals of Statistics}, \bold{34}.
+  \emph{The Annals of Statistics}, \bold{34}(2), 559--583.
 
   Peter Buhlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
-  Statistical Science, accepted.
-  \url{ftp://ftp.stat.math.ethz.ch/Research-Reports/Other-Manuscripts/buhlmann/BuehlmannHothorn_Boosting-rev.pdf}
+  \emph{Statistical Science}, accepted.
+  \url{http://www.imstat.org/sts/future_papers.html}
 
 }
 \source{
-
-  M. West and C. Blanchette and H. Dressman and E. Huang
-  and S. Ishida and R. Spang and H. Zuzan and J. Olson and
-  J. Marks and J. Nevins (2001), 
+  Mike West, Carrie Blanchette, Holly Dressman, Erich Huang,
+  Seiichi Ishida, Rainer Spang, Harry Zuzan, John A. Olson Jr.,
+  Jeffrey R. Marks and Joseph R. Nevins (2001), 
   Predicting the clinical status of human breast cancer by using
   gene expression profiles, \emph{Proceedings of the National Academy of Sciences},
   \bold{98}, 11462-11467.

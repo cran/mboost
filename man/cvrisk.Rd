@@ -3,7 +3,7 @@
 \title{ Cross-Validation }
 \description{
   Cross-validated estimation of the empirical risk 
-  for hyper parameter selection.
+  for hyper-parameter selection.
 }
 \usage{
 cvrisk(object, folds, 
@@ -20,12 +20,12 @@ cvrisk(object, folds,
 }
 \details{
 
-  The number of boosting iterations is a hyper parameter of the
+  The number of boosting iterations is a hyper-parameter of the
   boosting algorithms implemented in this package. Honest, 
   i.e., cross-validated, estimates of the empirical risk
   for different stopping parameters \code{mstop} are computed by
   this function which can be utilized to choose an appropriate
-  number of boosting iteration to be applied.
+  number of boosting iterations to be applied.
 
   Different forms of cross-validation can be applied, for example
   10-fold cross-validation or bootstrapping. The weights (zero weights
@@ -34,15 +34,15 @@ cvrisk(object, folds,
 }
 \value{
   An object of class \code{cvrisk}, basically a matrix 
-  containing estimates of the empirical risk for a variying number
+  containing estimates of the empirical risk for a varying number
   of bootstrap iterations. \code{plot} and \code{print} methods
-  are available as well as a \code{mstop} methods.
+  are available as well as a \code{mstop} method.
 }
 \references{
 
   Torsten Hothorn, Friedrich Leisch, Achim Zeileis and Kurt Hornik (2006),
-  The Design and Analysis of Benchmark Experiments.
-  \emph{Journal of Computational and Graphical Statistics} \bold{14}(3), 
+  The design and analysis of benchmark experiments.
+  \emph{Journal of Computational and Graphical Statistics}, \bold{14}(3), 
   675--699.
 }
 \examples{
