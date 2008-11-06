@@ -64,12 +64,12 @@ resid.blackboost <- resid.gb
 ### methods: hatvalues, either exact (L2) or approximately
 hatvalues.gb <- function(model, ...) {
 
-    n <- nrow(model$data$x)   
-    p <- ncol(model$data$x)
+    n <- length(model$data$y)   
     ens <- model$ensemble
+    p <- max(ens[,"xselect"])
     nu <- model$control$nu
 
-    ### list of hat matices
+    ### list of hat matrices
     H <- vector(mode = "list", length = p)
 
     for (xs in unique(ens[,"xselect"]))
@@ -194,3 +194,51 @@ mstop.gbAIC <- function(object, ...) attr(object, "mstop")
 mstop.gb <- function(object, ...) nrow(object$ensemble)
 
 mstop.blackboost <- function(object, ...) length(object$ensemble)
+
+
+survFit <- function(object, ...)
+    UseMethod("survFit")
+
+survFit.gb <- function(object, newdata = NULL, ...)
+{
+
+    n <- length(object$weights)
+    if (!all.equal(object$weights,rep(1,n)))
+        stop("survFit cannot (yet) deal with weights")
+
+    ord <- order(object$response[,1])
+    y <- object$response
+    time <- y[ord,1]
+    event <- y[ord,2]
+    n.event <- aggregate(event, by = list(time), sum)[,2]
+    
+    linpred <- (predict(object)-mean(predict(object)))[ord]
+    R <- rev(cumsum(rev(exp(linpred))))
+    R[R<1e-6] <- Inf
+    
+    d <- c(1,diff(time)) != 0
+    R <- R[d]
+    H <- cumsum(1/R*n.event)
+    time <- time[d]   
+    
+    devent <- n.event > 0
+    if (!is.null(newdata)){
+        S <- exp( tcrossprod( -H, exp(as.numeric(predict(object,
+        newdata=newdata)- mean(predict(object)))) ))[devent,]
+        colnames(S) <- rownames(newdata)
+    } else S <- matrix(exp(-H)[devent], ncol = 1)
+        
+    ret <- list(surv = S, time = time[devent], n.event = n.event[devent])
+    class(ret) <- "survFit"
+    ret
+}
+
+survFit.blackboost <- survFit.gb
+
+plot.survFit <- function(x, xlab = "Time", ylab = "Probability", ...) {
+    plot(x$time, rep(1, length(x$time)), ylim = c(0, 1), type = "n", 
+         ylab = ylab, xlab = xlab, ...)
+    tmp <- apply(rbind(1,x$surv), 2, function(s) lines(c(0,x$time), s, 
+                 type = "s"))
+}
+

@@ -118,20 +118,51 @@ tmp <- data.frame(x1 = runif(100), x2 = runif(100), y = rnorm(100))
 fm1 <- y ~ bss(x1, df = 3) + bss(x2, df = 3)
 fm2 <- y ~ x1 + x2
 mod1 <- gamboost(fm1, data = tmp)
-mod2 <- gamboost(fm1, data = tmp, base = "bss", dfbase = 3)
+mod2 <- gamboost(fm2, data = tmp, base = "bss", dfbase = 3)
 stopifnot(max(abs(fitted(mod1) - fitted(mod2))) < .Machine$double.eps)
 stopifnot(max(abs(predict(mod1, newdata = tmp) - predict(mod2, newdata = tmp))) < .Machine$double.eps)
 
 fm1 <- y ~ bbs(x1, df = 3) + bbs(x2, df = 3)
 fm2 <- y ~ x1 + x2
 mod1 <- gamboost(fm1, data = tmp)
-mod2 <- gamboost(fm1, data = tmp, base = "bbs", dfbase = 3)
+mod2 <- gamboost(fm2, data = tmp, base = "bbs", dfbase = 3)
 stopifnot(max(abs(fitted(mod1) - fitted(mod2)))  < .Machine$double.eps)
 stopifnot(max(abs(predict(mod1, newdata = tmp) - predict(mod2, newdata = tmp)))  < .Machine$double.eps)
 
 fm1 <- y ~ bols(x1) + bols(x2)
 fm2 <- y ~ x1 + x2
 mod1 <- gamboost(fm1, data = tmp)
-mod2 <- gamboost(fm1, data = tmp, base = "bols")
+mod2 <- gamboost(fm2, data = tmp, base = "bols")
 stopifnot(max(abs(fitted(mod1) - fitted(mod2)))  < .Machine$double.eps)
 stopifnot(max(abs(predict(mod1, newdata = tmp) - predict(mod2, newdata = tmp)))  < .Machine$double.eps)
+
+fm1 <- y ~ btree(x1) + btree(x2)
+fm2 <- y ~ x1 + x2
+mod1 <- gamboost(fm1, data = tmp)
+mod2 <- gamboost(fm2, data = tmp, base = "btree")
+stopifnot(max(abs(fitted(mod1) - fitted(mod2)))  < .Machine$double.eps)
+stopifnot(max(abs(predict(mod1, newdata = tmp) - predict(mod2, newdata = tmp)))  < .Machine$double.eps)
+
+## Cox model
+
+fit2 <- gamboost(Surv(futime, fustat) ~ bbs(age, knots = 40) +
+    bols(resid.ds) + bols(rx) + bols(ecog.ps), data = ovarian, 
+    family = CoxPH(), control = boost_control(mstop = 1000, center = TRUE))
+
+A2 <- survFit(fit2)
+A2
+
+newdata <- ovarian[c(1,3,12),]
+A2 <- survFit(fit2, newdata = newdata)
+A2
+
+### gamboost with explicit intercept
+df <- data.frame(x = 1:100, y = rnorm(1:100), int = rep(1, 100))
+mod <- gamboost(y ~ bols(int, center = TRUE) + bols(x, center = TRUE), data = df, 
+                control = boost_control(mstop = 2500))
+cf <- unlist(coef(mod))
+cf[1] <- cf[1] + mod$offset
+tmp <- max(abs(cf - coef(lm(y ~ x, data = df))))
+stopifnot(tmp < 1e-5)
+tmp <- max(abs(fitted(mod) - fitted(lm(y ~ x, data = df))))
+stopifnot(tmp < 1e-5)
