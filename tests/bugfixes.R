@@ -186,3 +186,26 @@ mean(predict(cspline, newdata = tmp[-learn,], type = "response") != tmp[-learn, 
 cspline <- gamboost(Class ~ ., data = tmp[learn,], 
     control = boost_control(mstop = 73, constraint = FALSE), family = GaussClass())
 mean(predict(cspline, newdata = tmp[-learn,], type = "response") != tmp[-learn, "Class"])
+
+### make sure environment(formula) is used for evaluation
+data("cars")
+ctl  <- boost_control(mstop = 100, trace = TRUE)
+tctl <- ctree_control(teststat = "max", testtype = "Teststat", 
+                      mincrit = 0, maxdepth = 5, savesplitstat = FALSE)
+myfun <- function(cars, xx, zz){ 
+  gamboost(dist ~ btree(speed, tree_controls = zz),
+           data = cars, control = xx)
+}
+mod <- myfun(cars, xx = ctl, zz = tctl)
+
+### bbs with weights and expanded data
+x <- runif(100)
+y <- rnorm(length(x))
+knots <- seq(from = 0.1, to = 0.9, by = 0.1)
+w <- rmultinom(1, length(x), rep(1, length(x)) / length(x))[,1]
+iw <- rep(1:length(x), w)
+
+m1 <- attr(bbs(x, knots = knots), "dpp")(w)$fit(y)$model 
+m2 <- attr(bbs(x[iw], knots = knots), "dpp")(rep(1, length(x)))$fit(y[iw])$model 
+
+stopifnot(max(abs(m1 - m2)) < sqrt(.Machine$double.eps))
