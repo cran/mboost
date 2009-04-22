@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
 Date: 2009-03-27
-Version: 1.1-0
+Version: 1.1-1
 Author: Torsten Hothorn, Peter Buhlmann, Thomas Kneib, Matthias Schmid
         and Benjamin Hofner
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
@@ -17,6 +17,6 @@ Suggests: mlbench, ipred
 LazyLoad: yes
 LazyData: yes
 License: GPL-2
-Packaged: Fri Mar 27 17:22:47 2009; hothorn
+Packaged: 2009-04-22 10:40:33 UTC; hothorn
 Repository: CRAN
-Date/Publication: 2009-03-27 16:56:45
+Date/Publication: 2009-04-22 16:01:53
