@@ -52,7 +52,7 @@ bbs <- function(x, z = NULL, df = 4, knots = 20, degree = 3, differences = 2,
     if (is.null(zname)) zname <- deparse(substitute(z))
 
     if (all(x %in% c(0, 1)))
-        return(bols(x = x, z = z, xname = xname, zname = zname, 
+        return(bols(x = x, z = z, xname = xname, zname = zname,
                     center = center || all(x == 1)))
 
     if (is.factor(x) || (df <= 2 && !center))
@@ -342,6 +342,8 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = 20, yknots = 20,
     if (is.null(yname)) yname = deparse(substitute(y))
     if (is.null(zname)) zname = deparse(substitute(z))
 
+    cc <- complete_cases(x = x, y = y, z = z)
+
 #    if (df <= 2) stop(sQuote("df"), " must be greater two")
     if (!differences %in% 1:3)
         stop(sQuote("differences"), " are not in 1:3")
@@ -369,36 +371,78 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = 20, yknots = 20,
                      to = max(y, na.rm = TRUE), length = yknots + 2)
         yknots <- yknots[2:(length(yknots) - 1)]
     }
-    newX <- function(x, y, z) {
-        Xx <- bs(x, knots = xknots, degree = degree, intercept = TRUE)
-        Xy <- bs(y, knots = yknots, degree = degree, intercept = TRUE)
-        X <- kronecker(Xx, matrix(1, nc = ncol(Xy))) * kronecker(matrix(1, nc = ncol(Xx)), Xy)
-        if (!is.null(z))
-            X <- X * z
-        return(X)
-    }
-    X <- newX(x, y, z)
 
-    xd <- length(xknots) + degree + 1
-    yd <- length(yknots) + degree + 1
-
-    Kx <- diff(diag(xd), differences = differences)
-    Kx <- crossprod(Kx, Kx)
-    Ky <- diff(diag(yd), differences = differences)
-    Ky <- crossprod(Ky, Ky)
-    K <- kronecker(Kx, diag(yd)) + kronecker(diag(xd), Ky)
-
-    L <- 0
-    if(center) {
-        L <- eigen(K, symmetric=TRUE, EISPACK=TRUE)
-        L$vectors <- L$vectors[,1:(ncol(X)-differences^2)]
-        L$values <- sqrt(L$values[1:(ncol(X)-differences^2)])
-        L <- L$vectors%*%diag(1/L$values)
-        X <- X%*%L
-        K <- diag(ncol(X))
-    }
+    X <- matrix(x, ncol = 1)
 
     dpp <- function(weights) {
+
+        if (any(!cc)) weights <- weights[cc]
+
+        ### knots may depend on weights
+        xboundary.knots <- range(x[cc], na.rm = TRUE)
+        xbnw <- range(x[cc][weights > 0], na.rm = TRUE)
+        if (!isTRUE(all.equal(xboundary.knots, xbnw)))
+            warning("knots (and therefore model) depend on observations with zero weight")
+
+        if (length(xknots) == 1) {
+            xknots <- seq(from = xboundary.knots[1], to = xboundary.knots[2], length = xknots+2)
+            xknots <- xknots[2:(length(xknots) - 1)]
+        }
+
+        yboundary.knots <- range(y[cc], na.rm = TRUE)
+        ybnw <- range(y[cc][weights > 0], na.rm = TRUE)
+        if (!isTRUE(all.equal(yboundary.knots, ybnw)))
+            warning("knots (and therefore model) depend on observations with zero weight")
+
+        if (length(yknots) == 1) {
+            yknots <- seq(from = yboundary.knots[1], to = yboundary.knots[2], length = yknots+2)
+            yknots <- yknots[2:(length(yknots) - 1)]
+        }
+
+        newX <- function(x, y, z = NULL, weights = NULL, na.rm = TRUE) {
+
+          if (na.rm) {
+                x <- x[cc]
+                y <- y[cc]
+                if (!is.null(z))
+                    z <- z[cc]
+                if (!is.null(weights))
+                    weights <- weights[cc]
+            }
+
+            Xx <- bs(x, knots = xknots, degree = degree, intercept = TRUE,
+                     Boundary.knots = xboundary.knots)
+            Xy <- bs(y, knots = yknots, degree = degree, intercept = TRUE,
+                     Boundary.knots = yboundary.knots)
+            X <- kronecker(Xx, matrix(1, nc = ncol(Xy))) * kronecker(matrix(1, nc = ncol(Xx)), Xy)
+            if (!is.null(z))
+                X <- X * z
+            return(X)
+        }
+        X <- newX(x, y, z)
+        Xna <- X
+        if (any(!cc))
+            Xna <- newX(x, y, z, weights = weights, na.rm = FALSE)
+
+        xd <- length(xknots) + degree + 1
+        yd <- length(yknots) + degree + 1
+
+        Kx <- diff(diag(xd), differences = differences)
+        Kx <- crossprod(Kx, Kx)
+        Ky <- diff(diag(yd), differences = differences)
+        Ky <- crossprod(Ky, Ky)
+        K <- kronecker(Kx, diag(yd)) + kronecker(diag(xd), Ky)
+
+        L <- 0
+        if(center) {
+            L <- eigen(K, symmetric=TRUE, EISPACK=TRUE)
+            L$vectors <- L$vectors[,1:(ncol(X)-differences^2)]
+            L$values <- sqrt(L$values[1:(ncol(X)-differences^2)])
+            L <- L$vectors%*%diag(1/L$values)
+            X <- X%*%L
+            K <- diag(ncol(X))
+        }
+
 
         lambda <- df2lambda(X, df = df, dmat = K, weights = weights)
         Xw <- X * weights
@@ -409,16 +453,16 @@ bspatial <- function(x, y, z = NULL, df = 5, xknots = 20, yknots = 20,
             coef <- Xsolve %*% y
 
             predictfun <- function(newdata = NULL) {
-                if (is.null(newdata)) return(X %*% coef)
+                if (is.null(newdata)) return(Xna %*% coef)
                 nX <- newX(x = newdata[[xname]], y = newdata[[yname]],
-                           z = newdata[[zname]])
+                           z = newdata[[zname]], na.rm = FALSE)
                 if(center) {
                     nX <- nX%*%L
                 }
                 nX %*% coef
             }
             ret <- list(model = coef, predict = predictfun,
-                        fitted = function() X %*% coef)
+                        fitted = function() Xna %*% coef)
             class(ret) <- c("basefit", "baselm")
             ret
         }
@@ -444,7 +488,7 @@ bols <- function(x, z = NULL, xname = NULL, zname = NULL, center = FALSE,
              if (!is.null(z))
                  z <- z[cc]
          }
-         
+
          if (is.factor(x)) {
              X <- model.matrix(~ x, contrasts.arg = list(x = contrasts.arg))
          } else {
@@ -476,7 +520,7 @@ bols <- function(x, z = NULL, xname = NULL, zname = NULL, center = FALSE,
          XtX <- crossprod(Xw, X)
 
          if (is.null(df) || df >= ncol(K)) {
-             Xsolve <- tcrossprod(solve(crossprod(Xw, X)), Xw)
+             Xsolve <- tcrossprod(solve(XtX), Xw)
          } else {
              lambda <- df2lambda(X, df = df, dmat = K, weights = weights)
              Xsolve <- tcrossprod(solve(XtX + lambda * K), Xw)
@@ -579,7 +623,7 @@ btree <- function(..., tree_controls = ctree_control(stump = TRUE,
         ### construct design matrix etc.
         y <- vector(length = nrow(x), mode = "numeric")
         ### name for working response (different from any x)
-        rname <- paste("R", paste(colnames(x), collapse = "_"), sep = "_")
+        rname <- paste(sample(LETTERS, 25, replace = TRUE), collapse = "")
         fm <- as.formula(paste(rname, " ~ ", paste(xname, collapse = "+")))
         df <- x
         df[[rname]] <- y
