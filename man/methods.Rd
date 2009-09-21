@@ -63,8 +63,7 @@
   These functions can be used to extract details from fitted models. \code{print}
   shows a dense representation of the model fit and \code{coef} extracts the
   regression coefficients of a linear model fitted using the \code{\link{glmboost}}
-  function (for \code{\link{gamboost}} objects, \code{coef} only works
-  when \code{\link{bols}} is used as baselearner).
+  function or the \code{\link{gamboost}} function.
 
   The \code{predict} function can be used to predict the status of the response variable
   for new observations whereas \code{fitted} extracts the regression fit for the observations
