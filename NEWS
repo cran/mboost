@@ -1,4 +1,9 @@
 
+                CHANGES in `mboost' VERSION 2.0-1 (2010-03-01)
+
+  o  fixed bug in coef( , aggregate="cumsum"): fraction "nu" was missing
+
+
                 CHANGES in `mboost' VERSION 2.0-0 (2010-02-01)
 
   o  generic implementation of component-wise functional gradient
