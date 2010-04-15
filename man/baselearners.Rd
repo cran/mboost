@@ -62,9 +62,12 @@ bl1 \%X\% bl2
                  re-parameterized such that the unpenalized part of the fit is subtracted and
                  only the deviation effect is fitted. The unpenalized, parametric part has then
 		 to be included in separate base-learners using \code{bols} (see the examples below).}
-  \item{contrasts.arg}{ a character suitable for input to the
+  \item{contrasts.arg}{ a named list of characters suitable for input to the
                         \code{\link{contrasts}} replacement function, see
-                        \code{\link{model.matrix}}.}
+                        \code{\link{model.matrix}}, or a single
+			character which is then used as contrasts for
+			all factors in this base-learner (with the
+			exception of factors in \code{by}). }
   \item{tree_controls}{ an object of class \code{"\linkS4class{TreeControl}"}, which can be
                   obtained using \code{\link[party]{ctree_control}}.
                   Defines hyper-parameters for the trees which are used as base-learners,
@@ -181,6 +184,12 @@ bl1 \%X\% bl2
 
   \code{btree} fits a stump to one or more variables. Note that
   \code{\link{blackboost}} is more efficient for boosting stumps.
+
+  Note that the base-learners \code{bns} and \code{bss} are deprecated
+  (and no longer available). Please use \code{bbs} instead, which
+  results in qualitatively the same models but is computationally much
+  more attractive.
+
 }
 \value{
  An object of class \code{bl} (base-learner) with a \code{dpp} function. The call of \code{dpp} returns
