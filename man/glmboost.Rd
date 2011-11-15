@@ -12,8 +12,8 @@
 \usage{
 \method{glmboost}{formula}(formula, data = list(), weights = NULL,
           na.action = na.pass, contrasts.arg = NULL,
-          center = FALSE, control = boost_control(), ...)
-\method{glmboost}{matrix}(x, y, center = FALSE, control = boost_control(), ...)
+          center = TRUE, control = boost_control(), ...)
+\method{glmboost}{matrix}(x, y, center = TRUE, control = boost_control(), ...)
 \method{glmboost}{default}(x,  ...)
 \method{plot}{glmboost}(x, main = deparse(x$call), col = NULL,
                         off2int = FALSE, ...)
@@ -36,7 +36,7 @@
   \item{y}{ vector of responses. }
   \item{main}{ a title for the plot.}
   \item{col}{ (a vector of) colors for plotting the lines representing
-             the coefficient paths.}
+    the coefficient paths.}
   \item{off2int}{ logical indicating whether the offset should be
     added to the intercept (if there is any) or if the offset is
     neglected for plotting (default).}
@@ -72,6 +72,11 @@
   Peter Buehlmann and Torsten Hothorn (2007),
   Boosting algorithms: regularization, prediction and model fitting.
   \emph{Statistical Science}, \bold{22}(4), 477--505.
+
+  Torsten Hothorn, Peter Buehlmann, Thomas Kneib, Mattthias Schmid
+  and Benjamin Hofner (2010),
+  Model-based Boosting 2.0.
+  \emph{Journal of Machine Learning Research}, \bold{11}, 2109 -- 2113.
 
 }
 \seealso{\code{\link{mboost}} for the generic boosting function and
