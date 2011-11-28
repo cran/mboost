@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
-Version: 2.1-0
-Date: 2011-11-15
+Version: 2.1-1
+Date: 2011-11-28
 Author: Torsten Hothorn, Peter Buehlmann, Thomas Kneib, Matthias Schmid and
   Benjamin Hofner
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
@@ -17,6 +17,6 @@ Suggests: multicore, party (>= 0.9-9993), ipred, MASS, fields, BayesX,
 LazyLoad: yes
 LazyData: yes
 License: GPL-2
-Packaged: 2011-11-15 12:52:02 UTC; hofnerb
+Packaged: 2011-11-28 13:47:44 UTC; hothorn
 Repository: CRAN
-Date/Publication: 2011-11-15 17:09:40
+Date/Publication: 2011-11-29 07:30:55
