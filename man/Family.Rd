@@ -72,7 +72,11 @@ Lognormal(nuirange = c(0, 100))
   \item{check_y}{ a function for checking and transforming
                   the class / mode of a response variable.}
   \item{nuisance}{ a function for extracting nuisance parameters from the family.}
-  \item{weights}{ a character indicating if weights are allowed. }
+  \item{weights}{ a character indicating what type of weights are
+    allowed. These can be either arbitrary (non-negative) weights
+    code{"any"}, only zero and one weights \code{"zeroone"},
+    (non-negative) interger weights \code{"case"}, or no weights are
+    allowed \code{"none"}.}
   \item{name}{ a character giving the name of the loss function for pretty printing. }
   \item{link}{ link function for binomial family. Alternatively,
                one may supply the name of a distribution (for example
@@ -219,6 +223,13 @@ distribution approximation used in Ma and Huang (2005).
     regression models with multidimensional prediction functions.
     \emph{Statistics and Computing}, \bold{20}, 139-150.
 
+  Benjamin Hofner, Andreas Mayr, Nikolay Robinzonov and Matthias Schmid
+  (2012). Model-based Boosting in R: A Hands-on Tutorial Using the R
+  Package mboost. \emph{Department of Statistics, Technical Report No. 120}.\cr
+  \url{http://epub.ub.uni-muenchen.de/12754/}
+
+  Available as vignette via: vignette(package = "mboost", "mboost_tutorial")
+  
   }
 \seealso{\code{\link{mboost}} for the usage of \code{Family}s. See
     \code{\link{boost_family-class}} for objects resulting from a call to \code{Family}. }

@@ -98,11 +98,14 @@ bl1 \%O\% bl2
                \code{cov.function}. Thus strongly dependent on the
            specified \code{cov.function}. }
   \item{contrasts.arg}{ a named list of characters suitable for input to the
-                        \code{\link{contrasts}} replacement function, see
+                        \code{\link{contrasts}} replacement function or
+			the contrast matrix itself, see
                         \code{\link{model.matrix}}, or a single
-			character which is then used as contrasts for
+			character string (or contrast matrix)
+			which is then used as contrasts for
 			all factors in this base-learner (with the
-			exception of factors in \code{by}). }
+			exception of factors in \code{by}). See also
+			example below for setting contrasts. }
   \item{tree_controls}{ an object of class \code{"TreeControl"}, which can be
                   obtained using \code{\link[party]{ctree_control}}.
                   Defines hyper-parameters for the trees which are used as base-learners,
@@ -303,7 +306,7 @@ bl1 \%O\% bl2
   tensor product of two or more linear base-learners is returned by
   \code{\%X\%}. When the design matrix can be written as the
   Kronecker product of two matrices \code{X = kronecker(X2, X1)},
-  then \code{bl1 \%X\% bl2} with design matrices X1 and X2, respectively,
+  then \code{bl1 \%O\% bl2} with design matrices X1 and X2, respectively,
   can be used to efficiently compute Ridge-estimates
   following Currie, Durban, Eilers (2006). In cases the overall degrees of freedom of the
   combined base-learner increase (additive or multiplicative,
@@ -311,7 +314,9 @@ bl1 \%O\% bl2
   only.
 
   \code{btree} fits a stump to one or more variables. Note that
-  \code{\link{blackboost}} is more efficient for boosting stumps.
+  \code{\link{blackboost}} is more efficient for boosting stumps. For
+  further references see Hothorn, Hornik, Zeileis (2006) and Hothorn et
+  al. (2010).
 
   Note that the base-learners \code{bns} and \code{bss} are deprecated
   (and no longer available). Please use \code{bbs} instead, which
@@ -350,22 +355,29 @@ bl1 \%O\% bl2
 
   Benjamin Hofner, Torsten Hothorn, Thomas Kneib, and Matthias Schmid (2011),
   A framework for unbiased model selection based on boosting.
-  \emph{Journal of Computational and Graphical Statistics}, in press.
-  doi:10.1198/jcgs.2011.09220
+  \emph{Journal of Computational and Graphical Statistics}, \bold{20}, 956--971.
 
-  Preliminary version: Department of Statistics, Technical Report Nr.
-  72, LMU Muenchen. \url{http://epub.ub.uni-muenchen.de/11243/}
-
-  B. Hofner, J. Mueller, and T. Hothorn (2011),
+  Benjamin Hofner, Joerg Mueller, and Torsten Hothorn (2011),
   Monotonicity-Constrained Species Distribution Models, 
   \emph{Ecology}, 92:1895-1901.
 
-  Thomas Kneib, Torsten Hothorn and Gerhard Tutz (2009), Variable selection and
-  model choice in geoadditive regression models, \emph{Biometrics}, \bold{65}(2),
-  626--634.
+  Thomas Kneib, Torsten Hothorn and Gerhard Tutz (2009), Variable
+  selection and model choice in geoadditive regression models,
+  \emph{Biometrics}, \bold{65}(2), 626--634.
 
-}
-\seealso{\code{\link{mboost}}}
+  Torsten Hothorn, Kurt Hornik, Achim Zeileis (2006), Unbiased recursive
+  partitioning: A conditional inference framework. \emph{Journal of
+    Computational and Graphical Statistics}, \bold{15}, 651--674.
+
+  Torsten Hothorn, Peter Buehlmann, Thomas Kneib, Matthias Schmid and
+  Benjamin Hofner (2010), Model-based Boosting 2.0, \emph{Journal of
+    Machine Learning Research}, \bold{11}, 2109--2113.
+
+  
+} 
+
+\seealso{\code{\link{mboost}}} 
+
 \examples{
 
   set.seed(290875)
@@ -614,6 +626,28 @@ bl1 \%O\% bl2
 
   max(abs(fitted(mod) - fitted(modx)))
 
+
+  ### setting contrasts via contrasts.arg
+  x <- as.factor(sample(1:4, 100, replace = TRUE))
+
+  ## compute base-learners with different reference categories
+  BL1 <- bols(x, contrasts.arg = contr.treatment(4, base = 1)) # default
+  BL2 <- bols(x, contrasts.arg = contr.treatment(4, base = 2))
+  ## compute 'sum to zero contrasts' using character string
+  BL3 <- bols(x, contrasts.arg = "contr.sum")
+
+  ## extract model matrices to check if it works
+  extract(BL1)
+  extract(BL2)
+  extract(BL3)
+
+  ### setting contrasts using named lists in contrasts.arg
+  x2 <- as.factor(sample(1:4, 100, replace = TRUE))
+
+  BL4 <- bols(x, x2,
+              contrasts.arg = list(x = contr.treatment(4, base = 2),
+                                   x2 = "contr.helmert"))
+  extract(BL4)
 
 }
 \keyword{models}

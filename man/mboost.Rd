@@ -91,6 +91,10 @@ mboost_fit(blg, response, weights = rep(1, NROW(response)), offset = NULL,
   Boosting algorithms: regularization, prediction and model fitting.
   \emph{Statistical Science}, \bold{22}(4), 477--505.
 
+  Torsten Hothorn, Peter Buehlmann, Thomas Kneib, Mattthias Schmid and
+  Benjamin Hofner (2010), Model-based Boosting 2.0. \emph{Journal of
+  Machine Learning Research}, \bold{11}, 2109--2113.
+
   Yoav Freund and Robert E. Schapire (1996),
   Experiments with a new boosting algorithm.
   In \emph{Machine Learning: Proc. Thirteenth International Conference},
@@ -99,6 +103,13 @@ mboost_fit(blg, response, weights = rep(1, NROW(response)), offset = NULL,
   Jerome H. Friedman (2001),
   Greedy function approximation: A gradient boosting machine.
   \emph{The Annals of Statistics}, \bold{29}, 1189--1232.
+
+  Benjamin Hofner, Andreas Mayr, Nikolay Robinzonov and Matthias Schmid
+  (2012). Model-based Boosting in R: A Hands-on Tutorial Using the R
+  Package mboost. \emph{Department of Statistics, Technical Report No. 120}.\cr
+  \url{http://epub.ub.uni-muenchen.de/12754/}
+
+  Available as vignette via: vignette(package = "mboost", "mboost_tutorial")
 
 }
 \seealso{\code{\link{glmboost}} for boosted linear models and
