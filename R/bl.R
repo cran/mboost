@@ -151,6 +151,8 @@ hyper_bbs <- function(mf, vary, knots = 20, boundary.knots = NULL, degree = 3,
     knotf <- function(x, knots, boundary.knots) {
         if (is.null(boundary.knots))
             boundary.knots <- range(x, na.rm = TRUE)
+        ## <fixme> At the moment only NULL or 2 boundary knots can be specified.
+        ## Knot expansion is done automatically on an equidistand grid.</fixme>
         if ((length(boundary.knots) != 2) || !boundary.knots[1] < boundary.knots[2])
             stop("boundary.knots must be a vector (or a list of vectors) ",
                  "of length 2 in increasing order")
@@ -304,7 +306,7 @@ X_bbs <- function(mf, vary, args) {
             K <- kronecker(diag(ncol(by)), K)
         }
         if (args$center) {
-            L <- eigen(K, symmetric = TRUE, EISPACK = TRUE)
+            L <- eigen(K, symmetric = TRUE, EISPACK = FALSE)
             L$vectors <- L$vectors[,1:(ncol(X) - args$differences^2)]
             L$values <- sqrt(L$values[1:(ncol(X) - args$differences^2)])
             L <- L$vectors %*% (diag(length(L$values)) * (1/L$values))
@@ -343,7 +345,8 @@ bols <- function(..., by = NULL, index = NULL, intercept = TRUE, df = NULL,
     cll[[1]] <- as.name("bols")
 
     mf <- list(...)
-    if (length(mf) == 1 && (isMATRIX(mf[[1]]) || is.data.frame(mf[[1]]))) {
+    if (length(mf) == 1 && ((isMATRIX(mf[[1]]) || is.data.frame(mf[[1]])) &&
+                            ncol(mf[[1]]) > 1 )) {
         mf <- mf[[1]]
         ### spline bases should be matrices
         if (isMATRIX(mf) && !is(mf, "Matrix"))
@@ -429,7 +432,8 @@ bbs <- function(..., by = NULL, index = NULL, knots = 20, boundary.knots = NULL,
     cll[[1]] <- as.name("bbs")
 
     mf <- list(...)
-    if (length(mf) == 1 && (is.matrix(mf[[1]]) || is.data.frame(mf[[1]]))) {
+    if (length(mf) == 1 && ((is.matrix(mf[[1]]) || is.data.frame(mf[[1]])) &&
+                            ncol(mf[[1]]) > 1 )) {
         mf <- as.data.frame(mf[[1]])
     } else {
         mf <- as.data.frame(mf)
@@ -567,7 +571,7 @@ bl_lin <- function(blg, Xfun, args) {
             w <- .Call("R_ysum", as.double(weights), as.integer(index), PACKAGE = "mboost")
         XtX <- crossprod(X * w, X)
         lambdadf <- df2lambda(X, df = args$df, lambda = args$lambda,
-                              dmat = K, weights = w)
+                              dmat = K, weights = w, XtX = XtX)
         lambda <- lambdadf["lambda"]
         XtX <- XtX + lambda * K
 
@@ -585,8 +589,7 @@ bl_lin <- function(blg, Xfun, args) {
                 XtX <- as(XtX, "matrix")
             }
             mysolve <- function(y)
-                .Call("La_dgesv", XtX, crossprod(X, y), .Machine$double.eps,
-                      PACKAGE = "base")
+                solve(XtX, crossprod(X, y), LINPACK = FALSE)
         }
 
         fit <- function(y) {
@@ -640,7 +643,8 @@ bl_lin <- function(blg, Xfun, args) {
             pr <- switch(aggregate, "sum" =
                 as(X %*% rowSums(cf), "matrix"),
             "cumsum" = {
-                as(X %*% .Call("R_mcumsum", as(cf, "matrix")), "matrix")
+                as(X %*% .Call("R_mcumsum", as(cf, "matrix"),
+                               PACKAGE = "mboost"), "matrix")
             },
             "none" = as(X %*% cf, "matrix"))
             if (is.null(index)) return(pr[,,drop = FALSE])
