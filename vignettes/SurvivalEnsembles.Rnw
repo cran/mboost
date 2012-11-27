@@ -11,7 +11,7 @@
 %%\usepackage{Sweave}
 
 %%\VignetteIndexEntry{Survival Ensembles}
-%%\VignetteDepends{ipred, mboost, survival}
+%%\VignetteDepends{mboost, survival, rpart, ipred}
 
 \newcommand{\Rpackage}[1]{{\normalfont\fontseries{b}\selectfont #1}}
 \newcommand{\Robject}[1]{\texttt{#1}}
@@ -35,7 +35,7 @@
                                               fontshape=it,
                                               fontsize=\relsize{-1}}
 \DefineVerbatimEnvironment{Scode}{Verbatim}{}
-\newenvironment{Schunk}{}{} 
+\newenvironment{Schunk}{}{}
 
 \renewcommand{\baselinestretch}{1}
 
@@ -102,7 +102,10 @@ that have been implemented after the paper was printed.
 source("setup.R")
 if (!require("ipred"))
     stop("cannot attach package ", sQuote("ipred"))
-require("party")
+if (!require("rpart"))
+    stop("cannot attach package ", sQuote("rpart"))
+if (!require("party"))
+    stop("cannot attach package ", sQuote("party"))
 
 set.seed(290875)
 CEX <- 0.85
@@ -120,12 +123,9 @@ mdplot <- function(obs, pred, main = "", ...) {
 @
 
 <<loaddata, echo = FALSE, results = tex>>=
-### load data from internet. See `mboost/inst/datapreproc/readAML_Bullinger.R' for
+### load data. See `mboost/inst/readAML_Bullinger.R' for
 ### how the data were generated from the raw data.
-handle <- try(url("http://www.stat.uni-muenchen.de/~hothorn/data/AML_Bullinger.rda", open = "r"))
-if (inherits(handle, "try-error"))
-    cat("Cannot download data from the net. This vignette needs a working internet connection. \n \\end{document} \n")
-load(handle)
+load(system.file("AML_Bullinger.Rda", package = "mboost"))
 @
 
 \paragraph{Data preprocessing}
@@ -140,7 +140,7 @@ risk <- rep(0, nrow(clinical))
 rlev <- levels(clinical[, "Cytogenetic.group"])
 risk[clinical[, "Cytogenetic.group"] %in% rlev[c(7,8,4)]] <- "low"
 risk[clinical[, "Cytogenetic.group"] %in% rlev[c(5, 9)]] <- "intermediate"
-risk[clinical[, "Cytogenetic.group"] %in% rlev[-c(4,5, 7,8,9)]] <- "high" 
+risk[clinical[, "Cytogenetic.group"] %in% rlev[-c(4,5, 7,8,9)]] <- "high"
 risk <- as.factor(risk)
 
 ### set-up learning sample
@@ -185,7 +185,7 @@ Compute fitted values
 ### restrict number of boosting iterations and inspect selected variables
 AMLl2b <- AMLl2b[mstop(aic)]
 cAML <- coef(AMLl2b)
-cAML[abs(cAML) > 0] 
+cAML[abs(cAML) > 0]
 
 ### fitted values
 AMLprf <- predict(AMLrf, newdata = AMLlearn)
@@ -240,20 +240,22 @@ n <- nrow(GBSG2learn)
 \paragraph{Model fitting}
 
 <<GBSG2-models, echo = TRUE>>=
-### linear model 
+### linear model
 LMmod <- lm(ltime ~ . , data = GBSG2learn, weights = GBSG2w)
 LMerisk <- sum((GBSG2learn$ltime - predict(LMmod))^2*GBSG2w) / n
 
 ### regression tree
-TRmod <- rpart(ltime ~ . , data = GBSG2learn, weights = GBSG2w)
-TRerisk <- sum((GBSG2learn$ltime - predict(TRmod))^2*GBSG2w) / n
+pos <- GBSG2w > 0
+TRmod <- rpart(ltime ~ . , data = GBSG2learn, weights = GBSG2w, 
+               subset = pos)
+TRerisk <- sum((GBSG2learn$ltime[pos] - predict(TRmod))^2*GBSG2w[pos]) / n
 
 ### tree controls
 ctrl <- cforest_control(mincriterion = qnorm(0.95), mtry = 5,
                       minsplit = 5, ntree = 100)
 
 ### fit random forest for censored data (warnings are OK here)
-RFmod <- cforest(ltime ~ . , data = GBSG2learn, weights = GBSG2w, 
+RFmod <- cforest(ltime ~ . , data = GBSG2learn, weights = GBSG2w,
                  control = ctrl)
 
 ### fit L2 boosting for censored data
@@ -278,14 +280,14 @@ Compute fitted values:
 <<GBSG2-fitted, echo = TRUE>>=
 GBSG2Hp <- predict(L2BHubermod, newdata = GBSG2learn)
 L2Berisk <- sum((GBSG2learn$ltime - predict(L2Bmod, newdata = GBSG2learn))^2*GBSG2w) / n
-RFerisk <- sum((GBSG2learn$ltime - predict(RFmod, newdata = GBSG2learn))^2*GBSG2w) / n  
+RFerisk <- sum((GBSG2learn$ltime - predict(RFmod, newdata = GBSG2learn))^2*GBSG2w) / n
 @
 
 \begin{figure}
 \begin{center}
 <<Figure3, echo = FALSE, fig = TRUE>>=
 lim <- c(4,9)
-mylwd <- 0.5 
+mylwd <- 0.5
 par(mai = par("mai") * c(0.7, 0.8, 0.7, 0.6))
 
 layout(matrix(1:4, ncol = 2))
@@ -317,7 +319,7 @@ plot(GBSG2learn$pnodes, RFpr, cex = GBSG2w/4, xlim = c(0,40), lwd = mylwd,
      xlab = "Nr. positive lymph nodes", ylim = ylim, ylab =
      expression(hat(Y)), cex.axis = CEX, cex.main = CEX, cex.lab = CEX,)
 lines(smooth.spline(GBSG2learn$pnodes, RFpr, GBSG2w/4, df = mydf))
-plot(GBSG2learn$age, RFpr, cex = GBSG2w/4, xlab = "Age", 
+plot(GBSG2learn$age, RFpr, cex = GBSG2w/4, xlab = "Age",
      ylab = expression(hat(Y)), ylim = ylim, lwd = mylwd, cex.axis = CEX,
      cex.main = CEX, cex.lab = CEX)
 lines(smooth.spline(GBSG2learn$age, RFpr, GBSG2w/4, df = mydf))
@@ -327,7 +329,7 @@ plot(GBSG2learn$estrec, RFpr, cex = GBSG2w/4, xlab = "Estrogen receptor",
 lines(smooth.spline(GBSG2learn$estrec, RFpr, GBSG2w/4, df = mydf))
 indx <- which(GBSG2learn$progrec < 100)
 plot(GBSG2learn$progrec[indx], RFpr[indx], cex = GBSG2w[indx]/4,
-     xlab = "Progesterone receptor (< 100 fmol / l)", 
+     xlab = "Progesterone receptor (< 100 fmol / l)",
      ylab = expression(hat(Y)), ylim = ylim, lwd = mylwd, cex.axis = CEX,
      cex.main = CEX, cex.lab = CEX)
 lines(smooth.spline(GBSG2learn$progrec[indx], RFpr[indx], GBSG2w[indx]/4, df = mydf))
@@ -347,18 +349,18 @@ plot(GBSG2learn$pnodes, L2Bpr, cex = GBSG2w/4, xlim = c(0,40),
      xlab = "Nr. positive lymph nodes", ylim = ylim, lwd = mylwd, cex.axis =
      CEX, cex.main = CEX, cex.lab = CEX)
 lines(smooth.spline(GBSG2learn$pnodes, L2Bpr, GBSG2w/4, df = mydf))
-plot(GBSG2learn$age, L2Bpr, cex = GBSG2w/4, xlab = "Age", 
-     ylab = expression(hat(Y)), 
+plot(GBSG2learn$age, L2Bpr, cex = GBSG2w/4, xlab = "Age",
+     ylab = expression(hat(Y)),
      ylim = ylim, lwd = mylwd, cex.axis = CEX, cex.main = CEX, cex.lab =
      CEX)
 lines(smooth.spline(GBSG2learn$age, L2Bpr, GBSG2w/4, df = mydf))
 plot(GBSG2learn$estrec, L2Bpr, cex = GBSG2w/4, xlab = "Estrogen receptor",
-     ylab = expression(hat(Y)), ylim = ylim, lwd = mylwd, cex.axis = CEX, 
+     ylab = expression(hat(Y)), ylim = ylim, lwd = mylwd, cex.axis = CEX,
      cex.main = CEX, cex.lab = CEX)
 lines(smooth.spline(GBSG2learn$estrec, L2Bpr, GBSG2w/4, df = mydf))
 indx <- which(GBSG2learn$progrec < 100)
 plot(GBSG2learn$progrec[indx], L2Bpr[indx], cex = GBSG2w[indx]/4,
-     xlab = "Progesterone receptor (< 100 fmol / l)", 
+     xlab = "Progesterone receptor (< 100 fmol / l)",
      ylab = expression(hat(Y)), ylim = ylim, lwd = mylwd, cex.axis = CEX,
      cex.main = CEX, cex.lab = CEX)
 lines(smooth.spline(GBSG2learn$progrec[indx], L2Bpr[indx], GBSG2w[indx]/4, df = mydf))
