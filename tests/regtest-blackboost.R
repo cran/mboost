@@ -1,6 +1,6 @@
 
 require("mboost")
-library("party")
+if (require("party")) {
 
 set.seed(290875)
 
@@ -22,7 +22,7 @@ if (!inherits(tst, "try-error")) {
 
     ### attach `gbm', quietly
     sink("tmpfile")
-    require("gbm")
+    if (require("gbm")) cat()
     sink()
     file.remove("tmpfile")
 
@@ -53,11 +53,11 @@ fit2 <- blackboost(Surv(futime,fustat) ~ age + resid.ds + rx + ecog.ps,
     data = ovarian, family = CoxPH(), control = boost_control(mstop = 1000))
 
 A2 <- survFit(fit2)
-A2
+print(A2)
 
 newdata <- ovarian[c(1,3,12),]
 A2 <- survFit(fit2, newdata = newdata)
-A2
+print(A2)
 
 ### predictions:
 set.seed(1907)
@@ -105,3 +105,5 @@ foo <- table(pr, y)
 stopifnot(foo[1,2] + foo[2,1] == 0)
 pr <- predict(mod, type="response")
 # <FIXME> How do we check "correctness" of results?</FIXME>
+
+}
