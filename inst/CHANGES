@@ -1,3 +1,19 @@
+                CHANGES in `mboost' VERSION 2.2-3 (2013-09-09, r733)
+
+  o  fixed bugs in survival families:
+     -  offset in all survival families was based on max(survtime) instead
+     	of max(log(survtime));
+     -  offset in CoxPH can't be computed from Cox Partial LH as constants
+     	are canceled out; Use fixed offset instead;
+
+  o  speed up checking of manual by changing some computations (e.g. reduce
+     mstop) or exclude code from checking via \dontrun{}
+
+  o  removed dependency on ipred (replaced with TH.data)
+
+  o  small improvements in manual
+
+
                 CHANGES in `mboost' VERSION 2.2-2 (2013-02-08, r703)
 
   o  bbs(..., center = "spectralDecomp") computes the spectral decomposition
@@ -17,7 +33,7 @@
   o  fixed bug in brandom: now really use contrasts.arg = "contr.dummy" per
      default.
 
-  o  removed tests/ folder and .Rout.save files for vignettes from the CRAN 
+  o  removed tests/ folder and .Rout.save files for vignettes from the CRAN
      release
 
   o  small improvements in manual

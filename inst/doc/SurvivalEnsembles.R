@@ -1,104 +1,8 @@
+### R code from vignette source 'SurvivalEnsembles.Rnw'
 
-\documentclass{article}
-\usepackage{amstext}
-\usepackage{amsfonts}
-\usepackage{hyperref}
-\usepackage[round]{natbib}
-\usepackage{hyperref}
-\usepackage{graphicx}
-\usepackage{rotating}
-%%\usepackage[nolists]{endfloat}
-%%\usepackage{Sweave}
-
-%%\VignetteIndexEntry{Survival Ensembles}
-%%\VignetteDepends{mboost, survival, rpart, TH.data}
-
-\newcommand{\Rpackage}[1]{{\normalfont\fontseries{b}\selectfont #1}}
-\newcommand{\Robject}[1]{\texttt{#1}}
-\newcommand{\Rclass}[1]{\textit{#1}}
-\newcommand{\Rcmd}[1]{\texttt{#1}}
-\newcommand{\Roperator}[1]{\texttt{#1}}
-\newcommand{\Rarg}[1]{\texttt{#1}}
-\newcommand{\Rlevel}[1]{\texttt{#1}}
-
-\newcommand{\RR}{\textsf{R}}
-\renewcommand{\S}{\textsf{S}}
-
-\RequirePackage[T1]{fontenc}
-\RequirePackage{graphicx,ae,fancyvrb}
-\IfFileExists{upquote.sty}{\RequirePackage{upquote}}{}
-\usepackage{relsize}
-
-\DefineVerbatimEnvironment{Sinput}{Verbatim}{baselinestretch=1}
-\DefineVerbatimEnvironment{Soutput}{Verbatim}{fontfamily=courier,
-                                              baselinestretch=1,
-                                              fontshape=it,
-                                              fontsize=\relsize{-1}}
-\DefineVerbatimEnvironment{Scode}{Verbatim}{}
-\newenvironment{Schunk}{}{}
-
-\renewcommand{\baselinestretch}{1}
-
-\hypersetup{%
-  pdftitle = {mboost Illustrations},
-  pdfsubject = {package vignette},
-  pdfauthor = {Torsten Hothorn and Peter Buhlmann},
-%% change colorlinks to false for pretty printing
-  colorlinks = {true},
-  linkcolor = {blue},
-  citecolor = {blue},
-  urlcolor = {red},
-  hyperindex = {true},
-  linktocpage = {true},
-}
-
-\begin{document}
-
-\setkeys{Gin}{width=\textwidth}
-
-\title{Survival Ensembles}
-
-\author{Torsten Hothorn$^{1,\star}$, Peter B\"uhlmann$^2$, Sandrine Dudoit$^3$, \\
-        Annette Molinaro$^4$ and Mark J. van der Laan$^3$}
-\date{}
-\maketitle
-
-\noindent$^1$Institut f\"ur Statistik \\
-           Ludwig-Maximilians-Universit\"at M\"unchen \\
-           Ludwigstra{\ss}e 33, D-80539 M\"unchen, Germany \\
-     Tel: ++49--9131--8522707 \\
-     Fax: ++49--9131--8525740 \\
-     \texttt{Torsten.Hothorn@R-project.org}
-\newline
-
-\noindent$^2$Seminar f\"ur Statistik, ETH Z\"urich,
-             CH-8032 Z\"urich, Switzerland \\
-            \texttt{buhlmann@stat.math.ethz.ch}
-\newline
-
-\noindent$^3$Division of Biostatistics, University of California, Berkeley \\
-     140 Earl Warren Hall, \#7360, Berkeley, CA 94720-7360, USA \\
-    \texttt{sandrine@stat.Berkeley.EDU} \\
-    \texttt{laan@stat.Berkeley.EDU}
-\newline
-
-\noindent$^4$Division of Biostatistics, Epidemiology and Public Health\\
-    Yale University School of Medicine, 206 LEPH \\
-    60 College Street PO Box 208034, New Haven CT 06520-8034 \\
-    \texttt{annette.molinaro@yale.edu}
-\newline
-
-\section{Illustrations and Applications}
-
-This document reproduces the data analyses presented in
-\cite{hothetal06}. For a description of the theory behind
-applications shown here we refer to the original manuscript.
-The results differ slightly due to technical changes or bugfixes in \textbf{mboost}
-that have been implemented after the paper was printed.
-
-\subsection{Acute myeloid leukemia}
-
-<<setup, echo = FALSE, results = hide>>=
+###################################################
+### code chunk number 1: setup
+###################################################
 source("setup.R")
 if (!require("TH.data"))
     stop("cannot attach package ", sQuote("TH.data"))
@@ -122,18 +26,19 @@ mdplot <- function(obs, pred, main = "", ...) {
          main, cex.axis = CEX, cex.main = CEX, cex.lab = CEX, ...)
     abline(h = 0, lty = 3)
 }
-@
 
-<<loaddata, echo = FALSE, results = tex>>=
+
+###################################################
+### code chunk number 2: loaddata
+###################################################
 ### load data. See `mboost/inst/readAML_Bullinger.R' for
 ### how the data were generated from the raw data.
 load(system.file("AML_Bullinger.Rda", package = "mboost"))
-@
 
-\paragraph{Data preprocessing}
 
-Compute IPC weights, define risk score and set up learning sample:
-<<AML-dpp, echo = TRUE>>=
+###################################################
+### code chunk number 3: AML-dpp
+###################################################
 ### compute IPC weights
 AMLw <- IPCweights(Surv(clinical$time, clinical$event))
 
@@ -153,37 +58,36 @@ AMLlearn <- cbind(clinical[, c("time", "Sex", "Age", "LDH", "WBC",
 cc <- complete.cases(AMLlearn)
 AMLlearn <- AMLlearn[AMLw > 0 & cc,]
 AMLw <- AMLw[AMLw > 0 & cc]
-@
 
-\paragraph{Model fitting}
 
-Fit random forest for censored data
-<<AML-RF, echo = TRUE>>=
+###################################################
+### code chunk number 4: AML-RF
+###################################################
 ### controls for tree growing
 ctrl <- cforest_control(mincriterion = 0.1, mtry = 5, minsplit = 5, ntree = 250)
 
 ### fit random forest for censored data (warnings are OK here)
 AMLrf <- cforest(I(log(time)) ~ ., data = AMLlearn, control = ctrl,
                  weights = AMLw)
-@
-and $L_2$Boosting for censored data
-<<AML-boost, echo = TRUE>>=
+
+
+###################################################
+### code chunk number 5: AML-boost
+###################################################
 AMLl2b <- glmboost(I(log(time)) ~ ., data = AMLlearn, weights = AMLw,
                     control = boost_control(mstop = 5000))
-@
 
-\begin{figure}
-\begin{center}
-<<AML-AIC, echo = TRUE, fig = TRUE>>=
+
+###################################################
+### code chunk number 6: AML-AIC
+###################################################
 ### AIC criterion
 plot(aic <- AIC(AMLl2b))
-@
-\caption{AIC criterion for AML data.}
-\end{center}
-\end{figure}
 
-Compute fitted values
-<<AML-fitted, echo = TRUE>>=
+
+###################################################
+### code chunk number 7: AML-fitted
+###################################################
 ### restrict number of boosting iterations and inspect selected variables
 AMLl2b <- AMLl2b[mstop(aic)]
 cAML <- coef(AMLl2b)
@@ -192,11 +96,11 @@ cAML[abs(cAML) > 0]
 ### fitted values
 AMLprf <- predict(AMLrf, newdata = AMLlearn)
 AMLpb <- predict(AMLl2b, newdata = AMLlearn)
-@
 
-\begin{figure}
-\begin{center}
-<<Figure1, echo = FALSE, fig = TRUE>>=
+
+###################################################
+### code chunk number 8: Figure1
+###################################################
 Mmod <- sum(AMLw * log(AMLlearn$time))/sum(AMLw )
 par(mai = par("mai") * c(0.7, 0.8, 0.7, 0.6))
 layout(matrix(1:4, ncol = 2))
@@ -216,17 +120,11 @@ plot(log(AMLlearn$time), AMLpb, cex = AMLw / 4,
        ylim = range(log(AMLlearn$time)), ylab = "Predicted", xlab = "Observed",
        main = "Boosting",  cex.axis = CEX, cex.main = CEX, cex.lab = CEX)
 abline(h = Mmod, lty = 2)
-@
-\caption{AML data: Reproduction of Figure 1.}
-\end{center}
-\end{figure}
 
-\subsection{Node-positive breast cancer}
 
-\paragraph{Data preprocessing}
-
-Compute IPC weights and set up learning sample:
-<<GBSG2-dpp, echo = TRUE>>=
+###################################################
+### code chunk number 9: GBSG2-dpp
+###################################################
 ### attach data
 data("GBSG2", package = "TH.data")
 
@@ -237,11 +135,11 @@ GBSG2w <- IPCweights(Surv(GBSG2$time, GBSG2$cens))
 GBSG2learn <- cbind(GBSG2[,-which(names(GBSG2) %in% c("time", "cens"))],
                ltime = log(GBSG2$time))
 n <- nrow(GBSG2learn)
-@
 
-\paragraph{Model fitting}
 
-<<GBSG2-models, echo = TRUE>>=
+###################################################
+### code chunk number 10: GBSG2-models
+###################################################
 ### linear model
 LMmod <- lm(ltime ~ . , data = GBSG2learn, weights = GBSG2w)
 LMerisk <- sum((GBSG2learn$ltime - predict(LMmod))^2*GBSG2w) / n
@@ -267,27 +165,25 @@ L2Bmod <- glmboost(ltime ~ ., data = GBSG2learn, weights = GBSG2w,
 ### with Huber loss function
 L2BHubermod <- glmboost(ltime ~ ., data = GBSG2learn, weights = GBSG2w,
                         family = Huber(d = log(2)))
-@
 
-\begin{figure}
-\begin{center}
-<<GBSG2-AIC, echo = TRUE, fig = TRUE>>=
+
+###################################################
+### code chunk number 11: GBSG2-AIC
+###################################################
 plot(aic <- AIC(L2Bmod))
-@
-\caption{AIC criterion for GBSG2 data.}
-\end{center}
-\end{figure}
 
-Compute fitted values:
-<<GBSG2-fitted, echo = TRUE>>=
+
+###################################################
+### code chunk number 12: GBSG2-fitted
+###################################################
 GBSG2Hp <- predict(L2BHubermod, newdata = GBSG2learn)
 L2Berisk <- sum((GBSG2learn$ltime - predict(L2Bmod, newdata = GBSG2learn))^2*GBSG2w) / n
 RFerisk <- sum((GBSG2learn$ltime - predict(RFmod, newdata = GBSG2learn))^2*GBSG2w) / n
-@
 
-\begin{figure}
-\begin{center}
-<<Figure3, echo = FALSE, fig = TRUE>>=
+
+###################################################
+### code chunk number 13: Figure3
+###################################################
 lim <- c(4,9)
 mylwd <- 0.5
 par(mai = par("mai") * c(0.7, 0.8, 0.7, 0.6))
@@ -303,14 +199,11 @@ mdplot(GBSG2learn$ltime, predict(RFmod, newdata = GBSG2learn), cex = GBSG2w / 4,
        main = "Random Forest", ylim = c(-3, 3), xlim = c(5, 8))
 mdplot(GBSG2learn$ltime, predict(L2Bmod, newdata = GBSG2learn), cex = GBSG2w / 4,
        main = "Boosting", ylim = c(-3, 3), xlim = c(5, 8))
-@
-\caption{GBSG-2 data: Reproduction of Figure 3.}
-\end{center}
-\end{figure}
 
-\begin{figure}
-\begin{center}
-<<Figure5, echo = FALSE, fig = TRUE>>=
+
+###################################################
+### code chunk number 14: Figure5
+###################################################
 RFpr <- predict(RFmod, newdata = GBSG2learn)
 L2Bpr <- predict(L2Bmod, newdata = GBSG2learn)
 ylim <- range(c(RFpr[GBSG2w > 0], L2Bpr[GBSG2w > 0]))
@@ -335,15 +228,11 @@ plot(GBSG2learn$progrec[indx], RFpr[indx], cex = GBSG2w[indx]/4,
      ylab = expression(hat(Y)), ylim = ylim, lwd = mylwd, cex.axis = CEX,
      cex.main = CEX, cex.lab = CEX)
 lines(smooth.spline(GBSG2learn$progrec[indx], RFpr[indx], GBSG2w[indx]/4, df = mydf))
-@
-\caption{GBSG-2 data: Reproduction of Figure 5.}
-\end{center}
-\end{figure}
 
 
-\begin{figure}
-\begin{center}
-<<Figure6, echo = FALSE, fig = TRUE>>=
+###################################################
+### code chunk number 15: Figure6
+###################################################
 par(mai = par("mai") * c(0.7, 0.8, 0.4, 0.6))
 layout(matrix(1:4, ncol = 2))
 plot(GBSG2learn$pnodes, L2Bpr, cex = GBSG2w/4, xlim = c(0,40),
@@ -366,14 +255,11 @@ plot(GBSG2learn$progrec[indx], L2Bpr[indx], cex = GBSG2w[indx]/4,
      ylab = expression(hat(Y)), ylim = ylim, lwd = mylwd, cex.axis = CEX,
      cex.main = CEX, cex.lab = CEX)
 lines(smooth.spline(GBSG2learn$progrec[indx], L2Bpr[indx], GBSG2w[indx]/4, df = mydf))
-@
-\caption{GBSG-2 data: Reproduction of Figure 6.}
-\end{center}
-\end{figure}
 
-\begin{figure}
-\begin{center}
-<<Figure7, echo = FALSE, fig = TRUE>>=
+
+###################################################
+### code chunk number 16: Figure7
+###################################################
 Mmod <- sum(GBSG2w * GBSG2learn$ltime)/sum(GBSG2w)
 par(mai = par("mai") * c(0.7, 0.8, 0.7, 0.6))
 layout(matrix(1:4, ncol = 2))
@@ -392,15 +278,5 @@ mdplot(GBSG2learn$ltime, L2Bpr,
 plot(GBSG2learn$ltime, L2Bpr, cex = GBSG2w / 4,
        xlim = range(GBSG2learn$ltime[GBSG2w > 0]), ylim = yl, ylab = "Predicted", xlab = "Observed",
        main = "Quadratic Loss",  cex.axis = CEX, cex.main = CEX, cex.lab = CEX)
-@
-\caption{GBSG-2 data: Reproduction of Figure 7.}
-\end{center}
-\end{figure}
-
-\clearpage
-
-\bibliographystyle{plainnat}
-\bibliography{boost}
 
 
-\end{document}
