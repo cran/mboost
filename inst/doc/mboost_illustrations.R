@@ -136,7 +136,7 @@ out <- sapply(varorder, function(i) {
 source("setup.R")
 
 ### OK, this once required Biobase and is a very dirty hack...
-data("Westbc", package = "mboost")
+data("Westbc", package = "TH.data")
 westbc <- Westbc
 exprs <- function(x) x$assay
 pData <- function(x) x$pheno

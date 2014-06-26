@@ -32,6 +32,7 @@ if (file.exists("model.Rda")) {
 ###################################################
 ### set-up model formula
 ### names of features
+data("bodyfat", package = "TH.data")
 features <- names(bodyfat)[-2]
 ### set up model structure:
 fml <- paste("bols(", features, ")", collapse = " + ") ### linear functions

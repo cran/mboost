@@ -25,8 +25,8 @@ if (!file.exists("graphics"))
 ###################################################
 ### code chunk number 2: setup
 ###################################################
-library("mboost")    ## load package
-data("bodyfat")      ## load data
+library("mboost")                         ## load package
+data("bodyfat", package = "TH.data")      ## load data
 
 
 ###################################################
