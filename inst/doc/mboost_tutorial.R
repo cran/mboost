@@ -432,17 +432,21 @@ lines(sort(x2), fitted(mod, which = 2)[order(x2)] + mod$offset, col = red, lwd =
 ###################################################
 ### example for cyclic spline
 set.seed(1907)
-x <- runif(200, 0,(2*pi))
-y <- rnorm(200, mean=sin(x), sd=0.2)
-newX <- seq(0,2*pi, length=100)
-mod <- gamboost(y ~ bbs(x, knots = 12))
-mod_cyclic <- gamboost(y ~ bbs(x, cyclic = TRUE, knots = 12,
-                               boundary.knots = c(0, 2*pi)))
+true_f <- function(x)
+    cos(x) + 0.25 * sin(4 * x)
+x <- runif(150, 0, 2 * pi)
+y <- rnorm(150, mean = true_f(x), sd=0.1)
+newX <- seq(0, 2*pi, length = 200)
+mod <- gamboost(y ~ bbs(x, knots = 20, degree = 4))
+mod[3000]
+mod_cyclic <- gamboost(y ~ bbs(x, cyclic=TRUE, knots = 20,
+                               degree = 4, boundary.knots=c(0, 2*pi)))
+mod_cyclic[3000]
 
 par(mar = c(4, 4, 0, 0) + 0.1)
-plot(x,y,
-     ylab = "f(x)",
-     cex=1, pch = 20, col = rgb(0.5, 0.5, 0.5, alpha = 0.8))
+plot(x,y, ylab = "f(x)",
+     pch = 20, xlim = c(0, 7),
+     col = rgb(0.5, 0.5, 0.5, alpha = 0.8))
 lines(newX, predict(mod, data.frame(x = newX)),
       col = "black", lwd = 2)
 lines(newX + 2 * pi, predict(mod, data.frame(x = newX)),
@@ -455,8 +459,9 @@ legend("bottomleft", c("cyclic = FALSE"),
 ### code chunk number 40: cyclic2
 ###################################################
 par(mar = c(4, 4, 0, 0) + 0.1)
-plot(x,y, ylab = "f(x)",
-     cex=1, pch = 20, col = rgb(0.5, 0.5, 0.5, alpha = 0.8))
+plot(x, y, ylab = "f(x)",
+     pch = 20, xlim = c(0, 7),
+     col = rgb(0.5, 0.5, 0.5, alpha = 0.8))
 lines(newX, predict(mod_cyclic, data.frame(x = newX)),
       col = red, lwd = 2)
 lines(newX + 2 * pi, predict(mod_cyclic, data.frame(x = newX)),

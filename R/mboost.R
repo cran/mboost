@@ -174,9 +174,14 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
     )
 
     ### update to new weights; just a fresh start
-    RET$update <- function(weights = NULL, oobweights = NULL, risk = "oobag") {
+    RET$update <- function(weights = NULL, oobweights = NULL, risk = "oobag",
+                           trace = NULL) {
+
         control$mstop <- mstop
-        control$risk <- risk
+        if (!is.null(risk))
+            control$risk <- risk
+        if (!is.null(trace))
+            control$trace <- trace
         ### use user specified offset only (since it depends on weights otherwise)
         if (!is.null(offsetarg)) offsetarg <- offset
         mboost_fit(blg = blg, response = response, weights = weights,
@@ -259,7 +264,13 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
             } else {
                 ## only if no selection of baselearners
                 ## was made via the `which' argument
-                return(offset + matrix(rowSums(pr), ncol = 1))
+                ret <- matrix(rowSums(pr), ncol = 1)
+                if (length(offset) != 1 && !is.null(newdata)) {
+                    warning("Offset not used for prediction when ", sQuote("newdata"), " is specified")
+                } else {
+                    ret <- ret + offset
+                }
+                return(ret)
             }
         }, "cumsum" = {
             if (!nw) {
@@ -271,10 +282,15 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
                 attr(pr, "offset") <- offset
                 return(pr)
             } else {
-                ret <- 0
-                for (i in 1:max(xselect)) ret <- ret + pfun(i, agg = "none")
-                return(.Call("R_mcumsum", as(ret, "matrix"), PACKAGE = "mboost")
-                       + offset)
+                pr <- 0
+                for (i in 1:max(xselect)) pr <- pr + pfun(i, agg = "none")
+                pr <- .Call("R_mcumsum", as(pr, "matrix"), PACKAGE = "mboost")
+                if (length(offset) != 1 && !is.null(newdata)) {
+                    warning("Offset not used for prediction when ", sQuote("newdata"), " is specified")
+                } else {
+                    pr <- pr + offset
+                }
+                return(pr)
             }
          }, "none" = {
             if (!nw) {
@@ -284,11 +300,11 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
                 attr(pr, "offset") <- offset
                 return(pr)
             } else {
-                ret <- 0
-                for (i in 1:max(xselect)) ret <- ret + pfun(i, agg = "none")
-                ret <- as(ret, "matrix")
-                attr(ret, "offset") <- offset
-                return(ret)
+                pr <- 0
+                for (i in 1:max(xselect)) pr <- pr + pfun(i, agg = "none")
+                pr <- as(pr, "matrix")
+                attr(pr, "offset") <- offset
+                return(pr)
             }
          })
          return(pr)
@@ -512,7 +528,7 @@ gamboost <- function(formula, data = list(),
 
 ### just one single tree-based baselearner
 blackboost <- function(formula, data = list(),
-    tree_controls = ctree_control(teststat = "max",
+    tree_controls = party::ctree_control(teststat = "max",
                                testtype = "Teststatistic",
                                mincriterion = 0,
                                maxdepth = 2, savesplitstats = FALSE),
@@ -598,6 +614,43 @@ glmboost.formula <- function(formula, data = list(), weights = NULL,
         H
     }
     ret$rownames <- rownames(mf)
+    ### specialized method for model.frame
+    ret$model.frame <- function(which = NULL) {
+        if (!is.null(which))
+            warning("Argument ", sQuote("which"), " is ignored")
+        mf
+    }
+    ### save standard update function for re-use
+    update <- ret$update
+    ### needs a specialized update function as well
+    ret$update <- function(weights = NULL, oobweights = NULL, risk = "oobag",
+                           trace = NULL) {
+        ## call standard update function
+        res <- update(weights = weights, oobweights = oobweights, risk = risk,
+                      trace = trace)
+        ## now re-set all special arguments
+        res$newX <- newX
+        res$assign <- assign
+        res$center <- cm
+        res$call <- cl
+        ### need specialized method (hatvalues etc. anyway)
+        res$hatvalues <- function() {
+            H <- vector(mode = "list", length = ncol(X))
+            MPinv <- res$basemodel[[1]]$MPinv()
+            for (j in unique(res$xselect()))
+                H[[j]] <- (X[,j] %*% MPinv[j, ,drop = FALSE]) * control$nu
+            H
+        }
+        res$rownames <- rownames(mf)
+        ### specialized method for model.frame
+        res$model.frame <- function(which = NULL) {
+            if (!is.null(which))
+                warning("Argument ", sQuote("which"), " is ignored")
+            mf
+        }
+        class(res) <- c("glmboost", "mboost")
+        res
+    }
     class(ret) <- c("glmboost", "mboost")
     return(ret)
 }
@@ -660,6 +713,43 @@ glmboost.matrix <- function(x, y, center = TRUE,
         H
     }
     ret$rownames <- rownames(X)
+    ### specialized method for model.frame
+    ret$model.frame <- function(which = NULL) {
+        if (!is.null(which))
+            warning("Argument ", sQuote("which"), " is ignored")
+        X
+    }
+    ### save standard update function for re-use
+    update <- ret$update
+    ### needs a specialized update function as well
+    ret$update <- function(weights = NULL, oobweights = NULL, risk = "oobag",
+                           trace = NULL) {
+        ## call standard update function
+        res <- update(weights = weights, oobweights = oobweights, risk = risk,
+                      trace = trace)
+        ## now re-set all special arguments
+        ret$newX <- newX
+        res$assign <- assign
+        res$center <- cm
+        res$call <- match.call()
+        ### need specialized method (hatvalues etc. anyway)
+        res$hatvalues <- function() {
+            H <- vector(mode = "list", length = ncol(X))
+            MPinv <- res$basemodel[[1]]$MPinv()
+            for (j in unique(res$xselect()))
+                H[[j]] <- (X[,j] %*% MPinv[j, ,drop = FALSE]) * control$nu
+            H
+        }
+        res$rownames <- rownames(X)
+        ### specialized method for model.frame
+        res$model.frame <- function(which = NULL) {
+            if (!is.null(which))
+                warning("Argument ", sQuote("which"), " is ignored")
+            X
+        }
+        class(res) <- c("glmboost", "mboost")
+        res
+    }
     class(ret) <- c("glmboost", "mboost")
     return(ret)
 }
