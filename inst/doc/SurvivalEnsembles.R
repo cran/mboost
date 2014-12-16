@@ -33,7 +33,7 @@ mdplot <- function(obs, pred, main = "", ...) {
 ###################################################
 ### load data. See `mboost/inst/readAML_Bullinger.R' for
 ### how the data were generated from the raw data.
-load(system.file("AML_Bullinger.Rda", package = "mboost"))
+load(file.path(path.package(package = "TH.data"), "rda", "AML_Bullinger.rda"))
 
 
 ###################################################
