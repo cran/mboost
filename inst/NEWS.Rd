@@ -1,6 +1,31 @@
 \name{NEWS}
 \title{News for Package 'mboost'}
 
+\section{Changes in mboost version 2.4-2 (2014-02-12)}{
+  \subsection{User-visible changes}{
+    \itemize{
+      \item Export \code{df2lambda}, \code{hyper_bbs} and \code{bl_lin}
+        to make package \pkg{FDboost} happy. Note: These functions
+	usually should not be called directly by users.
+    }
+  }
+  \subsection{Miscellaneous}{
+    \itemize{
+      \item Added Hothorn et al (2010) to \file{inst/CITATION}
+    }
+  }
+  \subsection{Bug-fixes}{
+    \itemize{
+      \item Changes in \file{inst/CITATION} to make CRAN happy:
+        Citations can now be extracted without the need to install the
+        package.
+      \item Removed \code{EISPACK = FALSE} from \code{eigen()} as the
+        argument is defunct and ignored.
+      \item Changed \code{require} to \code{requireNamespace}
+    }
+  }
+}
+
 \section{Changes in mboost version 2.4-1 (2014-12-15)}{
   \subsection{Miscellaneous}{
     \itemize{

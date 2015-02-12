@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
-Version: 2.4-1
-Date: 2014-12-15
+Version: 2.4-2
+Date: 2015-02-12
 Authors@R: c(person("Torsten", "Hothorn", role = c("aut", "cre"),
                     email = "Torsten.Hothorn@R-project.org"),
              person("Peter", "Buehlmann", role = "aut"),
@@ -22,7 +22,7 @@ Suggests: party (>= 1.0-3), TH.data, MASS, fields, BayesX, gbm,
 LazyData: yes
 License: GPL-2
 URL: http://mboost.r-forge.r-project.org/
-Packaged: 2014-12-15 13:57:42 UTC; bhofner
+Packaged: 2015-02-12 15:30:11 UTC; bhofner
 Author: Torsten Hothorn [aut, cre],
   Peter Buehlmann [aut],
   Thomas Kneib [aut],
@@ -33,4 +33,4 @@ Author: Torsten Hothorn [aut, cre],
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2014-12-16 00:39:25
+Date/Publication: 2015-02-12 18:47:04
