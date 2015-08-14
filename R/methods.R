@@ -369,8 +369,11 @@ print.mboost <- function(x, ...) {
     cat("\n")
     cat("\t Model-based Boosting\n")
     cat("\n")
-    if (!is.null(x$call))
-    cat("Call:\n", deparse(x$call), "\n\n", sep = "")
+    if (!is.null(x$call)) {
+        if(length(deparse(x$call$data)) > 20)
+            x$call$data <- deparse(x$call$data, nlines = 1)
+        cat("Call:\n", deparse(x$call), "\n\n", sep = "")
+    }
     show(x$family)
     cat("\n")
     cat("Number of boosting iterations: mstop =", mstop(x), "\n")
@@ -387,8 +390,11 @@ print.glmboost <- function(x, ...) {
     cat("\n")
     cat("\t Generalized Linear Models Fitted via Gradient Boosting\n")
     cat("\n")
-    if (!is.null(x$call))
-    cat("Call:\n", deparse(x$call), "\n\n", sep = "")
+    if (!is.null(x$call)) {
+        if(length(deparse(x$call$data)) > 20)
+            x$call$data <- deparse(x$call$data, nlines = 1)
+        cat("Call:\n", deparse(x$call), "\n\n", sep = "")
+    }
     show(x$family)
     cat("\n")
     cat("Number of boosting iterations: mstop =", mstop(x), "\n")
@@ -443,9 +449,6 @@ variable.names.glmboost <- function(object, which = NULL, usedonly = FALSE, ...)
     names(ret) <- ret
     ret[which]
 }
-
-#selected <- function(object, ...)
-#    UseMethod("selected", object)
 
 selected.mboost <- function(object, ...)
     object$xselect()

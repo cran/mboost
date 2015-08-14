@@ -134,8 +134,7 @@ bmono <- function(..., constraint = c("increasing", "decreasing",
             }
         }
         args$cons.arg <- cons.arg
-        ret$dpp <- bl_mono(ret, Xfun = X_bbs,
-                           args = args)
+        ret$dpp <- bl_mono(ret, Xfun = X_bbs, args = args)
     } else {
         args <- hyper_ols(df = df, lambda = lambda,
                           intercept = intercept,
@@ -147,8 +146,7 @@ bmono <- function(..., constraint = c("increasing", "decreasing",
         ## <FIXME> Was machen wir bei kateg. Effekten? Da muesste das doch auch gehen!
         args$boundary.constraints <- boundary.constraints
         args$cons.arg$n <- cons.arg$n
-        ret$dpp <- bl_mono(ret, Xfun = X_ols,
-                           args = args)
+        ret$dpp <- bl_mono(ret, Xfun = X_ols, args = args)
     }
     return(ret)
 }
@@ -158,12 +156,12 @@ bl_mono <- function(blg, Xfun, args) {
     index <- blg$get_index()
     vary <- blg$get_vary()
 
-    newX <- function(newdata = NULL) {
+    newX <- function(newdata = NULL, prediction = FALSE) {
         if (!is.null(newdata)) {
-            stopifnot(all(names(newdata) == names(blg)))
-            stopifnot(all(class(newdata) == class(mf)))
-            mf <- newdata[,names(blg),drop = FALSE]
+            mf <- check_newdata(newdata, blg, mf)
         }
+        ## this argument is currently only used in X_bbs --> bsplines
+        args$prediction <- prediction
         return(Xfun(mf, vary, args))
     }
     X <- newX()
@@ -338,15 +336,14 @@ bl_mono <- function(blg, Xfun, args) {
             if (!is.matrix(cf)) cf <- matrix(cf, nrow = 1)
             if(!is.null(newdata)) {
                 index <- NULL
-                nm <- names(blg)
-                newdata <- newdata[,nm, drop = FALSE]
-                ### option
-                if (nrow(newdata) > options("mboost_indexmin")[[1]]) {
+                ## Use sparse data represenation if data set is huge
+                ## and a data.frame
+                if (is.data.frame(newdata) && nrow(newdata) > options("mboost_indexmin")[[1]]) {
                     index <- get_index(newdata)
-                    newdata <- newdata[index[[1]],,drop = FALSE]
+                    newdata <- newdata[index[[1]], , drop = FALSE]
                     index <- index[[2]]
                 }
-                X <- newX(newdata)$X
+                X <- newX(newdata, prediction = TRUE)$X
             }
             aggregate <- match.arg(aggregate)
             pr <- switch(aggregate, "sum" =
@@ -356,8 +353,9 @@ bl_mono <- function(blg, Xfun, args) {
                                PACKAGE = "mboost"), "matrix")
             },
             "none" = as(X %*% cf, "matrix"))
-            if (is.null(index)) return(pr[,,drop = FALSE])
-            return(pr[index,,drop = FALSE])
+            if (is.null(index))
+                return(pr[, , drop = FALSE])
+            return(pr[index, , drop = FALSE])
         }
 
         ret <- list(fit = fit, hatvalues = hatvalues,

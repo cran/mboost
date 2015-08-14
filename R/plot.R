@@ -41,8 +41,13 @@ plot.mboost <- function(x, which = NULL, newdata = NULL,
         data <- model.frame(x, which = w)[[1]]
         get_vary <- x$baselearner[[w]]$get_vary
         vary <- ""
-        if (!is.null(get_vary)) vary <- get_vary()
-        if (!is.null(newdata)) data <- newdata[, colnames(data), drop = FALSE]
+        if (!is.null(get_vary))
+            vary <- get_vary()
+        if (!is.null(newdata)) {
+            data <- newdata[colnames(data)]
+            if (is.list(data))
+                data <- as.data.frame(data)
+        }
         if (vary != "") {
             v <- data[[vary]]
             if (is.factor(v)) v <- factor(levels(v)[-1], levels = levels(v))
@@ -62,7 +67,12 @@ plot.mboost <- function(x, which = NULL, newdata = NULL,
                     if (is.factor(data[[1]])) {
                         xVals <- unique(sort(data[[1]]))
                         xValsN <- as.numeric(xVals)
-                        yVals <- unique(pr[order(data[[1]], na.last = NA)])
+                        ## make sure that we get the same number of values as in
+                        ## x; this is only a problem if pr is equal for
+                        ## different x values.
+                        yVals <- unique(cbind(pr[order(data[[1]], na.last = NA)],
+                                              sort(data[[1]])))[, 1]
+
                         if (length(pr) == 1 && pr == 0) {
                             yVals <- rep(0, length(xVals))
                         }

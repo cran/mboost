@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
-Version: 2.4-2
-Date: 2015-02-12
+Version: 2.5-0
+Date: 2015-08-13
 Authors@R: c(person("Torsten", "Hothorn", role = c("aut", "cre"),
                     email = "Torsten.Hothorn@R-project.org"),
              person("Peter", "Buehlmann", role = "aut"),
@@ -16,13 +16,17 @@ Description: Functional gradient descent algorithm
   trees as base-learners for fitting generalized linear, additive
   and interaction models to potentially high-dimensional data.
 Depends: R (>= 2.14.0), methods, stats, parallel, stabs (>= 0.5-0)
-Imports: Matrix, survival, splines, lattice, nnls, quadprog, utils
+Imports: Matrix, survival, splines, lattice, nnls, quadprog, utils,
+        graphics, grDevices
 Suggests: party (>= 1.0-3), TH.data, MASS, fields, BayesX, gbm,
         mlbench, RColorBrewer, rpart (>= 4.0-3), randomForest, nnet
 LazyData: yes
 License: GPL-2
-URL: http://mboost.r-forge.r-project.org/
-Packaged: 2015-02-12 15:30:11 UTC; bhofner
+BugReports: https://github.com/hofnerb/mboost/issues
+URL: http://mboost.r-forge.r-project.org/,
+        https://github.com/hofnerb/mboost
+NeedsCompilation: yes
+Packaged: 2015-08-13 09:48:37 UTC; bhofner
 Author: Torsten Hothorn [aut, cre],
   Peter Buehlmann [aut],
   Thomas Kneib [aut],
@@ -31,6 +35,5 @@ Author: Torsten Hothorn [aut, cre],
   Fabian Sobotka [ctb],
   Fabian Scheipl [ctb]
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
-NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2015-02-12 18:47:04
+Date/Publication: 2015-08-14 08:27:27
