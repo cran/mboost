@@ -161,7 +161,13 @@ gam2[ mstop(cvm) ]    ## set the model automatically to the optimal mstop
 
 
 ###################################################
-### code chunk number 20: mod_gamboost2_refit2
+### code chunk number 20: mstop_save
+###################################################
+m_cvm <- mstop(cvm)
+
+
+###################################################
+### code chunk number 21: mod_gamboost2_refit2
 ###################################################
 ## refit model to get trace again
 ## this is only required for the output in the PDF
@@ -171,21 +177,31 @@ gam2[ mstop(cvm) ]
 
 
 ###################################################
-### code chunk number 21: coef_gamboost
+### code chunk number 22: coef_gamboost_save
 ###################################################
-names(coef(gam2)) ## displays the selected base-learners at iteration 30
+n_coef <- length(coef(gam2))
+coef_string <-
+    paste(c("zero", "one", "two", "three", "four",
+            "five", "six", "seven", "eight", "nine")[n_coef + 1],
+          if (n_coef == 1) "predictor" else "predictors")
+
+
+###################################################
+### code chunk number 23: coef_gamboost
+###################################################
+names(coef(gam2)) ## displays the selected base-learners at iteration "mstop(cvm)"
 ## To see that nothing got lost we now increase mstop to 1000:
 gam2[1000, return = FALSE]  # return = FALSE just supresses "print(gam2)"
 
 
 ###################################################
-### code chunk number 22: coef_gamboost2
+### code chunk number 24: coef_gamboost2
 ###################################################
 names(coef(gam2))  ## displays the selected base-learners, now at iteration 1000
 
 
 ###################################################
-### code chunk number 23: quantreg_gamboost
+### code chunk number 25: quantreg_gamboost
 ###################################################
 ## Same model as glm1 but now with QuantReg() family
 glm3 <- glmboost(DEXfat ~ hipcirc + kneebreadth + anthro3a, data = bodyfat,
@@ -194,21 +210,21 @@ coef(glm3, off2int = TRUE)
 
 
 ###################################################
-### code chunk number 24: loss
+### code chunk number 26: loss
 ###################################################
 loss =  function(y, f) tau * (y - f) * ((y - f) >= 0) +
                        (tau - 1) * (y - f) * ((y - f) < 0)
 
 
 ###################################################
-### code chunk number 25: ngradient
+### code chunk number 27: ngradient
 ###################################################
 ngradient = function(y, f, w = NULL)  tau * ((y - f) >= 0) +
                     (tau- 1) * ((y - f) < 0)
 
 
 ###################################################
-### code chunk number 26: OurQR
+### code chunk number 28: OurQR
 ###################################################
 OurQuantReg <- function(tau = 0.5){    ## function to include dependency on tau
   Family(                              ## applying the Family function
@@ -224,7 +240,7 @@ OurQuantReg()
 
 
 ###################################################
-### code chunk number 27: ourQR_gamboost
+### code chunk number 29: ourQR_gamboost
 ###################################################
 ## Same model as glm3 but now with our new family
 glm3b <- glmboost(DEXfat ~ hipcirc + kneebreadth + anthro3a, data = bodyfat,
@@ -234,7 +250,7 @@ identical(coef(glm3b), coef(glm3))
 
 
 ###################################################
-### code chunk number 28: QR_hipcirc
+### code chunk number 30: QR_hipcirc
 ###################################################
 glm4a <- glmboost(DEXfat ~ hipcirc, family = OurQuantReg(tau = 0.05), data = bodyfat,
                   control = boost_control(mstop = 2000))
@@ -245,7 +261,7 @@ glm4c <- glmboost(DEXfat ~ hipcirc, family = OurQuantReg(tau = 0.95), data = bod
 
 
 ###################################################
-### code chunk number 29: plot_QR_hipcirc
+### code chunk number 31: plot_QR_hipcirc
 ###################################################
 ord <- order(bodyfat$hipcirc)    ## order the data to avoid problems when plotting
 plot(bodyfat$hipcirc[ord], bodyfat$DEXfat[ord])                   ## observed data
@@ -255,7 +271,7 @@ lines(bodyfat$hipcirc[ord], fitted(glm4c)[ord], lty = 2, lwd = 2) ## 0.95 quanti
 
 
 ###################################################
-### code chunk number 30: quantregbodyfat
+### code chunk number 32: quantregbodyfat
 ###################################################
 ## same plot but with better margings and parameters
 par(mar = c(4, 4, 0, 0) + 0.1)
@@ -266,7 +282,7 @@ lines(bodyfat$hipcirc[ord], fitted(glm4c)[ord], lty=2, lwd=2)
 
 
 ###################################################
-### code chunk number 31: init_figs
+### code chunk number 33: init_figs
 ###################################################
 ################################################################################
 ## the following chunks produce the graphics that are NOT part of the bodyfat ##
@@ -275,13 +291,13 @@ lines(bodyfat$hipcirc[ord], fitted(glm4c)[ord], lty=2, lwd=2)
 
 
 ###################################################
-### code chunk number 32: init
+### code chunk number 34: init
 ###################################################
 red <- rgb(103,0,31, max = 255) ## define red color
 
 
 ###################################################
-### code chunk number 33: center_false
+### code chunk number 35: center_false
 ###################################################
 ## load library mboost
 library("mboost")
@@ -313,7 +329,7 @@ legend(0.1, 2.35,  legend = c("origin", "center of data", "base-learner"),
 
 
 ###################################################
-### code chunk number 34: center_true
+### code chunk number 36: center_true
 ###################################################
 ## create graphics to show importance of centering
 set.seed(1907)
@@ -340,7 +356,7 @@ points(mean(x), mean(y), col = cols[2], pch = 3, lwd = 1.5)
 
 
 ###################################################
-### code chunk number 35: bolsx1
+### code chunk number 37: bolsx1
 ###################################################
 ### Simulate some data
 set.seed(1907)
@@ -361,7 +377,7 @@ legend("topleft", c("true effect", "model"),
 
 
 ###################################################
-### code chunk number 36: bolsx2
+### code chunk number 38: bolsx2
 ###################################################
 beta <- c(0, -1, 0.5, 3)
 y <- drop(model.matrix(~ x2) %*% beta + rnorm(n, sd = 0.3))
@@ -386,7 +402,7 @@ legend("topleft", c("true effect", "model"),
 
 
 ###################################################
-### code chunk number 37: bbsx1
+### code chunk number 39: bbsx1
 ###################################################
 set.seed(1907)
 n <- 100
@@ -416,7 +432,7 @@ legend("topleft", c("true effect", "model"),
 
 
 ###################################################
-### code chunk number 38: bbsx2
+### code chunk number 40: bbsx2
 ###################################################
 par(mar = c(4, 4, 0, 0) + 0.1)
 plot(sort(x2), (x2^2)[order(x2)], type = "l", lwd = 2,
@@ -428,7 +444,7 @@ lines(sort(x2), fitted(mod, which = 2)[order(x2)] + mod$offset, col = red, lwd =
 
 
 ###################################################
-### code chunk number 39: cyclic1
+### code chunk number 41: cyclic1
 ###################################################
 ### example for cyclic spline
 set.seed(1907)
@@ -456,7 +472,7 @@ legend("bottomleft", c("cyclic = FALSE"),
 
 
 ###################################################
-### code chunk number 40: cyclic2
+### code chunk number 42: cyclic2
 ###################################################
 par(mar = c(4, 4, 0, 0) + 0.1)
 plot(x, y, ylab = "f(x)",
@@ -472,7 +488,7 @@ legend("bottomleft", c("cyclic = TRUE"),
 
 
 ###################################################
-### code chunk number 41: bspatial1
+### code chunk number 43: bspatial1
 ###################################################
 set.seed(1907)
 x1 <- runif(250,-pi,pi)
@@ -502,7 +518,7 @@ print(levelplot(preds ~ nd$x1 + nd$x2,
 
 
 ###################################################
-### code chunk number 42: bspatial2
+### code chunk number 44: bspatial2
 ###################################################
 x1 <- x2 <- seq(-pi, pi, length = 50)
 nd <- expand.grid(x1 = x1,
@@ -526,7 +542,7 @@ persp(x1, x2, z,
 
 
 ###################################################
-### code chunk number 43: families
+### code chunk number 45: families
 ###################################################
 pdf("./graphics/fig-family.pdf", width = 5, height = 4)
 par(mar = c(4, 4, 0, 0) + 0.1)

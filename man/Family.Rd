@@ -21,6 +21,7 @@
 \alias{Gehan}
 \alias{Hurdle}
 \alias{Multinomial}
+\alias{Cindex}
 \title{ Gradient Boosting Families }
 \description{
     \code{boost_family} objects provide a convenient way to specify loss functions
@@ -59,6 +60,7 @@ Lognormal(nuirange = c(0, 100))
 Gehan()
 Hurdle(nuirange = c(0, 100))
 Multinomial()
+Cindex(sigma = 0.1, ipcw = 1)
 }
 \arguments{
   \item{ngradient}{ a function with arguments \code{y}, \code{f} and \code{w} implementing the
@@ -90,12 +92,16 @@ Multinomial()
                be specified via the \dots argument.}
   \item{d}{ delta parameter for Huber loss function. If omitted, it is chosen adaptively.}
   \item{tau}{ the quantile or expectile to be estimated, a number strictly between 0 and 1.}
-  \item{qoffset}{ quantile of response distribution to be used as offset.}
+  \item{qoffset}{ quantile of response distribution to be used as offset, i.e., 
+      starting values for the intercept. Per default the median of the response is used,
+      which is in general a good choice (see Fenske et al. 2011, for details).}
   \item{nuirange}{ a vector containing the end-points of the interval to be
           searched for the minimum risk w.r.t. the nuisance parameter.
 	  In case of \code{PropOdds}, the starting values for
 	  the nuisance parameters. }
   \item{offrange}{ interval to search for offset in.}
+  \item{sigma}{smoothness parameter for sigmoid functions inside \code{Cindex}.}
+  \item{ipcw}{vector containing inverse probability of censoring weights for all observations. If omitted, it is estimated inside \code{Cindex} family.}
   \item{\dots}{ additional arguments to link functions.}
 }
 \details{
@@ -107,12 +113,22 @@ Multinomial()
 
   Pre-fabricated functions for the most commonly used loss functions are
   available as well. Buehlmann and Hothorn (2007) give a detailed
-  overview of the available loss functions. The \code{offset} function
-  returns the population minimizers evaluated at the response, i.e.,
-  \eqn{1/2 \log(p / (1 - p))} for \code{Binomial()} or \code{AdaExp()}
+  overview of the available loss functions. An updated overview can 
+  be found in Hofner et al (2014). 
+  
+  The \code{offset} function returns the population minimizers evaluated at the 
+  response, i.e., \eqn{1/2 \log(p / (1 - p))} for \code{Binomial()} or \code{AdaExp()}
   and \eqn{(\sum w_i)^{-1} \sum w_i y_i} for \code{Gaussian()} and the
-  median for \code{Huber()} and \code{Laplace()}. A short summary of the
-  available families is given in the following paragraphs:
+  median for \code{Huber()} and \code{Laplace()}. The offset is used as starting 
+  value for the boosting algorithm.
+  
+  Note that all families are functions and thus need to be specified either with
+  empty brackets (e.g., \code{family = Gaussian()} for Gaussian regression) or 
+  with additional arguments if these are supported by the respective family 
+  (e.g., \code{family = QuantReg(tau = 0.2)} for quantile regression for the 
+  20\% quantile).
+  
+  \strong{A short summary of the available families is given in the following paragraphs:}
 
 \code{AdaExp()}, \code{Binomial()} and \code{AUC()} implement
 families for binary classification. \code{AdaExp()} uses the
@@ -194,6 +210,9 @@ distribution approximation used in Ma and Huang (2005).
   (see \code{\link{Surv}} for details). For details on \code{Gehan()} see
   Johnson and Long (2011).
 
+  \code{Cindex()} optimizes the concordance-index for survival data (often denoted     as Harrell's C or C-index). The concordance index evaluates the rank-based           concordance probability between the model and the outcome. The C-index measures      whether large values of the model are associated with short survival times  and      vice versa. The interpretation is similar to the AUC: A C-index of 1 represents a    perfect discrimination while a C-index of 0.5 will be achieved by a completely       non-informative marker. The \code{Cindex()} family is based on an estimator by       Uno et al. (2011), which incorporates inverse probability of censoring weighting     \code{ipcw}. To make the estimator differentiable, sigmoid functions are applied;    the corresponding smoothness can be controlled via \code{sigma}. For details on      \code{Cindex()} see Mayr and Schmid (2014).
+    
+  
   Hurdle models for zero-inflated count data can be fitted by using a combination
   of the \code{Binomial()} and \code{Hurdle()} families. While the \code{Binomial()}
   family allows for fitting the zero-generating process of the Hurdle model,
@@ -208,7 +227,8 @@ distribution approximation used in Ma and Huang (2005).
   that this family does not work with tree-based base-learners at the
   moment. The class corresponding to the last level of the factor coding
   of the response is used as reference class.
-
+  
+  
 }
 \section{Warning}{
   The coefficients resulting from boosting with family
@@ -240,6 +260,8 @@ distribution approximation used in Ma and Huang (2005).
     Shuangge Ma and Jian Huang (2005), Regularized ROC method for
     disease classification and biomarker selection with microarray
     data. \emph{Bioinformatics}, \bold{21}(24), 4356--4362.
+    
+    Andreas Mayr and Matthias Schmid (2014). Boosting the concordance index for          survival data -- a unified framework to derive and evaluate biomarker combination.     \emph{PloS ONE}, \bold{9}(1):84483.
 
     Whitney K. Newey and James L. Powell (1987),
     Asymmetric least squares estimation and testing.
@@ -259,6 +281,8 @@ distribution approximation used in Ma and Huang (2005).
     condition. \emph{Environmental and Ecological Statistics},
     \bold{18}(4), 709--733.
 
+    Uno H, Cai T, Pencina MJ, D Agostino RB and Wei LJ (2011). On the C-statistics       for evaluating overall adequacy of risk prediction procedures with censored          survival data. \emph{Stat Med}, \bold{30}(10), 1105--17.
+
     Benjamin Hofner, Andreas Mayr, Nikolay Robinzonov and Matthias Schmid
     (2014). Model-based Boosting in R: A Hands-on Tutorial Using the R
     Package mboost. \emph{Computational Statistics}, \bold{29}, 3--35.\cr
@@ -269,6 +293,7 @@ distribution approximation used in Ma and Huang (2005).
     Brent A. Johnson and Qi Long (2011) Survival ensembles by the sum of pairwise
     differences with application to lung cancer microarray studies.
     \emph{Annals of Applied Statistics}, \bold{5}, 1081--1101.
+    
 
   }
 \seealso{\code{\link{mboost}} for the usage of \code{Family}s. See
@@ -284,6 +309,11 @@ MyGaussian <- function(){
        loss = function(y, f) (y - f)^2,
        name = "My Gauss Variant")
 }
+# Now use the new family
+data(bodyfat, package = "TH.data")
+mod <- mboost(DEXfat ~ ., data = bodyfat, family = MyGaussian())
+# N.B. that the family needs to be called with empty brackets
+
 
 \donttest{############################################################
 ## Do not run and check these examples automatically as
