@@ -41,7 +41,8 @@ Family(ngradient, loss = NULL, risk = NULL,
        rclass = function(f) NA)
 AdaExp()
 AUC()
-Binomial(link = c("logit", "probit"), ...)
+Binomial(type = c("adaboost", "glm"),
+         link = c("logit", "probit", "cloglog", "cauchit", "log"), ...)
 GaussClass()
 GaussReg()
 Gaussian()
@@ -86,10 +87,8 @@ Cindex(sigma = 0.1, ipcw = 1)
     (non-negative) interger weights \code{"case"}, or no weights are
     allowed \code{"none"}.}
   \item{name}{ a character giving the name of the loss function for pretty printing. }
-  \item{link}{ link function for binomial family. Alternatively,
-               one may supply the name of a distribution (for example
-               \code{link = "norm"}), parameters of which may
-               be specified via the \dots argument.}
+  \item{type}{ which parameterization of \code{Binomial} shoule be used?} b
+  \item{link}{ link function. For possible values see Usage section.}
   \item{d}{ delta parameter for Huber loss function. If omitted, it is chosen adaptively.}
   \item{tau}{ the quantile or expectile to be estimated, a number strictly between 0 and 1.}
   \item{qoffset}{ quantile of response distribution to be used as offset, i.e., 
@@ -104,6 +103,7 @@ Cindex(sigma = 0.1, ipcw = 1)
   \item{ipcw}{vector containing inverse probability of censoring weights for all observations. If omitted, it is estimated inside \code{Cindex} family.}
   \item{\dots}{ additional arguments to link functions.}
 }
+
 \details{
   The boosting algorithm implemented in \code{\link{mboost}} minimizes the
   (weighted) empirical risk function \code{risk(y, f, w)} with respect to \code{f}.
@@ -137,20 +137,22 @@ of Freund and Schapire (1996). \code{Binomial()} implements the
 negative binomial log-likelihood of a logistic regression model
 as loss function. Thus, using \code{Binomial} family closely corresponds
 to fitting a logistic model. Alternative link functions
-can be specified via the name of the corresponding distribution, for
-example \code{link = "cauchy"} lead to \code{\link{pcauchy}}
-used as link function. This feature is still experimental and
-not well tested.
+can be specified.
 
 However, the coefficients resulting from boosting with family
 \code{Binomial(link = "logit")} are \eqn{1/2} of the coefficients of a logit model
-obtained via \code{\link{glm}}. This is due to the internal recoding
-of the response to \eqn{-1} and \eqn{+1} (see below).
-  However, Buehlmann and Hothorn (2007) argue that the
+obtained via \code{\link{glm}}.  Buehlmann and Hothorn (2007) argue that the
 family \code{Binomial} is the preferred choice for binary
 classification. For binary classification problems the response
 \code{y} has to be a \code{factor}. Internally \code{y} is re-coded
-to \eqn{-1} and \eqn{+1} (Buehlmann and Hothorn 2007).
+to \eqn{-1} and \eqn{+1} (Buehlmann and Hothorn 2007). 
+
+\code{Binomial(type = "glm")} is an alternative to \code{Binomial()} leading to 
+coefficients of the same size as coefficients from a classical logit 
+model via \code{\link{glm}}. Additionally, it works not only with a 
+two-level factor but also with a two-column matrix containing the number 
+of successes and number of failures (again, similar to \code{\link{glm}}). 
+
 \code{AUC()} uses \eqn{1-AUC(y, f)} as the loss function.
 The area under the ROC curve (AUC) is defined as
 \eqn{AUC = (n_{-1} n_1)^{-1} \sum_{i: y_i = 1} \sum_{j: y_j = -1} I(f_i > f_j)}.
@@ -232,9 +234,8 @@ distribution approximation used in Ma and Huang (2005).
 }
 \section{Warning}{
   The coefficients resulting from boosting with family
-  \code{Binomial} are \eqn{1/2} of the coefficients of a logit model
-  obtained via \code{\link{glm}}. This is due to the internal recoding
-  of the response to \eqn{-1} and \eqn{+1} (see above).
+  \code{Binomial(link = "logit")} are \eqn{1/2} of the coefficients of a logit model
+  obtained via \code{\link{glm}} (see above). 
 
   For \code{AUC()}, variables should be centered and scaled and observations with weight > 0 must not contain missing values.
   The estimated coefficients for \code{AUC()} have no probabilistic interpretation.
@@ -261,7 +262,10 @@ distribution approximation used in Ma and Huang (2005).
     disease classification and biomarker selection with microarray
     data. \emph{Bioinformatics}, \bold{21}(24), 4356--4362.
     
-    Andreas Mayr and Matthias Schmid (2014). Boosting the concordance index for          survival data -- a unified framework to derive and evaluate biomarker combination.     \emph{PloS ONE}, \bold{9}(1):84483.
+    Andreas Mayr and Matthias Schmid (2014). 
+    Boosting the concordance index for survival data -- a unified 
+    framework to derive and evaluate biomarker combination.     
+    \emph{PloS ONE}, \bold{9}(1):84483.
 
     Whitney K. Newey and James L. Powell (1987),
     Asymmetric least squares estimation and testing.
@@ -281,7 +285,10 @@ distribution approximation used in Ma and Huang (2005).
     condition. \emph{Environmental and Ecological Statistics},
     \bold{18}(4), 709--733.
 
-    Uno H, Cai T, Pencina MJ, D Agostino RB and Wei LJ (2011). On the C-statistics       for evaluating overall adequacy of risk prediction procedures with censored          survival data. \emph{Stat Med}, \bold{30}(10), 1105--17.
+    Uno H, Cai T, Pencina MJ, D Agostino RB and Wei LJ (2011). 
+    On the C-statistics for evaluating overall adequacy of risk prediction 
+    procedures with censored survival data. 
+    \emph{Statistics in Medicine}, \bold{30}(10), 1105--17.
 
     Benjamin Hofner, Andreas Mayr, Nikolay Robinzonov and Matthias Schmid
     (2014). Model-based Boosting in R: A Hands-on Tutorial Using the R

@@ -55,22 +55,31 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
     blfit <- lapply(bl, function(x) x$fit)
     fit1 <- blfit[[1]]
 
-    xselect <- NA
+    if (identical("Negative Multinomial Likelihood", family@name)
+        && ! all(vapply(bl, inherits, FALSE, what = "bl_kronecker")))
+        stop(sQuote("family = Multinomial()"), " only works with Kronecker prodcut base-learners, ",
+             "i.e., combined base-learners of the form ", sQuote("bl1 %O% bl2"), " fitted via ",
+             sQuote("gamboost()"), " or ", sQuote("mboost()"),
+             ".\n See ", sQuote("?Multinomial"), " for details.")
+        
+    xselect <- NULL
     ens <- vector(mode = "list", length = control$mstop)
     nuisance <- vector(mode = "list", length = control$mstop)
-
-    ### vector of empirical risks for all boosting iterations
-    ### (either in-bag or out-of-bag)
-    mrisk <- NA
-    tsums <- numeric(length(bl))
-    ss <- vector(mode = "list", length = length(bl))
 
     ### initialized the boosting algorithm
     fit <- offset
     offsetarg <- offset
     if (is.null(offset))
         fit <- offset <- family@offset(y, weights)
+    if (length(fit) == 1)
+        fit <- rep(fit, NROW(y))
     u <- ustart <- ngradient(y, fit, weights)
+    
+    ### vector of empirical risks for all boosting iterations
+    ### (either in-bag or out-of-bag)
+    mrisk <- triskfct(y, fit)
+    tsums <- numeric(length(bl))
+    ss <- vector(mode = "list", length = length(bl))
 
     ### set up function for fitting baselearner(s)
     cwlin <- FALSE
@@ -141,7 +150,7 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
 
             ### evaluate risk, either for the learning sample (inbag)
             ### or the test sample (oobag)
-            mrisk[m] <<- triskfct(y, fit)
+            mrisk[m + 1] <<- triskfct(y, fit)
 
             ### save the model
             ens[[m]] <<- basess
@@ -154,15 +163,18 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
                          step = tracestep, width = niter)
 
             ### internal stopping (for oobag risk only)
-            if (stopintern & (m > 1)) {
-                if ((mrisk[m] - mrisk[m - 1]) > stopeps) break
+            if (stopintern) {
+                if ((mrisk[m + 1] - mrisk[m]) > stopeps) break
             }
         }
         mstop <<- mstop + niter
         return(TRUE)
     }
-    ### actually go for initial mstop iterations!
-    tmp <- boost(control$mstop)
+    
+    if (control$mstop > 0) {
+        ### actually go for initial mstop iterations!
+        tmp <- boost(control$mstop)
+    }
 
     ### prepare a (very) rich objects
     RET <- list(baselearner = blg,          ### the baselearners (without weights)
@@ -199,8 +211,11 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
     RET$mstop <- function() mstop
 
     ### which basemodels have been selected so far?
-    RET$xselect <- function()
+    RET$xselect <- function() {
+        if (mstop == 0)
+            return(NULL)
         return(xselect[1:mstop])
+    }
 
     ### current fitted values
     RET$fitted <- function() as.vector(fit)
@@ -209,10 +224,12 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
     RET$resid <- function() u
 
     ### current risk fct.
-    RET$risk <- function() mrisk[1:mstop]
+    RET$risk <- function() {
+        mrisk[1:(mstop + 1)]
+    }
 
     ### negative risk (at current iteration)
-    RET$logLik <- function() -mrisk[mstop]
+    RET$logLik <- function() -mrisk[mstop + 1]
 
     ### figure out which baselearners are requested
     thiswhich <- function(which = NULL, usedonly = FALSE) {
@@ -242,7 +259,22 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
     RET$predict <- function(newdata = NULL, which = NULL,
                             aggregate = c("sum", "cumsum", "none")) {
 
-        indx <- ((1:length(xselect)) <= mstop)
+        if (mstop == 0) {
+            if (length(offset) == 1) {
+                if (!is.null(newdata))
+                    return(rep(offset, NCOL(newdata)))
+                return(rep(offset, NROW(y)))
+            } 
+            if (!is.null(newdata)) {
+                warning("User-specified offset is not a scalar, ",
+                        "thus it cannot be used for predictions when ",
+                        sQuote("newdata"), " is specified.")
+                return(rep(0, NCOL(newdata)))
+            }
+            return(offset)
+        }
+        if (!is.null(xselect))
+            indx <- ((1:length(xselect)) <= mstop)
         which <- thiswhich(which, usedonly = nw <- is.null(which))
         if (length(which) == 0) return(NULL)
 
@@ -272,10 +304,9 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
                 ## was made via the `which' argument
                 ret <- matrix(rowSums(pr), ncol = 1)
                 if (length(offset) != 1 && !is.null(newdata)) {
-                    warning(sQuote("length(offset) > 1"),
-                            ": User-specified offset is not a scalar, ",
-                            "thus offset not used for prediction when ",
-                            sQuote("newdata"), " is specified")
+                    warning("User-specified offset is not a scalar, ",
+                            "thus it cannot be used for predictions when ",
+                            sQuote("newdata"), " is specified.")
                 } else {
                     ret <- ret + offset
                 }
@@ -362,7 +393,8 @@ mboost_fit <- function(blg, response, weights = rep(1, NROW(response)),
     ### aggregated at all ("none")
     RET$coef <- function(which = NULL, aggregate = c("sum", "cumsum", "none")) {
 
-        indx <- ((1:length(xselect)) <= mstop)
+        if (!is.null(xselect)) 
+            indx <- ((1:length(xselect)) <= mstop)
         which <- thiswhich(which, usedonly = is.null(which))
         if (length(which) == 0) return(NULL)
 
@@ -453,13 +485,13 @@ mboost <- function(formula, data = list(), na.action = na.omit,
     }
 
     if (is.data.frame(data)) {
-        if (!all(complete.cases(data))) {
+        if (!all(Complete.cases(data))) {
             ## drop cases with missing values in any of the specified variables:
             vars <- all.vars(formula)[all.vars(formula) %in% names(data)]
             data <- na.action(data[, vars])
         }
     } else {
-        if (any(unlist(lapply(data, is.na))))
+        if (any(unlist(lapply(data, function(x) !all(Complete.cases(x))))))
             warning(sQuote("data"),
                     " contains missing values. Results might be affected. Consider removing missing values.")
     }

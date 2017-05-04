@@ -8,10 +8,10 @@ cvrisk <- function(object, ...)
     UseMethod("cvrisk")
 
 cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
-                           grid = 1:mstop(object), papply = mclapply,
+                           grid = 0:mstop(object), papply = mclapply,
                            fun = NULL, corrected = TRUE, mc.preschedule = FALSE,
                            ...) {
-
+    
     papply <- match.fun(papply)
     weights <- model.weights(object)
     if (any(weights == 0))
@@ -32,7 +32,7 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
             dummyfct <- function(weights, oobweights) {
                 mod <- fitfct(weights = weights, oobweights = oobweights)
                 mod[max(grid)]
-                mod$risk()[grid]
+                mod$risk()[grid + 1]
             }
         } else {
             ## If family = CoxPH(), cross-validation needs to be computed as in
@@ -41,6 +41,11 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
             plloss <- environment(object$family@risk)[["plloss"]]
 
             if (is.null(fun)) {
+                if (0 %in% grid) {
+                    warning("All values in ", sQuote("grid"), " must be greater 0 if ",
+                            'family = "CoxPH", hence 0 is dropped from grid')
+                    grid <- grid[grid != 0]
+                }
                 dummyfct <- function(weights, oobweights) {
                     ## <FIXME> Should the risk be computed on the inbag
                     ## (currently done) or on the oobag observations?
@@ -56,7 +61,7 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
                     lplk <- apply(pr[, grid], 2, function(f)
                         sum(plloss(y = object$response, f = f, w = 1)))
                     ## return negative "cvl"
-                    - mod$risk()[grid] - lplk
+                    - mod$risk()[1:(grid + 1)] - lplk
                 }
             }
         }
@@ -95,6 +100,7 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
                 "Original error message(s):\n",
                 sapply(oobrisk[idx], function(x) x))
         oobrisk[idx] <- NULL
+        OOBweights <- OOBweights[, !idx]
     }
     if (!is.null(fun))
         return(oobrisk)
@@ -106,14 +112,14 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
     attr(oobrisk, "call") <- call
     attr(oobrisk, "mstop") <- grid
     attr(oobrisk, "type") <- ifelse(!is.null(attr(folds, "type")),
-        attr(folds, "type"), "user-defined")
+                                    attr(folds, "type"), "user-defined")
     class(oobrisk) <- "cvrisk"
     oobrisk
 }
 
 print.cvrisk <- function(x, ...) {
     cat("\n\t Cross-validated", attr(x, "risk"), "\n\t",
-              attr(x, "call"), "\n\n")
+        attr(x, "call"), "\n\n")
     print(colMeans(x))
     cat("\n\t Optimal number of boosting iterations:", mstop(x), "\n")
     return(invisible(x))
@@ -156,9 +162,9 @@ cv <- function(weights, type = c("bootstrap", "kfold", "subsampling"),
     for (s in levels(strata)) {
         indx <- which(strata == s)
         folds[indx,] <- switch(type,
-            "bootstrap" = cvboot(length(indx), B = B, weights[indx]),
-            "kfold" = cvkfold(length(indx), k = B) * weights[indx],
-            "subsampling" = cvsub(length(indx), prob = prob, B = B) * weights[indx])
+                               "bootstrap" = cvboot(length(indx), B = B, weights[indx]),
+                               "kfold" = cvkfold(length(indx), k = B) * weights[indx],
+                               "subsampling" = cvsub(length(indx), prob = prob, B = B) * weights[indx])
     }
     attr(folds, "type") <- paste(B, "-fold ", type, sep = "")
     return(folds)

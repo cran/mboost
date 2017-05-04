@@ -1,6 +1,73 @@
 \name{NEWS}
 \title{News for Package 'mboost'}
 
+\section{Changes in mboost version 2.8-0 (2017-05-04)}{
+  \subsection{User-visible changes}{
+    \itemize{
+      \item Models with zero steps (i.e., models containing only the offset) can
+        now be fitted. Furthermore, cross-validation can now also select a model
+        without base-learners.
+        Fixes \href{https://github.com/boost-R/mboost/issues/64}{#64}, 
+        \href{https://github.com/boost-R/mboost/issues/66}{#66}, and 
+        \href{https://github.com/boost-R/mboost/issues/69}{#69}.        
+      \item \code{Binomial} now uses link functions by making use of \code{make.link}. 
+        Furthermore, an alternative implementation of \code{Binomial} models 
+        along the lines of the \code{glm} implementation can be used via 
+        \code{Binomial(type = "glm")}. Additionally, it works not only with a 
+        two-level factor but also with a two-column matrix containing the number 
+        of successes and number of failures. 
+        Fixes \href{https://github.com/boost-R/mboost/issues/34}{#34}, 
+        \href{https://github.com/boost-R/mboost/issues/63}{#63} and
+        \href{https://github.com/boost-R/mboost/issues/65}{#65}.
+      \item Added new base-learner \code{bkernel} for kernel boosting as described in
+      
+        S. Friedrichs, J. Manitz, P. Burger, C.I. Amos, A. Risch, J.C. Chang-Claude, 
+        H.E. Wichmann, T. Kneib, H. Bickeboeller, and B. Hofner (2017), 
+        Pathway-Based Kernel Boosting for the Analysis of Genome-Wide Association Studies.
+        Submitted to \emph{Computational and Mathematical Methods in Medicine}.
+        
+      \item Removed check if \code{df2lambda} is stable. Hence,  
+        \code{options(mboost_check_df2lambda)} (introduced in mboost 2.5-0) 
+        is no longer used. 
+        Closes \href{https://github.com/boost-R/mboost/issues/26}{#26}.
+    }
+  }
+  \subsection{Miscellaneous}{
+    \itemize{
+      \item Added Andreas Mayr as contributor.
+      \item Updated references and added reference to \code{citation("mboost")}.
+      \item Fixed code of India example, which can be used to reproduce the data analysis 
+        presented in
+        
+        N. Fenske, T. Kneib, and T. Hothorn (2011), 
+        Identifying risk factors for severe childhood malnutrition by boosting 
+        additive quantile regression.
+        \emph{Journal of the American Statistical Association}, \bold{106}:494-510.
+	      
+	    (see \code{system.file("India_quantiles.R", package = "mboost")})
+	  \item Fixed package citation.
+	  \item Register C routines to make CRAN happy (again).
+        Fixes \href{https://github.com/boost-R/mboost/issues/77}{#77}. 
+    }
+  }
+  \subsection{Bug-fixes}{
+     \itemize{
+       \item Make sure that \code{family = Multinomial} is only used with Kronecker 
+         product base-learners. Fixes \href{https://github.com/boost-R/mboost/issues/46}{#46}.
+      \item Use argument \code{PACKAGE} in \code{.Call}. 
+         Fixes \href{https://github.com/boost-R/mboost/issues/72}{#72}.
+      \item If \code{center} is specified as boolean value in \code{bols}, we now throw an error. 
+         Fixes \href{https://github.com/boost-R/mboost/issues/70}{#70}.
+      \item  Fixed \code{AUC} family which expected fit to be equal to a constant in the 
+        first iteration.
+      \item Check for new data, e.g., in \code{predict}, was broken.
+        Fixes \href{https://github.com/boost-R/mboost/issues/68}{#68}. 
+     \item Make sure that \code{newdata} is discarded in \code{fitted}. 
+        Fixes \href{https://github.com/boost-R/mboost/issues/76}{#76}.
+     }
+  }
+}
+
 \section{Changes in mboost version 2.7-0 (2016-11-23)}{
   \subsection{User-visible changes}{
     \itemize{

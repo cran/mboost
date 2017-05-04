@@ -153,11 +153,11 @@ mstop(x) <- value
                      added to the intercept (if there is any)
                      or if the offset is returned as attribute of
                      the coefficient (default).}
-  \item{i}{ integer. Index specifying the model to extract. If \code{i}
-            is smaller than the initial \code{mstop}, a subset is used.
-            If \code{i} is larger than the initial \code{mstop},
-            additional boosting steps are performed until step \code{i}
-            is reached. See details for more information. }
+  \item{i}{ integer. Index specifying the model to extract. If \code{i = 0}, 
+            the offset model is returned. If \code{i} is smaller than the initial 
+            \code{mstop}, a subset is used. If \code{i} is larger than the 
+            initial \code{mstop}, additional boosting steps are performed until 
+            step \code{i} is reached. See details for more information. }
   \item{value}{ integer. See \code{i}.}
   \item{return}{ a logical indicating whether the changed object is
                  returned. }
@@ -310,10 +310,7 @@ mstop(x) <- value
 }
 \section{Warning}{
   The coefficients resulting from boosting with family
-  \code{\link{Binomial}} are \eqn{1/2} of the coefficients of a logit
-  model obtained via \code{\link{glm}}. This is due to the internal
-  recoding of the response to \eqn{-1} and \eqn{+1} (see
-  \code{\link{Binomial}}).
+  \code{Binomial(link = "logit")} are \eqn{1/2} of the coefficients of a logit  model obtained via \code{\link{glm}} (see \code{\link{Binomial}}).
 }
 \references{
 
