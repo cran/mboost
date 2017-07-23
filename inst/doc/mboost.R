@@ -5,6 +5,8 @@
 ###################################################
 options(prompt = "R> ", continue = "+  ", digits = 4)
 set.seed(290875)
+## use old degrees of freedom for reproducibility
+options(mboost_dftraceS = TRUE)
 
 
 ###################################################

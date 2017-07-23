@@ -1,6 +1,35 @@
 \name{NEWS}
 \title{News for Package 'mboost'}
 
+\section{Changes in mboost version 2.8-1 (2017-07-19)}{
+  \subsection{User-visible changes}{
+    \itemize{
+      \item Added all possible options to the specific boosting functions
+        instead of passing the options via \code{...} to \code{mboost_fit}.
+        Closes \href{https://github.com/boost-R/mboost/issues/81}{#81}.
+    }
+  }
+  \subsection{Miscellaneous}{
+    \itemize{
+      \item Minor speed ups in \code{df2lambda} (i.e., when computing penalty parameter 
+        for the defined degrees of freedom). Changes proposed by Benjamin 
+        Christoffersen.
+      \item Updated kernel boosting reference. 
+        Closes \href{https://github.com/boost-R/mboost/issues/84}{#84}.  
+      \item Rebuilt package with LF instead of CRLF to fix \file{cleanup} script
+        as requested by CRAN. Fixes \href{https://github.com/boost-R/mboost/issues/81}{#82}
+      \item Use "old" definition of degrees of freedom in 
+        \code{vignette("mboost", package = "mboost")} to make results reproducible.
+    }
+  }
+  \subsection{Bug-fixes}{
+    \itemize{
+      \item Fix handling of missing values in \code{mboost} and \code{gamboost}
+        when weights are specified. Fixes \href{https://github.com/boost-R/mboost/issues/80}{#80}.
+    }
+  }
+}
+  
 \section{Changes in mboost version 2.8-0 (2017-05-04)}{
   \subsection{User-visible changes}{
     \itemize{
@@ -24,7 +53,8 @@
         S. Friedrichs, J. Manitz, P. Burger, C.I. Amos, A. Risch, J.C. Chang-Claude, 
         H.E. Wichmann, T. Kneib, H. Bickeboeller, and B. Hofner (2017), 
         Pathway-Based Kernel Boosting for the Analysis of Genome-Wide Association Studies.
-        Submitted to \emph{Computational and Mathematical Methods in Medicine}.
+        \emph{Computational and Mathematical Methods in Medicine}. 2017(6742763), 1-17. 
+        \doi{10.1155/2017/6742763}.
         
       \item Removed check if \code{df2lambda} is stable. Hence,  
         \code{options(mboost_check_df2lambda)} (introduced in mboost 2.5-0) 

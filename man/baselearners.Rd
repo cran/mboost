@@ -159,7 +159,7 @@ bl1 \%O\% bl2
                  (from package \code{fields}) is used. }
   \item{args}{ a named list of arguments to be passed to
                \code{cov.function}. Thus strongly dependent on the
-               specified \code{cov.function}. }
+               specified \code{cov.function}.}
   \item{kernel}{one of \code{"lin"} (linear kernel), \code{"sia"} (size adjusted kernel), 
                 or \code{"net"} (network kernel). For details see 
                 \code{\link[kangar00]{calc_kernel}}}
@@ -374,6 +374,12 @@ bl1 \%O\% bl2
   matrix has to be -1, else 0. With a boundary object at hand, the
   fitted or predicted values can be directly plotted into the map using
   \code{\link[BayesX]{drawmap}}.
+  
+  \code{bkernel} can be used to fit linear (\code{kernel = "lin"}), 
+  size-adjusted (\code{kernel = "sia"}) or network (\code{kernel = "net"})
+  kernels based on genetic pathways for genome-wide assosiation studies. 
+  For details see Friedrichs et al. (2017) and check the associated package
+  \CRANpkg{kangar00}.
 
   \code{buser(X, K)} specifies a base-learner with user-specified design
   matrix \code{X} and penalty matrix \code{K}, where \code{X} and
@@ -503,7 +509,8 @@ bl1 \%O\% bl2
   S. Friedrichs, J. Manitz, P. Burger, C.I. Amos, A. Risch, J.C. Chang-Claude, 
   H.E. Wichmann, T. Kneib, H. Bickeboeller, and B. Hofner (2017), 
   Pathway-Based Kernel Boosting for the Analysis of Genome-Wide Association Studies.
-  Submitted to \emph{Computational and Mathematical Methods in Medicine}.
+  \emph{Computational and Mathematical Methods in Medicine}. 2017(6742763), 1-17. 
+  \doi{10.1155/2017/6742763}.
 
   Benjamin Hofner, Torsten Hothorn, Thomas Kneib, and Matthias Schmid (2011a),
   A framework for unbiased model selection based on boosting.

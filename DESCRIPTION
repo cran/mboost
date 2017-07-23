@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
-Version: 2.8-0
-Date: 2017-05-04
+Version: 2.8-1
+Date: 2017-07-19
 Authors@R: c(person("Torsten", "Hothorn", role = "aut"),
              person("Peter", "Buehlmann", role = "aut"),
              person("Thomas", "Kneib", role = "aut"),
@@ -27,7 +27,7 @@ License: GPL-2
 BugReports: https://github.com/boost-R/mboost/issues
 URL: https://github.com/boost-R/mboost
 NeedsCompilation: yes
-Packaged: 2017-05-04 14:40:07 UTC; hofbe
+Packaged: 2017-07-19 09:27:23 UTC; hofbe
 Author: Torsten Hothorn [aut],
   Peter Buehlmann [aut],
   Thomas Kneib [aut],
@@ -38,4 +38,4 @@ Author: Torsten Hothorn [aut],
   Andreas Mayr [ctb]
 Maintainer: Benjamin Hofner <benjamin.hofner@pei.de>
 Repository: CRAN
-Date/Publication: 2017-05-04 19:29:34 UTC
+Date/Publication: 2017-07-23 17:34:31 UTC
