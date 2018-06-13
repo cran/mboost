@@ -251,9 +251,6 @@ update.mboost <- function(object, weights, oobweights = NULL,
 model.frame.mboost <- function(formula, ...)
     formula$model.frame(...)
 
-response.mboost <- function(object, ...)
-    object$response
-
 predict.glmboost <- function(object, newdata = NULL,
     type = c("link", "response", "class"), which = NULL,
     aggregate = c("sum", "cumsum", "none"), ...) {
@@ -530,7 +527,7 @@ extract.mboost <- function(object, what = c("design", "penalty", "lambda", "df",
 }
 
 extract.glmboost <- function(object, what = c("design", "coefficients", "residuals",
-                                     "variable.names", "bnames", "offset",
+                                     "variable.names", "offset",
                                      "nuisance", "weights", "control"),
                              which = NULL, asmatrix = FALSE, ...){
     what <- match.arg(what)
@@ -559,7 +556,6 @@ extract.glmboost <- function(object, what = c("design", "coefficients", "residua
            "coefficients" = return(coef(object, which = which)),
            "residuals" = return(residuals(object)),
            "variable.names" = return(variable.names(object, which)),
-           "bnames" = return(get("bnames", envir = environment(object$update))[which]),
            "offset" = return(object$offset),
            "nuisance" = return(nuisance(object)),
            "weights" = return(model.weights(object)),
@@ -644,4 +640,26 @@ risk <- function(object, ...)
 
 risk.mboost <- function(object, ...) {
     object$risk()
+}
+
+downstream.test <- function(object, ...) {
+    if (object$family@name != "Ratio of Correlated Gammas (RCG)")
+        stop("downstream tests currently only implemented for RCG family")
+    if (!inherits(object, "glmboost"))
+        stop("downstream tests currently only implemented for linear models, i.e., glmboost")
+    
+    # calculate Fisher information matrix
+    alpha <- nuisance(object)[1]
+    rho <- nuisance(object)[2]
+    coefs <- coef(object, which = "")
+    y <- object$response
+    ## do we need the original design matrix (X1) or the centered design (X) matrix?
+    X <- as.data.frame(extract(object, what = "design"))
+    X1 <- data.frame(model.matrix(~ x1 + x2))
+    
+    Fisher <- environment(object$family@ngradient)[["Fisher"]](y, alpha, rho, X1, coefs)
+    
+    # downstream hypothesis tests
+    p_value <- sapply(1:length(coefs), function(i) (1 - pnorm(abs(coefs[i]) / sqrt(solve(Fisher)[i, i]))) * 2)
+    return(p_value)
 }

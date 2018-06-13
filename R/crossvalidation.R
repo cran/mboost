@@ -9,7 +9,7 @@ cvrisk <- function(object, ...)
 
 cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
                            grid = 0:mstop(object), papply = mclapply,
-                           fun = NULL, corrected = TRUE, mc.preschedule = FALSE,
+                           fun = NULL, mc.preschedule = FALSE,
                            ...) {
     
     papply <- match.fun(papply)
@@ -18,6 +18,7 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
         warning("zero weights")
     if (is.null(folds)) {
         folds <- rmultinom(25, length(weights), weights/sum(weights))
+        attr(folds, "type") <- "25-fold bootstrap"
     } else {
         stopifnot(is.matrix(folds) && nrow(folds) == length(weights))
     }
@@ -28,43 +29,14 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
     fam_name <- object$family@name
     call <- deparse(object$call)
     if (is.null(fun)) {
-        if (fam_name != "Cox Partial Likelihood" || !corrected) {
-            dummyfct <- function(weights, oobweights) {
-                mod <- fitfct(weights = weights, oobweights = oobweights)
-                mod[max(grid)]
-                mod$risk()[grid + 1]
-            }
-        } else {
-            ## If family = CoxPH(), cross-validation needs to be computed as in
-            ## Verweij, van Houwelingen (1993), Cross-validation in survival
-            ## analysis, Statistics in Medicine, 12:2305-2314.
-            plloss <- environment(object$family@risk)[["plloss"]]
-
-            if (is.null(fun)) {
-                if (0 %in% grid) {
-                    warning("All values in ", sQuote("grid"), " must be greater 0 if ",
-                            'family = "CoxPH", hence 0 is dropped from grid')
-                    grid <- grid[grid != 0]
-                }
-                dummyfct <- function(weights, oobweights) {
-                    ## <FIXME> Should the risk be computed on the inbag
-                    ## (currently done) or on the oobag observations?
-                    mod <- fitfct(weights = weights, oobweights = oobweights,
-                                  risk = "inbag")
-                    mod[max(grid)]
-
-                    pr <- predict(mod, aggregate = "cumsum")
-                    ## <FIXME> are the weights w really equal to 1? Shouldn't it
-                    ## be equal to the original fitting weights? Is this
-                    ## computed on ALL observations (currently done) or only on
-                    ## the OOBAG observations?
-                    lplk <- apply(pr[, grid], 2, function(f)
-                        sum(plloss(y = object$response, f = f, w = 1)))
-                    ## return negative "cvl"
-                    - mod$risk()[1:(grid + 1)] - lplk
-                }
-            }
+        dummyfct <- function(weights, oobweights) {
+            mod <- fitfct(weights = weights, oobweights = oobweights)
+            mstop(mod) <- max(grid)
+            ## return all risk values in grid (+ 1 as 0 is included)
+            risk(mod)[grid + 1]
         }
+        if (fam_name == "Cox Partial Likelihood" && all(rowSums(folds == 0) == 1))
+            stop("Leave-one-out cross-validation cannot be used with ", sQuote("family = CoxPH()"))
     } else { ## !is.null(fun)
         dummyfct <- function(weights, oobweights) {
             mod <- fitfct(weights = weights, oobweights = oobweights)
@@ -99,8 +71,7 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
                 " folds only.\n",
                 "Original error message(s):\n",
                 sapply(oobrisk[idx], function(x) x))
-        oobrisk[idx] <- NULL
-        OOBweights <- OOBweights[, !idx]
+        oobrisk[idx] <- NA
     }
     if (!is.null(fun))
         return(oobrisk)
@@ -120,7 +91,7 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
 print.cvrisk <- function(x, ...) {
     cat("\n\t Cross-validated", attr(x, "risk"), "\n\t",
         attr(x, "call"), "\n\n")
-    print(colMeans(x))
+    print(colMeans(x, na.rm = TRUE))
     cat("\n\t Optimal number of boosting iterations:", mstop(x), "\n")
     return(invisible(x))
 }
@@ -129,6 +100,7 @@ plot.cvrisk <- function(x, xlab = "Number of boosting iterations",
                         ylab = attr(x, "risk"),
                         ylim = range(x), main = attr(x, "type"), ...) {
 
+    x <- x[, apply(x, 2, function(y) all(!is.na(y))), drop = FALSE]
     cm <- colMeans(x)
     plot(1:ncol(x), cm, ylab = ylab, ylim = ylim,
          type = "n", lwd = 2, xlab = xlab,
@@ -145,7 +117,7 @@ plot.cvrisk <- function(x, xlab = "Number of boosting iterations",
 }
 
 mstop.cvrisk <- function(object, ...)
-    attr(object, "mstop")[which.min(colSums(object))]
+    attr(object, "mstop")[which.min(colSums(object, na.rm = TRUE))]
 
 cv <- function(weights, type = c("bootstrap", "kfold", "subsampling"),
                B = ifelse(type == "kfold", 10, 25),
@@ -175,7 +147,7 @@ cvboot <- function(n, B, weights)
     rmultinom(B, n, weights / sum(weights))
 
 cvkfold <- function(n, k) {
-    if (k > n / 2) stop("k > n/2")
+    #if (k > n / 2) stop("k > n/2")
     fl <- floor(n/k)
     folds <- c(rep(c(rep(0, fl), rep(1, n)), k - 1),
                rep(0, n * k - (k - 1) * (fl + n)))

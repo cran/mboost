@@ -51,7 +51,7 @@
 \alias{nuisance}
 \alias{nuisance.mboost}
 
-
+\alias{downstream.test}
 
 \title{ Methods for Gradient Boosting Objects }
 \description{
@@ -99,7 +99,7 @@ mstop(x) <- value
                          "nuisance", "weights", "index", "control"),
         which = NULL, ...)
 \method{extract}{glmboost}(object, what = c("design", "coefficients", "residuals",
-                         "variable.names", "bnames", "offset",
+                         "variable.names", "offset",
                          "nuisance", "weights", "control"),
         which = NULL, asmatrix = FALSE, ...)
 \method{extract}{blg}(object, what = c("design", "penalty", "index"),
@@ -114,6 +114,8 @@ mstop(x) <- value
 \method{risk}{mboost}(object, ...)
 
 \method{nuisance}{mboost}(object)
+
+downstream.test(object, ...)
 }
 \arguments{
   \item{object}{ objects of class \code{glmboost}, \code{gamboost},
@@ -302,6 +304,12 @@ mstop(x) <- value
   Note that \code{logLik} and \code{AIC} only make sense when the
   corresponding \code{\link{Family}} implements the appropriate loss
   function.
+  
+  \code{downstream.test} computes tests for linear models fitted via \code{\link{glmboost}}
+  with a likelihood based loss function and only suitable without early stopping, i.e., 
+  if likelihood based model converged. In order to work, the Fisher matrix must
+  be implemented in the \code{\link{Family}}; currently this is only the case for 
+  family \code{\link{RCG}}.
 
 }
 \note{

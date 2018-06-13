@@ -136,23 +136,21 @@ X_ols <- function(mf, vary, args) {
         MATRIX <- MATRIX && options("mboost_useMatrix")$mboost_useMatrix
         if (MATRIX) {
             diag <- Diagonal
-            cbind <- cBind
             if (!is(X, "Matrix"))
                 X <- Matrix(X)
         }
         if (vary != "") {
             by <- model.matrix(as.formula(paste("~", vary, collapse = "")),
                                data = mf)[ , -1, drop = FALSE] # drop intercept
+            if (nrow(X) != nrow(by)) 
+                warning("The design matrix and the by argument imply a different number of rows: ", 
+                        nrow(X), ", ", nrow(by))
             DM <- lapply(1:ncol(by), function(i) {
                 ret <- X * by[, i]
                 colnames(ret) <- paste(colnames(ret), colnames(by)[i], sep = ":")
                 ret
             })
-            if (is(X, "Matrix")) {
-                X <- do.call("cBind", DM)
-            } else {
-                X <- do.call("cbind", DM)
-            }
+            X <- do.call("cbind", DM)
         }
     }
     ### <FIXME> penalize intercepts???
@@ -242,7 +240,6 @@ X_bbs <- function(mf, vary, args) {
     MATRIX <- MATRIX && options("mboost_useMatrix")$mboost_useMatrix
     if (MATRIX) {
         diag <- Diagonal
-        cbind <- cBind
         for (i in 1:length(mm)){
             tmp <- attributes(mm[[i]])[c("degree", "knots", "Boundary.knots")]
             mm[[i]] <- Matrix(mm[[i]])
@@ -259,11 +256,7 @@ X_bbs <- function(mf, vary, args) {
                 colnames(ret) <- paste(colnames(ret), colnames(by)[i], sep = ":")
                 ret
             })
-            if (is(X, "Matrix")) {
-                X <- do.call("cBind", DM)
-            } else {
-                X <- do.call("cbind", DM)
-            }
+            X <- do.call("cbind", DM)
         }
         if (args$differences > 0){
             if (!args$cyclic) {
@@ -410,6 +403,15 @@ bols <- function(..., by = NULL, index = NULL, intercept = TRUE, df = NULL,
     cll[[1]] <- as.name("bols")
     
     mf <- list(...)
+    if (is.null(by)) {
+        tmp <- mf
+    } else {
+        tmp <- c(mf, list(by))
+    }
+    if (length(unique(sapply(tmp, length))) > 1)
+        warning("The elements in ... or by imply different number of rows: ", 
+                paste(unique(sapply(tmp, length)), collapse = ", "))
+    rm("tmp")
     
     ## check that center = TRUE/FALSE is not specified in ...
     if ("center" %in% names(mf) && 
@@ -521,6 +523,16 @@ bbs <- function(..., by = NULL, index = NULL, knots = 20, boundary.knots = NULL,
                 "See section ", sQuote("Details"), " of ?bbs for more information.")
 
     mf <- list(...)
+    if (is.null(by)) {
+        tmp <- mf
+    } else {
+        tmp <- c(mf, list(by))
+    }
+    if (length(unique(sapply(tmp, length))) > 1)
+        warning("The elements in ... or by imply different number of rows: ", 
+                paste(unique(sapply(tmp, length)), collapse = ", "))
+    rm("tmp")
+    
     if (length(mf) == 1 && ((is.matrix(mf[[1]]) || is.data.frame(mf[[1]])) &&
                             ncol(mf[[1]]) > 1 )) {
         mf <- as.data.frame(mf[[1]])
@@ -782,8 +794,14 @@ bl_lin <- function(blg, Xfun, args) {
 
         fit <- function(y) {
             if (!is.null(index)) {
-                y <- .Call("R_ysum", as.double(weights * y), as.integer(index),
-                           PACKAGE = "mboost")
+                if (is.matrix(y)) {
+                    y <- apply(y, 2, function(u) 
+                        .Call("R_ysum", as.double(weights * u), as.integer(index),
+                              PACKAGE = "mboost"))
+                } else {
+                    y <- .Call("R_ysum", as.double(weights * y), as.integer(index),
+                               PACKAGE = "mboost")
+                }
             } else {
                 y <- y * weights
             }
@@ -825,14 +843,27 @@ bl_lin <- function(blg, Xfun, args) {
                 }
                 X <- newX(newdata, prediction = TRUE)$X
             }
+            ### when coef is actually a matrix
+            ### coming from multidimensional gradients
+            P <- 1L
+            if (ncol(X) != nrow(cf)) {
+                P <- nrow(cf) / ncol(X)
+                X <- do.call("bdiag", list(X = X)[rep(1, P)])
+            }
             aggregate <- match.arg(aggregate)
-            pr <- switch(aggregate, "sum" =
-                as(X %*% rowSums(cf), "matrix"),
+            pr <- switch(aggregate, "sum" = {
+                ret <- as(X %*% rowSums(cf), "matrix")
+                matrix(ret, ncol = P)
+            },
             "cumsum" = {
+                stopifnot(P == 1L)
                 as(X %*% .Call("R_mcumsum", as(cf, "matrix"),
                                PACKAGE = "mboost"), "matrix")
             },
-            "none" = as(X %*% cf, "matrix"))
+            "none" = {
+                stopifnot(P == 1L)
+                as(X %*% cf, "matrix")
+            })
             if (is.null(index))
                 return(pr[ , , drop = FALSE])
             return(pr[index, ,drop = FALSE])
@@ -935,6 +966,9 @@ fit.bl <- function(object, y)
     stopifnot(inherits(bl1, "blg"))
     stopifnot(inherits(bl2, "blg"))
 
+    if (nrow(model.frame(bl1)) != nrow(model.frame(bl2))) 
+        warning("The design matrices of the two base-learners imply a different number of rows: ", 
+                nrow(model.frame(bl1)), ", ", nrow(model.frame(bl2)))
     mf <- cbind(model.frame(bl1), model.frame(bl2))
     index1 <- bl1$get_index()
     index2 <- bl2$get_index()
@@ -1042,6 +1076,9 @@ fit.bl <- function(object, y)
 
     stopifnot(!any(colnames(model.frame(bl1)) %in%
                    colnames(model.frame(bl2))))
+    if (nrow(model.frame(bl1)) != nrow(model.frame(bl2))) 
+        warning("The design matrices of the two marginal base-learners imply a different number of rows: ", 
+                nrow(model.frame(bl1)), ", ", nrow(model.frame(bl2)))
     mf <- cbind(model.frame(bl1), model.frame(bl2))
     index1 <- bl1$get_index()
     index2 <- bl2$get_index()

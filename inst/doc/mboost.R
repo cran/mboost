@@ -16,10 +16,10 @@ options(mboost_dftraceS = TRUE)
 if (!require("mboost"))
     install.packages("mboost", dependencies = TRUE)
 library("mboost")
-### package party is necessary for fitting trees
-if (!require("party"))
-    install.packages("party", dependencies = TRUE)
-library("party")
+### package partykit is necessary for fitting trees
+if (!require("partykit"))
+    install.packages("partykit", dependencies = TRUE)
+library("partykit")
 ### speed up things a little bit: if the model is already
 ### available load it into R
 if (file.exists("model.Rda")) {

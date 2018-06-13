@@ -10,8 +10,8 @@ if (!require("rpart"))
     stop("cannot attach package ", sQuote("rpart"))
 if (!require("survival"))
     stop("cannot attach package ", sQuote("survival"))
-if (!require("party"))
-    stop("cannot attach package ", sQuote("party"))
+if (!require("partykit"))
+    stop("cannot attach package ", sQuote("partykit"))
 
 set.seed(290875)
 CEX <- 0.85
@@ -64,11 +64,14 @@ AMLw <- AMLw[AMLw > 0 & cc]
 ### code chunk number 4: AML-RF
 ###################################################
 ### controls for tree growing
-ctrl <- cforest_control(mincriterion = 0.1, mtry = 5, minsplit = 5, ntree = 250)
+ctrl <- ctree_control(testtype = "Teststatistic", 
+                      teststat = "maximum", mincriterion = .1, minsplit = 5)
+### was: cforest_control(mincriterion = 0.1, mtry = 5, minsplit = 5, ntree = 250)
 
 ### fit random forest for censored data (warnings are OK here)
-AMLrf <- cforest(I(log(time)) ~ ., data = AMLlearn, control = ctrl,
-                 weights = AMLw)
+AMLrf <- cforest(log(time) ~ ., data = AMLlearn, control = ctrl,
+                 weights = AMLw, mtry = 5, ntree = 250, 
+                 perturb = list(replace = TRUE, fraction = 0.632))
 
 
 ###################################################
@@ -151,12 +154,18 @@ TRmod <- rpart(ltime ~ . , data = GBSG2learn, weights = GBSG2w,
 TRerisk <- sum((GBSG2learn$ltime[pos] - predict(TRmod))^2*GBSG2w[pos]) / n
 
 ### tree controls
-ctrl <- cforest_control(mincriterion = qnorm(0.95), mtry = 5,
-                      minsplit = 5, ntree = 100)
+ctrl <- ctree_control(testtype = "Teststatistic", 
+                      teststat = "maximum", mincriterion = qnorm(.95), 
+                      minsplit = 5)
+### was: cforest_control(mincriterion = qnorm(0.95), mtry = 5,
+###                      minsplit = 5, ntree = 100)
+
 
 ### fit random forest for censored data (warnings are OK here)
 RFmod <- cforest(ltime ~ . , data = GBSG2learn, weights = GBSG2w,
-                 control = ctrl)
+                 control = ctrl, mtry = 5, ntree = 100, 
+                 perturb = list(replace = TRUE, 
+                     fraction = 0.632 * sum(GBSG2w > 0)))
 
 ### fit L2 boosting for censored data
 L2Bmod <- glmboost(ltime ~ ., data = GBSG2learn, weights = GBSG2w,

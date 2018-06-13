@@ -13,7 +13,7 @@ importFrom(quadprog, solve.QP)
 importFrom(utils, packageDescription)
 importFrom("graphics", "abline", "axis", "box", "lines", "matlines", "matplot", "plot", "points", "polygon")
 importFrom("grDevices", "hcl", "rgb")
-importFrom("party", "party_intern")
+importFrom("partykit", "ctree_control", "extree_data", "extree_fit", "fitted_node")
 
 export(glmboost,
        gamboost,
@@ -22,14 +22,16 @@ export(glmboost,
        boost_control, mstop, Family,
        GaussReg, Gaussian, GaussClass, Laplace, Binomial, Poisson, GammaReg, QuantReg,
        ExpectReg, NBinomial, PropOdds, Weibull, Loglog, Lognormal, AUC, mboost_fit,
-       Huber, AdaExp, Gehan, Cindex, CoxPH, Hurdle, Multinomial, FP, IPCweights,
+       Huber, AdaExp, Gehan, Cindex, CoxPH, Hurdle, Multinomial, RCG, FP, IPCweights,
        cvrisk, cv, 
        bbs, bols, bspatial, brandom, btree, bss, bns, brad, bkernel, bmono, bmrf, buser,
        survFit, selected, selected.mboost,
        nuisance, "%+%", "%X%", "%O%", extract, risk, "mstop<-",
        fitted.mboost, plot.glmboost, plot.mboost, lines.mboost, plot.cvrisk,
+       predict.mboost, predict.glmboost,
        stabsel.mboost, stabsel_parameters.mboost,
        confint.mboost, confint.glmboost, plot.mboost.ci, lines.mboost.ci, print.glmboost.ci,
+       downstream.test,
        varimp, plot.varimp, as.data.frame.varimp,
        mboost_intern)
        ###, basesel, fitsel)
