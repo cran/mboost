@@ -35,7 +35,7 @@ cvrisk.mboost <- function (object, folds = cv(model.weights(object)),
             ## return all risk values in grid (+ 1 as 0 is included)
             risk(mod)[grid + 1]
         }
-        if (fam_name == "Cox Partial Likelihood" && all(rowSums(folds == 0) == 1))
+        if (fam_name == "Cox Partial Likelihood" && all(colSums(folds == 0) == 1))
             stop("Leave-one-out cross-validation cannot be used with ", sQuote("family = CoxPH()"))
     } else { ## !is.null(fun)
         dummyfct <- function(weights, oobweights) {
@@ -99,7 +99,11 @@ print.cvrisk <- function(x, ...) {
 plot.cvrisk <- function(x, xlab = "Number of boosting iterations",
                         ylab = attr(x, "risk"),
                         ylim = range(x), main = attr(x, "type"), ...) {
-
+    
+    ## force evaluation of attributes (to not evaluate them in the wrong situation)
+    force(ylab)
+    force(main)
+    
     x <- x[, apply(x, 2, function(y) all(!is.na(y))), drop = FALSE]
     cm <- colMeans(x)
     plot(1:ncol(x), cm, ylab = ylab, ylim = ylim,
