@@ -1,6 +1,6 @@
 Package: mboost
 Title: Model-Based Boosting
-Version: 2.9-2
+Version: 2.9-2.1
 Date: 2020-02-17
 Authors@R: c(person("Torsten", "Hothorn", role = "aut", 
                 comment = c(ORCID = "0000-0001-8301-0471")),
@@ -29,7 +29,7 @@ License: GPL-2
 BugReports: https://github.com/boost-R/mboost/issues
 URL: https://github.com/boost-R/mboost
 NeedsCompilation: yes
-Packaged: 2020-02-17 21:24:00 UTC; benjamin
+Packaged: 2020-08-02 10:16:30 UTC; ripley
 Author: Torsten Hothorn [aut] (<https://orcid.org/0000-0001-8301-0471>),
   Peter Buehlmann [aut],
   Thomas Kneib [aut],
@@ -40,4 +40,4 @@ Author: Torsten Hothorn [aut] (<https://orcid.org/0000-0001-8301-0471>),
   Andreas Mayr [ctb]
 Maintainer: Benjamin Hofner <benjamin.hofner@pei.de>
 Repository: CRAN
-Date/Publication: 2020-02-18 08:20:02 UTC
+Date/Publication: 2020-08-02 14:01:07 UTC
