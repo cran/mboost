@@ -386,7 +386,6 @@ define_solver <- function(lambda2, lambda3, X) {
         ## some lines must be replaced in order to solve directly
         fct[2] <- '    solve(XtX +'
         fct[6] <- "          , crossprod(X, y)"
-        fct[7] <- '          )'
     }
     fct
 }
