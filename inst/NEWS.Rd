@@ -1,7 +1,28 @@
 \name{NEWS}
 \title{News for Package 'mboost'}
 
-\section{Changes in mboost version 2.9-3 (2020-07-29)}{
+\section{Changes in mboost version 2.9-4 (2020-12-09)}{
+  \subsection{User-visible changes}{
+    \itemize{
+      \item New maintainer: Torsten Hothorn follows Benjamin Hofner, who curated the 2.6-2.9 series, as
+            maintainer. All authors thank Benny for 4 years of package maintainance!
+      \item Added \code{by} argument to \code{btree}; only binary factors
+            are allowed.
+    }
+  }
+  \subsection{Bug-fixes}{
+    \itemize{
+      \item Add missing \code{rclass} function to derive class predictions 
+            from conditional class
+            probabilities to \code{Binomial()} family.
+      \item Plot correct x-axis in \code{plot(cvrisk(...))}
+            (closes \href{https://github.com/boost-R/mboost/issues/102}{#102}).
+
+    }
+  }
+}
+
+\section{Changes in mboost version 2.9-3 (2020-08-06)}{
   \subsection{Bug-fixes}{
     \itemize{
       \item Removed deprecated argument \code{LINPACK} from all calls to \code{solve}. 
