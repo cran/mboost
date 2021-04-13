@@ -309,7 +309,7 @@ distribution approximation used in Ma and Huang (2005).
     Benjamin Hofner, Andreas Mayr, Nikolay Robinzonov and Matthias Schmid
     (2014). Model-based Boosting in R: A Hands-on Tutorial Using the R
     Package mboost. \emph{Computational Statistics}, \bold{29}, 3--35.\cr
-    \url{http://dx.doi.org/10.1007/s00180-012-0382-5}
+    \doi{10.1007/s00180-012-0382-5}
 
     Available as vignette via: \code{vignette(package = "mboost", "mboost_tutorial")}
 
@@ -320,7 +320,7 @@ distribution approximation used in Ma and Huang (2005).
 
     Weinhold, L., S. Pechlivanis, S. Wahl, P. Hoffmann and M. Schmid (2016) A Statistical Model for the
     Analysis of Bounded Response Variables in DNA Methylation Studies.
-    \emph{BMC Bioinformatics}. 2016; 17: 480. \url{http://dx.doi.org/10.1186/s12859-016-1347-4}
+    \emph{BMC Bioinformatics}. 2016; 17: 480. \doi{10.1186/s12859-016-1347-4}
 }
 \seealso{\code{\link{mboost}} for the usage of \code{Family}s. See
     \code{\link{boost_family-class}} for objects resulting from a call to \code{Family}. }
@@ -341,10 +341,6 @@ mod <- mboost(DEXfat ~ ., data = bodyfat, family = MyGaussian())
 # N.B. that the family needs to be called with empty brackets
 
 
-\donttest{############################################################
-## Do not run and check these examples automatically as
-## they take some time
-
 ### Proportional odds model
 data(iris)
 iris$Species <- factor(iris$Species, ordered = TRUE)
@@ -361,9 +357,6 @@ coef(mod.PropOdds)["Sepal.Length"]
 ## make thresholds comparable to a model without intercept
 nuisance(mod.PropOdds) - coef(mod.PropOdds)["(Intercept)"] -
     attr(coef(mod.PropOdds), "offset")
-
-## End(Not run and test)
-}
 
 ### Multinomial logit model via a linear array model
 ## One needs to convert the data to a list
@@ -388,7 +381,7 @@ pred2 <- predict(mlm, type = "response", newdata = newdata)
 pred[1, ]
 pred2
 
-\donttest{############################################################
+\dontrun{############################################################
 ## Do not run and check these examples automatically as
 ## they take some time
 
@@ -402,10 +395,6 @@ if (require("nnet")) {
 ## End(Not run and test)
 }
 
-
-\donttest{############################################################
-## Do not run and check these examples automatically as
-## they take some time
 
 ### Example for RCG model
 ## generate covariate values
@@ -440,11 +429,6 @@ downstream.test(RCGmodel)
 predictions <- predict(RCGmodel, type = "response")
 plot(predictions, y)
 abline(0,1)
-
-## End(Not run and test)
-}
-
-
 
 }
 \keyword{models}

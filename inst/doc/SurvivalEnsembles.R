@@ -15,6 +15,7 @@ if (!require("partykit"))
 
 set.seed(290875)
 CEX <- 0.85
+options(digits = 3)
 
 ### mean difference plots
 mdplot <- function(obs, pred, main = "", ...) {

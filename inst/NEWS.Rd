@@ -1,6 +1,20 @@
 \name{NEWS}
 \title{News for Package 'mboost'}
 
+\section{Changes in mboost version 2.9-5 (2021-04-06)}{
+  \subsection{Bug-fixes}{
+    \itemize{
+      \item \code{btree(..., by = )} caused problems when restricting the number of boosting iterations.
+    }
+  }
+   \subsection{Miscellaneous}{
+   \itemize{
+      \item Speed-up vignettes.
+      \item Use less precision in numerical vignette outputs.
+    }
+  }
+}
+
 \section{Changes in mboost version 2.9-4 (2020-12-09)}{
   \subsection{User-visible changes}{
     \itemize{
