@@ -1,7 +1,7 @@
 Package: mboost
 Title: Model-Based Boosting
-Version: 2.9-5
-Date: 2021-04-06
+Version: 2.9-6
+Date: 2022-04-06
 Authors@R: c(person("Torsten", "Hothorn", role = c("cre", "aut"), 
                 email = "Torsten.Hothorn@R-project.org",
                 comment = c(ORCID = "0000-0001-8301-0471")),
@@ -24,8 +24,8 @@ Description: Functional gradient descent algorithm
   component-wise (penalised) least squares estimates or regression
   trees as base-learners for fitting generalized linear, additive
   and interaction models to potentially high-dimensional data.
-  Models and algorithms are described in \doi{10.1214/07-STS242}, 
-  a hands-on tutorial is available from \doi{10.1007/s00180-012-0382-5}.
+  Models and algorithms are described in <doi:10.1214/07-STS242>,
+  a hands-on tutorial is available from <doi:10.1007/s00180-012-0382-5>.
   The package allows user-specified loss functions and base-learners.
 Depends: R (>= 3.2.0), methods, stats, parallel, stabs (>= 0.5-0)
 Imports: Matrix, survival (>= 3.2-10), splines, lattice, nnls,
@@ -37,7 +37,7 @@ License: GPL-2
 BugReports: https://github.com/boost-R/mboost/issues
 URL: https://github.com/boost-R/mboost
 NeedsCompilation: yes
-Packaged: 2021-04-06 08:54:27 UTC; hothorn
+Packaged: 2022-04-06 14:21:25 UTC; hothorn
 Author: Torsten Hothorn [cre, aut] (<https://orcid.org/0000-0001-8301-0471>),
   Peter Buehlmann [aut] (<https://orcid.org/0000-0002-1782-6015>),
   Thomas Kneib [aut] (<https://orcid.org/0000-0003-3390-0972>),
@@ -48,4 +48,4 @@ Author: Torsten Hothorn [cre, aut] (<https://orcid.org/0000-0001-8301-0471>),
   Andreas Mayr [ctb] (<https://orcid.org/0000-0001-7106-9732>)
 Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
 Repository: CRAN
-Date/Publication: 2021-04-13 22:00:02 UTC
+Date/Publication: 2022-04-09 00:12:36 UTC
