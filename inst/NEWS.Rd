@@ -1,6 +1,21 @@
 \name{NEWS}
 \title{News for Package 'mboost'}
 
+\section{Changes in mboost version 2.9-12 (2026-07-14)}{
+  \subsection{Bug-fixes}{
+    \itemize{
+      \item Update \code{structure} call in vignette
+      \item Handle references in \file{REFERENCES.bib}
+    }
+  }
+  \subsection{Other}{
+    \itemize{
+      \item Bring back \file{tests}
+      \item Bring back \file{demo}
+    }
+  }
+}
+
 \section{Changes in mboost version 2.9-11 (2024-08-19)}{
   \subsection{Bug-fixes}{
     \itemize{

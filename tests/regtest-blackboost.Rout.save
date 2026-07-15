@@ -1,0 +1,243 @@
+
+R version 4.6.1 (2026-06-24) -- "Happy Hop"
+Copyright (C) 2026 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> options(digits = 3)
+> 
+> require("mboost")
+Loading required package: mboost
+Loading required package: parallel
+Loading required package: stabs
+> if (require("partykit")) {
++ 
++ set.seed(290875)
++ 
++ tst <- try(data("BostonHousing", package = "mlbench"))
++ if (!inherits(tst, "try-error")) {
++ 
++     system.time(a <- blackboost(medv ~ ., data = BostonHousing,
++         tree_controls = ctree_control(teststat = "max",
++                                 testtype = "Teststatistic",
++                                 mincriterion = 0,
++                                 maxdepth = 2),
++         control = boost_control(mstop = 500)))
++ 
++     print(ae <- mean((predict(a) - BostonHousing$medv)^2))
++ 
++     pdiffs <- max(abs(predict(update(a, model.weights(a))) - predict(a)))
++     stopifnot(pdiffs < sqrt(.Machine$double.eps))
++ 
++ 
++     ### attach `gbm', quietly
++     sink("tmpfile")
++     if (require("gbm")) cat()
++     sink()
++     file.remove("tmpfile")
++ 
++     if (require("gbm")) {
++         system.time(b <- gbm(medv ~ ., data = BostonHousing,
++             n.trees = 500, interaction = 2, distribution = "gaussian",
++             shrinkage = 0.1, bag = 1))
++     print(be <- mean((predict(b, newdata = BostonHousing, n.trees = 500) -
++                 BostonHousing$medv)^2))
++     plot(BostonHousing$medv, predict(a), col = "red", pch = "+")
++     points(BostonHousing$medv,
++            predict(b, newdata = BostonHousing, n.trees = 500),
++            col = "blue", pch = "+")
++     stopifnot(ae < be)
++     }
++ }
++ 
++ ### with by-argument, a certain type of interaction
++ tctrl <- ctree_control(teststat = "max",
++                        testtype = "Teststatistic",
++                        mincriterion = 0,
++                        maxdepth = 2)
++ bb <- mboost(medv ~ btree(crim, zn, indus, nox, age) + 
++                     btree(crim, zn, indus, nox, age, by = chas), 
++              data = BostonHousing)
++ stopifnot(isTRUE(all.equal(fitted(bb)[1:10], 
++                     c(predict(bb, newdata = BostonHousing[1:10,])), 
++                     check.attributes = FALSE)))
++ nd <- BostonHousing[1:10,]
++ nd$chas[] <- "0"
++ p0 <- predict(bb, newdata = nd, which = 1)
++ stopifnot(isTRUE(all.equal(c(unique(predict(bb, newdata = nd, which = 2))), 0, 
++                            check.attributes = FALSE)))
++ nd$chas[] <- "1"
++ p1 <- predict(bb, newdata = nd, which = 1)
++ stopifnot(isTRUE(all.equal(p0, p1)))
++ print(predict(bb, newdata = nd, which = 2))
++ print(table(selected(bb)))
++ print(table(selected(bb[50])))
++ 
++ ### check different interfaces
++ x <- as.matrix(BostonHousing[,colnames(BostonHousing) != "medv"])
++ y <- BostonHousing$medv
++ p2 <- predict(blackboost(medv ~ ., data = BostonHousing, family = Laplace()),
++               newdata = BostonHousing)
++ 
++ ## Cox model
++ library("survival")
++ 
++ fit2 <- blackboost(Surv(futime,fustat) ~ age + resid.ds + rx + ecog.ps,
++     data = ovarian, family = CoxPH(), control = boost_control(mstop = 1000))
++ 
++ A2 <- survFit(fit2)
++ print(A2)
++ 
++ newdata <- ovarian[c(1,3,12),]
++ A2 <- survFit(fit2, newdata = newdata)
++ print(A2)
++ 
++ ### predictions:
++ set.seed(1907)
++ x1 <- rnorm(100)
++ x2 <- rnorm(100)
++ x3 <- rnorm(100)
++ y <- rnorm(100, mean = 3 * x1, sd = 2)
++ DF <- data.frame(y = y, x1 = x1, x2 = x2, x3 = x3)
++ 
++ amod <- blackboost(y ~ -1 + x1 + x2, data = DF)
++ agg <- c("none", "sum", "cumsum")
++ whi <- list(NULL, 1)
++ for (i in 1:2){
++     pred <- vector("list", length=3)
++     for (j in 1:3){
++         pred[[j]] <- predict(amod, aggregate=agg[j], which = whi[[i]])
++     }
++     if (i == 1){
++         stopifnot(max(abs(pred[[2]] - pred[[3]][,ncol(pred[[3]])]))  < sqrt(.Machine$double.eps))
++         if ((pred[[2]] - rowSums(pred[[1]]))[1] - amod$offset < sqrt(.Machine$double.eps))
++             warning(sQuote("aggregate = sum"), " adds the offset, ", sQuote("aggregate = none"), " doesn't.")
++         stopifnot(max(abs(pred[[2]] - rowSums(pred[[1]]) - amod$offset))   < sqrt(.Machine$double.eps))
++     } else {
++         stopifnot(max(abs(pred[[2]] - sapply(pred[[3]], function(obj) obj[,ncol(obj)])))  < sqrt(.Machine$double.eps))
++         stopifnot(max(abs(pred[[2]] - sapply(pred[[1]], function(obj) rowSums(obj))))  < sqrt(.Machine$double.eps))
++     }
++ }
++ 
++ stopifnot(all(predict(amod, which=1) + amod$offset  - predict(amod) < sqrt(.Machine$double.eps)))
++ 
++ 
++ # check type argument
++ set.seed(1907)
++ x1 <- rnorm(100)
++ p <- 1/(1 + exp(- 3 * x1))
++ y <- as.factor(runif(100) < p)
++ DF <- data.frame(y = y, x1 = x1)
++ 
++ mod <- blackboost(y ~ x1, family = Binomial(),
++                   data = DF,  control=boost_control(mstop=5000))
++ 
++ pr <- predict(mod)
++ pr <- predict(mod, type="class")
++ foo <- table(pr, y)
++ stopifnot(foo[1,2] + foo[2,1] == 0)
++ pr <- predict(mod, type="response")
++ # <FIXME> How do we check "correctness" of results?</FIXME>
++ 
++ }
+Loading required package: partykit
+Loading required package: grid
+Loading required package: libcoin
+Loading required package: mvtnorm
+
+Attaching package: 'partykit'
+
+The following object is masked from 'package:mboost':
+
+    varimp
+
+[1] 2.37
+Loading required package: gbm
+Loaded gbm 2.3.1
+This version of gbm is no longer under development. Consider transitioning to gbm3, https://github.com/gbm-developers/gbm3
+[1] 2.75
+  btree(crim, zn, indus, nox, age, by = chas)
+2                                        7.15
+2                                        3.71
+2                                        3.71
+2                                        3.71
+2                                        3.71
+2                                        3.71
+2                                        7.15
+2                                        7.15
+2                                        7.15
+2                                        7.15
+attr(,"offset")
+[1] 22.5
+
+ 1  2 
+80 20 
+
+ 1  2 
+37 13 
+$surv
+       [,1]
+ [1,] 1.000
+ [2,] 1.000
+ [3,] 0.998
+ [4,] 0.994
+ [5,] 0.972
+ [6,] 0.948
+ [7,] 0.914
+ [8,] 0.864
+ [9,] 0.775
+[10,] 0.667
+[11,] 0.459
+[12,] 0.223
+
+$time
+  1   2   3  22  23  24  25   5   7   8  10  11 
+ 59 115 156 268 329 353 365 431 464 475 563 638 
+
+$n.event
+ [1] 1 1 1 1 1 1 1 1 1 1 1 1
+
+attr(,"class")
+[1] "survFit"
+$surv
+              1         3    12
+ [1,]  6.30e-01  9.66e-01 1.000
+ [2,]  2.67e-01  9.06e-01 1.000
+ [3,]  5.74e-04  5.74e-01 1.000
+ [4,]  7.18e-09  2.48e-01 1.000
+ [5,]  3.26e-39  1.39e-03 1.000
+ [6,]  1.19e-73  3.84e-06 1.000
+ [7,] 1.27e-123  7.46e-10 1.000
+ [8,] 5.20e-200  1.58e-15 1.000
+ [9,]  0.00e+00  1.69e-26 0.999
+[10,]  0.00e+00  1.31e-41 0.999
+[11,]  0.00e+00  1.49e-79 0.998
+[12,]  0.00e+00 1.93e-152 0.996
+
+$time
+  1   2   3  22  23  24  25   5   7   8  10  11 
+ 59 115 156 268 329 353 365 431 464 475 563 638 
+
+$n.event
+ [1] 1 1 1 1 1 1 1 1 1 1 1 1
+
+attr(,"class")
+[1] "survFit"
+Warning message:
+'aggregate = sum' adds the offset, 'aggregate = none' doesn't. 
+> 
+> proc.time()
+   user  system elapsed 
+ 18.314   0.102  18.412 

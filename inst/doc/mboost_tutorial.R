@@ -7,12 +7,12 @@
 options(prompt = "R> ", continue = "+  ", width = 80)
 pd <- packageDescription("mboost")
 if (any(is.na(pd))){
-    install.packages("mboost", repos = "http://cran.at.r-project.org")
+    install.packages("mboost", repos = "https://CRAN.R-project.org")
     pd <- packageDescription("mboost")
 }
 if (compareVersion(pd$Version, "2.1-0") < 0){ # must be mboost 2.1-X or newer
     warning("Current version of mboost is installed!")
-    install.packages("mboost", repos = "http://cran.at.r-project.org")
+    install.packages("mboost", repos = "https://CRAN.R-project.org")
 }
 options(digits = 3)
 require("mboost")
@@ -210,21 +210,44 @@ coef(glm3, off2int = TRUE)
 
 
 ###################################################
-### code chunk number 26: loss
+### code chunk number 26: bib
+###################################################
+thisdir <- getwd()
+bibfile <- system.file("REFERENCES.bib", package = "mboost")
+### bibfile may contain spaces LaTeX is unable to deal with on MacOS it seems
+if (file.copy(bibfile, to = thisdir, overwrite = TRUE)) {
+    bibfile <- "REFERENCES.bib"
+} else {
+    ### hope for the best
+    bibfile <- file.path("..", "inst", "REFERENCES.bib")
+}
+
+library("bibtex")
+mboost <- citation(package = "mboost", auto = TRUE)
+x <- unclass(mboost)
+attr(x[[1]], "key") <- "mboost"
+class(x) <- class(mboost)
+x$doi <- "10.32614/CRAN.package.mboost"
+writeLines(toBibtex(x), con = "packages.bib")
+write.bib(c("lme4", "nlme", "gbm"), file = "packages.bib", append = TRUE)
+
+
+###################################################
+### code chunk number 27: loss
 ###################################################
 loss =  function(y, f) tau * (y - f) * ((y - f) >= 0) +
                        (tau - 1) * (y - f) * ((y - f) < 0)
 
 
 ###################################################
-### code chunk number 27: ngradient
+### code chunk number 28: ngradient
 ###################################################
 ngradient = function(y, f, w = NULL)  tau * ((y - f) >= 0) +
                     (tau- 1) * ((y - f) < 0)
 
 
 ###################################################
-### code chunk number 28: OurQR
+### code chunk number 29: OurQR
 ###################################################
 OurQuantReg <- function(tau = 0.5){    ## function to include dependency on tau
   Family(                              ## applying the Family function
@@ -240,7 +263,7 @@ OurQuantReg()
 
 
 ###################################################
-### code chunk number 29: ourQR_gamboost
+### code chunk number 30: ourQR_gamboost
 ###################################################
 ## Same model as glm3 but now with our new family
 glm3b <- glmboost(DEXfat ~ hipcirc + kneebreadth + anthro3a, data = bodyfat,
@@ -250,7 +273,7 @@ identical(coef(glm3b), coef(glm3))
 
 
 ###################################################
-### code chunk number 30: QR_hipcirc
+### code chunk number 31: QR_hipcirc
 ###################################################
 glm4a <- glmboost(DEXfat ~ hipcirc, family = OurQuantReg(tau = 0.05), data = bodyfat,
                   control = boost_control(mstop = 2000))
@@ -261,7 +284,7 @@ glm4c <- glmboost(DEXfat ~ hipcirc, family = OurQuantReg(tau = 0.95), data = bod
 
 
 ###################################################
-### code chunk number 31: plot_QR_hipcirc
+### code chunk number 32: plot_QR_hipcirc
 ###################################################
 ord <- order(bodyfat$hipcirc)    ## order the data to avoid problems when plotting
 plot(bodyfat$hipcirc[ord], bodyfat$DEXfat[ord])                   ## observed data
@@ -271,7 +294,7 @@ lines(bodyfat$hipcirc[ord], fitted(glm4c)[ord], lty = 2, lwd = 2) ## 0.95 quanti
 
 
 ###################################################
-### code chunk number 32: quantregbodyfat
+### code chunk number 33: quantregbodyfat
 ###################################################
 ## same plot but with better margings and parameters
 par(mar = c(4, 4, 0, 0) + 0.1)
@@ -282,7 +305,7 @@ lines(bodyfat$hipcirc[ord], fitted(glm4c)[ord], lty=2, lwd=2)
 
 
 ###################################################
-### code chunk number 33: init_figs
+### code chunk number 34: init_figs
 ###################################################
 ################################################################################
 ## the following chunks produce the graphics that are NOT part of the bodyfat ##
@@ -291,13 +314,13 @@ lines(bodyfat$hipcirc[ord], fitted(glm4c)[ord], lty=2, lwd=2)
 
 
 ###################################################
-### code chunk number 34: init
+### code chunk number 35: init
 ###################################################
 red <- rgb(103,0,31, max = 255) ## define red color
 
 
 ###################################################
-### code chunk number 35: center_false
+### code chunk number 36: center_false
 ###################################################
 ## load library mboost
 library("mboost")
@@ -329,7 +352,7 @@ legend(0.1, 2.35,  legend = c("origin", "center of data", "base-learner"),
 
 
 ###################################################
-### code chunk number 36: center_true
+### code chunk number 37: center_true
 ###################################################
 ## create graphics to show importance of centering
 set.seed(1907)
@@ -356,7 +379,7 @@ points(mean(x), mean(y), col = cols[2], pch = 3, lwd = 1.5)
 
 
 ###################################################
-### code chunk number 37: bolsx1
+### code chunk number 38: bolsx1
 ###################################################
 ### Simulate some data
 set.seed(1907)
@@ -377,7 +400,7 @@ legend("topleft", c("true effect", "model"),
 
 
 ###################################################
-### code chunk number 38: bolsx2
+### code chunk number 39: bolsx2
 ###################################################
 beta <- c(0, -1, 0.5, 3)
 y <- drop(model.matrix(~ x2) %*% beta + rnorm(n, sd = 0.3))
@@ -402,7 +425,7 @@ legend("topleft", c("true effect", "model"),
 
 
 ###################################################
-### code chunk number 39: bbsx1
+### code chunk number 40: bbsx1
 ###################################################
 set.seed(1907)
 n <- 100
@@ -432,7 +455,7 @@ legend("topleft", c("true effect", "model"),
 
 
 ###################################################
-### code chunk number 40: bbsx2
+### code chunk number 41: bbsx2
 ###################################################
 par(mar = c(4, 4, 0, 0) + 0.1)
 plot(sort(x2), (x2^2)[order(x2)], type = "l", lwd = 2,
@@ -444,7 +467,7 @@ lines(sort(x2), fitted(mod, which = 2)[order(x2)] + mod$offset, col = red, lwd =
 
 
 ###################################################
-### code chunk number 41: cyclic1
+### code chunk number 42: cyclic1
 ###################################################
 ### example for cyclic spline
 set.seed(1907)
@@ -472,7 +495,7 @@ legend("bottomleft", c("cyclic = FALSE"),
 
 
 ###################################################
-### code chunk number 42: cyclic2
+### code chunk number 43: cyclic2
 ###################################################
 par(mar = c(4, 4, 0, 0) + 0.1)
 plot(x, y, ylab = "f(x)",
@@ -488,7 +511,7 @@ legend("bottomleft", c("cyclic = TRUE"),
 
 
 ###################################################
-### code chunk number 43: bspatial1
+### code chunk number 44: bspatial1
 ###################################################
 set.seed(1907)
 x1 <- runif(250,-pi,pi)
@@ -518,7 +541,7 @@ print(levelplot(preds ~ nd$x1 + nd$x2,
 
 
 ###################################################
-### code chunk number 44: bspatial2
+### code chunk number 45: bspatial2
 ###################################################
 x1 <- x2 <- seq(-pi, pi, length = 50)
 nd <- expand.grid(x1 = x1,
@@ -542,7 +565,7 @@ persp(x1, x2, z,
 
 
 ###################################################
-### code chunk number 45: families
+### code chunk number 46: families
 ###################################################
 pdf("./graphics/fig-family.pdf", width = 5, height = 4)
 par(mar = c(4, 4, 0, 0) + 0.1)
@@ -595,5 +618,3 @@ lines(x, dat$AdaExp, lty = 2, col = 2)
 legend("topright", legend = c("Binomial","AdaExp"), xjust = 0.5, title = "loss",
        lty = 1:2, col = 1:2, cex = 0.8, bty = "n")
 dev.off()
-
-

@@ -290,3 +290,15 @@ plot(GBSG2learn$ltime, L2Bpr, cex = GBSG2w / 4,
        main = "Quadratic Loss",  cex.axis = CEX, cex.main = CEX, cex.lab = CEX)
 
 
+###################################################
+### code chunk number 17: bib
+###################################################
+thisdir <- getwd()
+bibfile <- system.file("REFERENCES.bib", package = "mboost")
+### bibfile may contain spaces LaTeX is unable to deal with on MacOS it seems
+if (file.copy(bibfile, to = thisdir, overwrite = TRUE)) {
+    bibfile <- "REFERENCES.bib"
+} else {
+    ### hope for the best
+    bibfile <- file.path("..", "inst", "REFERENCES.bib")
+}

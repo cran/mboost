@@ -638,7 +638,7 @@ structure(c(3.7463373531230646, 5.0294654135338313, 3.805863095238093,
 1.4931641803723936, 1.4603329652076242, 1.6295693854945206, 1.6624546810087431, 
 1.3061920384979004, 1.396995761268865, 1.6785669277120703, 1.9372544801264491, 
 1.5743918472558274, 1.7250666697024684, 1.4503454917151744, 1.2655303765741142
-), .Dim = c(25L, 100L), .Dimnames = list(c("1", "2", "3", "4", 
+), dim = c(25L, 100L), dimnames = list(c("1", "2", "3", "4", 
 "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", 
 "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"), 
     c("10", "20", "30", "40", "50", "60", "70", "80", "90", "100", 
@@ -824,3 +824,24 @@ lines(nd$anthro3b, predict(model, which = "bols(anthro3b", newdata = nd),
       type = "l", lty = "dashed")
 
 
+###################################################
+### code chunk number 14: bib
+###################################################
+thisdir <- getwd()
+bibfile <- system.file("REFERENCES.bib", package = "mboost")
+### bibfile may contain spaces LaTeX is unable to deal with on MacOS it seems
+if (file.copy(bibfile, to = thisdir, overwrite = TRUE)) {
+    bibfile <- "REFERENCES.bib"
+} else {
+    ### hope for the best
+    bibfile <- file.path("..", "inst", "REFERENCES.bib")
+}
+library("bibtex")
+library("bibtex")
+mboost <- citation(package = "mboost", auto = TRUE)
+x <- unclass(mboost)
+attr(x[[1]], "key") <- "mboost"
+class(x) <- class(mboost)
+x$doi <- "10.32614/CRAN.package.mboost"
+writeLines(toBibtex(x), con = "packages.bib")
+write.bib(c("Matrix"), file = "packages.bib", append = TRUE)

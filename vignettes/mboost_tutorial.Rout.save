@@ -4,7 +4,7 @@
 > pd <- packageDescription("mboost")
 
 > if (any(is.na(pd))) {
-+     install.packages("mboost", repos = "http://cran.at.r-project.org")
++     install.packages("mboost", repos = "https://CRAN.R-project.org")
 +     pd <- packageDescription("mboost")
 + }
 
@@ -231,6 +231,35 @@ NULL
 > coef(glm3, off2int = TRUE)
 (Intercept)     hipcirc kneebreadth    anthro3a 
     -63.516       0.533       0.770       7.835 
+
+> thisdir <- getwd()
+
+> bibfile <- system.file("REFERENCES.bib", package = "mboost")
+
+> if (file.copy(bibfile, to = thisdir, overwrite = TRUE)) {
++     bibfile <- "REFERENCES.bib"
++ } else {
++     bibfile <- file.path("..", "inst", "REF ..." ... [TRUNCATED] 
+
+> library("bibtex")
+
+> mboost <- citation(package = "mboost", auto = TRUE)
+
+> x <- unclass(mboost)
+
+> attr(x[[1]], "key") <- "mboost"
+
+> class(x) <- class(mboost)
+
+> x$doi <- "10.32614/CRAN.package.mboost"
+
+> writeLines(toBibtex(x), con = "packages.bib")
+
+> write.bib(c("lme4", "nlme", "gbm"), file = "packages.bib", 
++     append = TRUE)
+Converted 3 of 3 package citations to BibTeX
+Writing 4 Bibtex entries ... OK
+Results written to file 'packages.bib'
 
 > loss = function(y, f) tau * (y - f) * ((y - f) >= 
 +     0) + (tau - 1) * (y - f) * ((y - f) < 0)
@@ -697,4 +726,4 @@ pdf
  *** Run successfully completed ***
 > proc.time()
    user  system elapsed 
-  5.408   0.731   4.950 
+  3.122   0.674   3.045 

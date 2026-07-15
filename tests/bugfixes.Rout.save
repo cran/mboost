@@ -1,0 +1,956 @@
+
+R version 4.6.1 (2026-06-24) -- "Happy Hop"
+Copyright (C) 2026 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> options(digits = 3)
+> 
+> 
+> .all.equal <- function(...) isTRUE(all.equal(..., check.environment = FALSE))
+> 
+> require("mboost")
+Loading required package: mboost
+Loading required package: parallel
+Loading required package: stabs
+> require("Matrix")
+Loading required package: Matrix
+> 
+> set.seed(290875)
+> 
+> ### predict did not return factor levels for blackboost models
+> dummy <- data.frame(y = gl(2, 100), x = runif(200))
+> pr <- predict(blackboost(y ~ x, data = dummy, family = Binomial()),
++               newdata = dummy, type = "class")
+> stopifnot(is.factor(pr) && all(levels(pr) %in% levels(dummy$y)))
+> 
+> ### predict for g{al}mboost.matrix did not work
+> ctrl <- boost_control(mstop = 10)
+> X <- cbind(int = 1, x = dummy$x)
+> gb <- glmboost(x = X, y = dummy$y, family = Binomial(), center = FALSE,
++                control = ctrl)
+> stopifnot(.all.equal(predict(gb), predict(gb, newdata = X)))
+> 
+> if (FALSE) {
++ gb <- gamboost(x = X, y = dummy$y, family = Binomial(),
++                control = ctrl)
++ stopifnot(.all.equal(predict(gb), predict(gb, newdata = X)))
++ }
+> 
+> ### predict with center = TRUE in glmboost.matrix() did not work
+> gb <- glmboost(x = X, y = dummy$y, family = Binomial(),
++                control = ctrl, center=TRUE)
+> p1 <- X %*% coef(gb)
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+> stopifnot(max(abs(p1 - predict(gb, newdata = X))) < sqrt(.Machine$double.eps))
+> 
+> ### blackboost _did_ touch the response, arg!
+> 
+> data("bodyfat", package = "TH.data")
+> ctrl <- boost_control(mstop = 500, nu = 0.01)
+> bb <- blackboost(DEXfat ~ ., data = bodyfat, control = ctrl)
+> n <- nrow(bodyfat)
+> bs <- rmultinom(3, n, rep(1, n) / n)
+> x <- seq(from = 10, to = 500, by = 10)
+> cv <- cvrisk(bb, bs, grid = x, papply = lapply)
+> ctrl$risk <- "oobag"
+> tmp <- blackboost(DEXfat ~ ., data = bodyfat, control = ctrl,
++                  weights = bs[,3])
+> 
+> stopifnot(identical(max(abs(tmp$risk()[x + 1] / sum(bs[,3] == 0)  - cv[3,])), 0))
+> 
+> ### center = TRUE and cvrisk were broken; same issue with masking original data
+> 
+> gb <- glmboost(DEXfat ~ ., data = bodyfat, center = TRUE)
+> cv1 <- cvrisk(gb, folds = bs, papply = lapply)
+> tmp <- glmboost(DEXfat ~ ., data = bodyfat, center = TRUE,
++                 control = boost_control(risk = "oobag"),
++                 weights = bs[,3])
+> stopifnot(identical(max(tmp$risk()[attr(cv1, "mstop") + 1] / sum(bs[,3] == 0) - cv1[3,]), 0))
+> 
+> ### same problem, just another check
+> 
+> indep <- names(bodyfat)[names(bodyfat) != "DEXfat"]
+> cbodyfat <- bodyfat
+> cbodyfat[indep] <- lapply(cbodyfat[indep], function(x) x - mean(x))
+> bffm <- DEXfat ~ age + waistcirc + hipcirc + elbowbreadth + kneebreadth +
++       anthro3a + anthro3b + anthro3c + anthro4
+> 
+> bf_glm_1 <- glmboost(bffm, data = cbodyfat, center = FALSE)
+> cv1 <- cvrisk(bf_glm_1, folds = bs, papply = lapply)
+> bf_glm_2 <- glmboost(bffm, data = bodyfat, center = TRUE)
+> cv2 <- cvrisk(bf_glm_2, folds = bs, papply = lapply)
+> 
+> stopifnot(mstop(cv1) == mstop(cv2))
+> 
+> if (FALSE){
++ ### dfbase=1 was not working correctly for ssp
++ ### spotted by Matthias Schmid <Matthias.Schmid@imbe.imed.uni-erlangen.de>
++ data("bodyfat", package = "TH.data")
++ ctrl <- boost_control(mstop = 100)
++ ### COMMENT: Not using ssp here but P-splines
++ ### Remove check!
++ ga <- gamboost(DEXfat ~ ., data = bodyfat, dfbase = 1, control = ctrl)
++ gl <- glmboost(DEXfat ~ ., data = bodyfat, center = TRUE, control = ctrl)
++ stopifnot(max(abs(predict(ga) - predict(gl))) < 1e-8)
++ AIC(gl)
++ }
+> 
+> if (FALSE) {
++ ### prediction with matrices was broken for gamboost,
++ ### spotted by <Max.Kuhn@pfizer.com>
++ x <- matrix(rnorm(1000), ncol = 10)
++ colnames(x) <- 1:ncol(x)
++ y <- rnorm(100)
++ fit <- gamboost(x = x, y = y, control = boost_control(mstop = 10))
++ a <- predict(fit, newdata = x[1:10,])
++ }
+> 
+> ### AIC for centered covariates didn't work
+> y <- gl(2, 10)
+> xn <- rnorm(20)
+> xnm <- xn - mean(xn)
+> gc <- glmboost(y ~ xn, center = TRUE,
++                family = Binomial())
+> g <- glmboost(y ~ xnm, center = FALSE, family = Binomial())
+> cgc <- coef(gc, off2int = TRUE)
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+> cg <- coef(g, off2int = TRUE) - c(mean(xn) * coef(g)[2], 0)
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+> names(cgc) <- NULL
+> names(cg) <- NULL
+> stopifnot(.all.equal(cgc, cg))
+> stopifnot(.all.equal(mstop(AIC(gc, "classical")),
++                     mstop(AIC(g, "classical"))))
+> 
+> ### fit ANCOVA models with centering
+> n <- 50
+> set.seed(290875)
+> x <- gl(3, n)
+> x1 <- sample(ordered(gl(3, n)))
+> z <- rnorm(length(x))
+> X <- model.matrix(~ x + z + x1)
+> eff <- X %*% (1:ncol(X))
+> y <- rnorm(length(x), mean = eff)
+> 
+> ctr <- list(list(x = "contr.treatment"), list(x = "contr.sum"),
++             list(x = "contr.helmert"), list(x = "contr.SAS"))
+> mstop <- 2000
+> fm <- y ~ z:x + x + z:x1
+> 
+> for (cc in ctr) {
++     modlm <- lm(fm, contrasts = cc)
++     modT <- glmboost(fm, contrasts.arg = cc,
++                      center = TRUE)[mstop]
++     stopifnot(max(abs(coef(modlm) - coef(modT, off2int = TRUE)))
++                       < .Machine$double.eps^(1/3))
++     stopifnot(max(abs(hatvalues(modlm) - hatvalues(modT))) < 0.01)
++     stopifnot(max(abs(predict(modlm) - predict(modT)))
++                       < .Machine$double.eps^(1/3))
++ }
+> 
+> y <- factor(rbinom(length(x), size = 1,
++                     prob = plogis(eff / max(abs(eff)) * 3)))
+> for (cc in ctr) {
++     modlm <- glm(fm, contrasts = cc,
++                  family = binomial())
++     modT <- glmboost(fm, contrasts.arg = cc,
++         center = TRUE, family = Binomial())[mstop]
++     stopifnot(max(abs(coef(modlm) - coef(modT, off2int = TRUE) * 2))
++                       < .Machine$double.eps^(1/3))
++     stopifnot(max(abs(predict(modlm) - predict(modT) * 2))
++                       < .Machine$double.eps^(1/3))
++ }
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+> 
+> 
+> ### check gamboost with weights (use weighted some of residuals
+> ### for variable selection)
+> data("bodyfat", package = "TH.data")
+> 
+> set.seed(290875)
+> n <- nrow(bodyfat)
+> w <- numeric(n)
+> w <- rmultinom(1, n, rep(1, n) / n)[,1]
+> ctrl <- boost_control(mstop = 20)
+> 
+> mod1 <- glmboost(DEXfat ~ ., data = bodyfat, weights = w, center = FALSE)
+> aic1 <- AIC(mod1, "corrected")
+> attributes(aic1) <- NULL
+> 
+> mod2 <- glmboost(DEXfat ~ ., data = bodyfat[rep(1:n, w),], center = FALSE)
+> aic2 <- AIC(mod2, "corrected")
+> attributes(aic2) <- NULL
+> 
+> stopifnot(.all.equal(round(aic1, 3), round(aic2, 3)))
+> 
+> mod1 <- gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl)
+> aic1 <- AIC(mod1, "corrected")
+> attributes(aic1) <- NULL
+> 
+> mod2 <- gamboost(DEXfat ~ ., data = bodyfat[rep(1:n, w),], con = ctrl)
+> aic2 <- AIC(mod2, "corrected")
+> attributes(aic2) <- NULL
+> 
+> stopifnot(.all.equal(round(aic1, 1), round(aic2, 1)))
+> 
+> mod1 <- blackboost(DEXfat ~ ., data = bodyfat, weights = w)
+> mod2 <- blackboost(DEXfat ~ ., data = bodyfat[rep(1:n, w),])
+> 
+> ratio <- mod1$risk() / mod2$risk()
+> stopifnot(ratio[1] > 0.95 && ratio[2] < 1.05)
+> 
+> if (FALSE){
++ ### df <= 2
++ ctrl$risk <- "oobag"
++ mod1 <- gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl, base = "bss", dfbase = 2)
++ mod2 <- gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl, base = "bbs", dfbase = 2)
++ mod3 <- gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl, base = "bols")
++ stopifnot(max(abs(predict(mod1) - predict(mod2))) < sqrt(.Machine$double.eps))
++ stopifnot(max(abs(predict(mod1) - predict(mod3))) < sqrt(.Machine$double.eps))
++ }
+> 
+> ### check predictions of zero-weight observations (via out-of-bag risk)
+> mod1 <- gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl, base = "bss")
+Warning message:
+In gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl,  :
+  bss and bns are deprecated, bbs is used instead
+> mod2 <- gamboost(DEXfat ~ ., data = bodyfat, weights = w, con = ctrl, base = "bbs")
+> stopifnot(abs(coef(lm(mod1$risk() ~ mod2$risk() - 1)) - 1) < 0.01)
+> 
+> ### not really a bug, a new feature; test fastp
+> df <- data.frame(y = rnorm(100), x = runif(100), z = runif(100))
+> eps <- sqrt(.Machine$double.eps)
+> s <- seq(from = 1, to = 100, by = 3)
+> 
+> x <- glmboost(y ~ ., data = df, center = FALSE)
+> for (i in s)
++     stopifnot(max(abs(predict(x[i]) - predict(x[max(s)], agg = "cumsum")[,i])) < eps)
+> 
+> x <- gamboost(y ~ ., data = df)
+> for (i in s)
++     stopifnot(max(abs(predict(x[i]) - predict(x[max(s)], agg = "cumsum")[,i])) < eps)
+> 
+> x <- blackboost(y ~ ., data = df)
+> for (i in s)
++     stopifnot(max(abs(predict(x[i]) - predict(x[max(s)], agg = "cumsum")[,i])) < eps)
+> 
+> ### make sure environment(formula) is used for evaluation
+> if (require("partykit")) {
++     data("cars")
++     ctl  <- boost_control(mstop = 100, trace = TRUE)
++     tctl <- ctree_control(teststat = "max", testtype = "Teststat",
++                           mincrit = 0, maxdepth = 5, saveinfo = FALSE)
++     myfun <- function(cars, xx, zz){
++         mboost(dist ~ btree(speed, tree_controls = zz),
++                data = cars, control = xx)
++     }
++     try(mod <- myfun(cars, xx = ctl, zz = tctl))
++ }
+Loading required package: partykit
+Loading required package: grid
+Loading required package: libcoin
+Loading required package: mvtnorm
+
+Attaching package: 'partykit'
+
+The following object is masked from 'package:mboost':
+
+    varimp
+
+[   1] ...................................... -- risk: 9247 
+[  41] ...................................... -- risk: 9006 
+[  81] ..................
+Final risk: 8977 
+> 
+> ### bbs with weights and expanded data
+> x <- runif(100)
+> y <- rnorm(length(x))
+> knots <- seq(from = 0.1, to = 0.9, by = 0.1)
+> w <- rmultinom(1, length(x), rep(1, length(x)) / length(x))[,1]
+> iw <- rep(1:length(x), w)
+> 
+> m1 <- bbs(x, knots = knots)$dpp(w)$fit(y)$model
+> m2 <- bbs(x[iw], knots = knots)$dpp(rep(1, length(iw)))$fit(y[iw])$model
+> 
+> stopifnot(max(abs(m1 - m2)) < sqrt(.Machine$double.eps))
+> 
+> ### base learner handling
+> stopifnot(max(abs(fitted(gamboost(DEXfat ~ age, data = bodyfat)) -
++                   fitted(gamboost(DEXfat ~ bbs(age), data = bodyfat)))) <
++           sqrt(.Machine$double.eps))
+> 
+> ### predict for matrix interface to glmboost
+> x <- matrix(runif(1000), ncol = 10)
+> y <- rowMeans(x) + rnorm(nrow(x))
+> mod <- glmboost(x = x, y = y, center = FALSE)
+> stopifnot(length(predict(mod, newdata = x[1:2,])) == 2)
+> try(predict(mod, newdata = as.data.frame(x[1:2,])))
+Error in object$newX(newdata) : 
+  'newdata' is not a matrix with the same variables as 'x'
+> 
+> 
+> ### predict for varying coefficient models with categorical z
+> set.seed(1907)
+> x <- rnorm(100)
+> z <- gl(2,50)
+> y <- rnorm(100, sd = 0.1)
+> data <- data.frame(y=y, x=x, z=z)
+> 
+> model <- gamboost(y ~ bols(x, by=z), data = data)
+> stopifnot(!is.na(predict(model,data[1,-1])))
+> 
+> model <- gamboost(y ~ bbs(x, by=z), data = data)
+> stopifnot(!is.na(predict(model,data[1,-1])))
+> 
+> x <- as.factor(sample(1:10, 100, replace=TRUE))
+> data <- data.frame(y=y, x=x, z=z)
+> model <- gamboost(y ~ brandom(x, by=z), data = data)
+> stopifnot(!is.na(predict(model,data[1,-1])))
+> 
+> x1 <- rnorm(100)
+> x2 <- rnorm(100)
+> data <- data.frame(y=y, x1=x1, x2=x2, z=z)
+> model <- gamboost(y ~ bspatial(x1,x2, by=z), data = data)
+> stopifnot(!is.na(predict(model,data[1,-1])))
+> 
+> ### bols with intercept = FALSE for categorical covariates was broken
+> x <- gl(2, 50)
+> y <- c(rnorm(50, mean = -1), rnorm(50, mean = 1))
+> stopifnot(length(coef(gamboost(y ~ bols(x, intercept=FALSE)))) == 1)
+> 
+> # check also for conntinuous x
+> x <- rnorm(100)
+> y <- c(rnorm(100, mean = 1 * x))
+> stopifnot(length(coef(gamboost(y ~ bols(x, intercept=FALSE)))) == 1)
+> 
+> ### check interface of coef
+> set.seed(1907)
+> x1 <- rnorm(100)
+> int <- rep(1, 100)
+> y <- 3 * x1 + rnorm(100, sd=0.1)
+> dummy <- data.frame(y = y, int = int, x1 = x1)
+> 
+> gbm <- gamboost(y ~ bols(int, intercept=FALSE) +  bols(x1, intercept=FALSE) +
++                 bbs(x1, center=TRUE, df=1), data = dummy)
+> 
+> ### check prediction if intercept=FALSE
+> gbm <- gamboost(y ~ bols(x1, intercept=FALSE), data = dummy)
+> stopifnot(!is.na(predict(gbm)) &
++           max(abs(predict(gbm) - fitted(gbm))) < sqrt(.Machine$double.eps))
+> 
+> ### check coef.glmboost
+> set.seed(1907)
+> x1 <- rnorm(100)
+> x2 <- rnorm(100)
+> y <- rnorm(100, mean= 3 * x1,sd=0.01)
+> linMod <- glmboost(y ~ x1 + x2, center = FALSE)
+> stopifnot(length(coef(linMod)) == 2)
+> 
+> ### automated offset computation in Family
+> x <- rnorm(100)
+> y <- rnorm(100)
+> w <- drop(rmultinom(1, 100, rep(1 / 100, 100)))
+> 
+> G <- Gaussian()
+> fm <- Family(ngradient = G@ngradient, risk = G@risk)
+> 
+> m1 <- glmboost(y ~ x, family = G, center = FALSE)
+> m2 <- glmboost(y ~ x, family = fm, center = FALSE)
+> stopifnot(.all.equal(coef(m1), coef(m2)))
+> 
+> ### formula evaluation
+> f <- function() {
++ 
++     x <- rnorm(100)
++     y <- rnorm(100)
++     list(mboost(y ~ bbs(x)),
++          gamboost(y ~ x),
++          glmboost(y ~ x, center = FALSE),
++          blackboost(y ~ x))
++ }
+> tmp <- f()
+> 
+> ### both loss and risk given, spotted by
+> ### Fabian Scheipl <fabian.scheipl@stat.uni-muenchen.de>
+> stopifnot(extends(class(Family(ngradient = function(y, f) y,
++                                loss = function(y, w) sum(y),
++                                risk = function(y, f, w) sum(y))),
++                   "boost_family"))
+> 
+> ### check coef with aggregate = "cumsum"
+> mod <- glmboost(DEXfat ~ ., data = bodyfat, center = FALSE)
+> 
+> stopifnot(max(abs(sapply(coef(mod, aggregate="cumsum"), function(x) x[,100])
++                   - coef(mod))) < sqrt(.Machine$double.eps))
+> 
+> ### get_index() was broken for factors
+> ### (spotted by Juliane Schaefer <JSchaefer _at_ uhbs.ch>)
+> y <- factor(c(2, 1, 1, 2, 2, 2, 1, 1, 2, 2), levels = 1:2, labels = c("N", "S"))
+> x <- factor(c(2, 1, 2, 2, 2, 1, 1, 1, 2, 2), levels = 1:2,
++             labels = c("No", "Yes"))
+> data <- data.frame(y,x)
+> m1 <- glm(y ~ x, data = data, family = binomial())
+> m2 <- glmboost(y ~ x, data = data, family = Binomial(),
++                control = boost_control(mstop = 2000), center = FALSE)
+> m3 <- gamboost(y ~ bols(x), data = data, family = Binomial(),
++                control = boost_control(mstop = 1000))
+> cf1 <- coef(m1)
+> a <- coef(m2); a[1] <- a[1] + m2$offset;
+
+NOTE: Coefficients from a Binomial model are half the size of coefficients
+ from a model fitted via glm(... , family = 'binomial').
+See Warning section in ?coef.mboost
+
+> cf2 <- as.vector(a) * 2
+> b <- coef(m3); b[[1]][1] <- b[[1]][1] + m3$offset;
+> cf3 <- b[[1]] * 2
+> 
+> stopifnot(max(abs(cf1 - cf2)) < sqrt(.Machine$double.eps))
+> stopifnot(max(abs(cf1 - cf3)) < sqrt(.Machine$double.eps))
+> stopifnot(max(abs(predict(m2) - predict(m3))) < sqrt(.Machine$double.eps))
+> 
+> ### bug in setting contrasts correctly
+> z <- as.ordered(gl(3, 10))
+> BL <- bols(z, contrasts.arg = "contr.treatment")$dpp
+> stopifnot(attr(get("X", envir = environment(BL)), "contrasts")$z == "contr.treatment")
+> 
+> ### check dimensions
+> try(glmboost(x = matrix(1:10, nrow = 5), y = rnorm(4)))
+Error in glmboost.matrix(x = matrix(1:10, nrow = 5), y = rnorm(4)) : 
+  dimensions of 'x' and 'y' do not match
+> 
+> ### (slight) abuse of bolscw
+> X <- runif(1000)
+> X <- matrix(X, nrow = 100)
+> y <- rnorm(100)
+> glmboost(x = X, y = y)
+
+	 Generalized Linear Models Fitted via Gradient Boosting
+
+Call:
+glmboost.matrix(x = X, y = y)
+
+
+	 Squared Error (Regression) 
+
+Loss function: (y - f)^2 
+ 
+
+Number of boosting iterations: mstop = 100 
+Step size:  0.1 
+Offset:  -0.0242 
+
+Coefficients: 
+     V1      V2      V3      V4      V5      V6      V7      V8      V9 
+-0.2433 -0.0787  0.3093 -0.1547 -0.4141 -0.0611 -0.2597 -0.7462  0.6370 
+attr(,"offset")
+[1] -0.0242
+
+Warning message:
+In glmboost.matrix(x = X, y = y) :
+  model with centered covariates does not contain intercept
+> b <- list(mboost:::bolscw(X))
+> mboost_fit(blg = b, response = y)
+
+	 Model-based Boosting
+
+
+	 Squared Error (Regression) 
+
+Loss function: (y - f)^2 
+ 
+
+Number of boosting iterations: mstop = 100 
+Step size:  0.1 
+Offset:  -0.0242 
+Number of baselearners:  1 
+
+> z <- rnorm(100)
+> b <- list(b1 = mboost:::bolscw(X), b2 = bbs(z))
+> mboost_fit(blg = b, response = y)
+
+	 Model-based Boosting
+
+
+	 Squared Error (Regression) 
+
+Loss function: (y - f)^2 
+ 
+
+Number of boosting iterations: mstop = 100 
+Step size:  0.1 
+Offset:  -0.0242 
+Number of baselearners:  2 
+
+> mod <- mboost_fit(blg = b, response = y)
+> cf <- coef(mod, which = 1)[[1]]
+> stopifnot(length(cf) == ncol(X))
+> 
+> 
+> ### check interface of buser
+> ### (K was fetched from global environment)
+> set.seed(1907)
+> x <- rnorm(100)
+> y <- rnorm(100, mean = x^2, sd = 0.1)
+> mod1 <- gamboost(y ~ bbs(x))
+> X1 <- extract(bbs(x))
+> K1 <- extract(bbs(x), "penalty")
+> mod2 <- gamboost(y ~ buser(X1, K1))
+> stopifnot(max(abs(predict(mod1) - predict(mod2))) < sqrt(.Machine$double.eps))
+> 
+> 
+> ### check if mysolve works correctly
+> set.seed(1907)
+> X <- matrix(runif(1000), ncol = 10)
+> XM <- Matrix(X)
+> y <- rnorm(nrow(X))
+> # use interface for dense matrices from package Matrix
+> f1 <- fitted(gamboost(y ~ bols(XM)))
+> # use interface for matrices of class "matrix"
+> f2 <- fitted(gamboost(y ~ bols(X)))
+> stopifnot(max(abs(f1 - f2)) < sqrt(.Machine$double.eps))
+> ## Now same with sparse matrix
+> X[X < .9] <- 0
+> XM <- Matrix(X)
+> # use interface for sparse matrices from package Matrix
+> f1 <- fitted(gamboost(y ~ bols(XM)))
+> # use interface for matrices of class "matrix"
+> f2 <- fitted(gamboost(y ~ bols(X)))
+> stopifnot(max(abs(f1 - f2)) < sqrt(.Machine$double.eps))
+> 
+> ### check if bmrf works correctly
+> ## (if not all locations are observed)
+> if (require("BayesX")) {
++     germany <- read.bnd(system.file("examples/germany.bnd", package="BayesX"))
++     districts <- attr(germany, "regions")
++     set.seed(1907)
++     regions <- factor(sample(districts, 400, replace = TRUE))
++     B <- bmrf(regions, bnd = germany)
++     X <- extract(B)
++     K <- extract(B, what = "pen")
++     Xs <- colSums(as.matrix(X))
++     names(Xs) <- rownames(K)
++     stopifnot(all(Xs[Xs > 0] == table(regions)[names(Xs[Xs > 0])]))
++ 
++     ## check against old, slower code:
++     Xold <- matrix(0, nrow = length(regions), ncol = ncol(K))
++     for (i in 1:length(regions))
++         Xold[i, which(districts == regions[i])] <- 1
++     stopifnot(all(X == Xold))
++ }
+Loading required package: BayesX
+Loading required package: shapefiles
+Loading required package: foreign
+
+Attaching package: 'shapefiles'
+
+The following objects are masked from 'package:foreign':
+
+    read.dbf, write.dbf
+
+Read 8852 records
+Note: map consists of 310 polygons
+Note: map consists of 309 regions
+Reading map ... finished
+Start neighbor search ...
+progress: 50%
+progress: 100%
+Neighbor search finished.
+> 
+> ## check handling of missing values
+> y <- yNa <- rnorm(100)
+> x1 <- rnorm(100)
+> x2 <- rnorm(100)
+> z1 <- as.factor(sample(1:10, 100, replace = TRUE))
+> 
+> yNa[1] <- NA
+> coef(mboost(yNa ~ x1))
+$`bbs(x1)`
+      1       2       3       4       5       6       7       8       9      10 
+-0.3320 -0.2530 -0.1682 -0.0573  0.0583  0.1448  0.1618  0.0766 -0.0863 -0.2359 
+     11      12      13      14      15      16      17      18      19      20 
+-0.3031 -0.2786 -0.1788 -0.0553  0.0593  0.1709  0.2980  0.3981  0.4216  0.3843 
+     21      22      23      24 
+ 0.3296  0.2811  0.2355  0.1901 
+
+attr(,"offset")
+[1] 0.086
+Warning message:
+In mboost_fit(bl, response = response, weights = weights, offset = offset,  :
+  response contains missing values;
+ weights of corresponding observations are set to zero and thus these observations are not used for fitting
+> 
+> yNa <- y
+> yNa[2] <- NaN
+> coef(mboost(yNa ~ x1))
+$`bbs(x1)`
+      1       2       3       4       5       6       7       8       9      10 
+-0.3202 -0.2411 -0.1563 -0.0456  0.0693  0.1541  0.1680  0.0779 -0.0910 -0.2453 
+     11      12      13      14      15      16      17      18      19      20 
+-0.3148 -0.2919 -0.1903 -0.0609  0.0606  0.1778  0.3085  0.4104  0.4345  0.3969 
+     21      22      23      24 
+ 0.3412  0.2914  0.2445  0.1976 
+
+attr(,"offset")
+[1] 0.0762
+Warning message:
+In mboost_fit(bl, response = response, weights = weights, offset = offset,  :
+  response contains missing values;
+ weights of corresponding observations are set to zero and thus these observations are not used for fitting
+> 
+> x1[1] <- NA
+> z1[1] <- NA
+> mod <- mboost(y ~ bols(x1) + bbs(x1) + brandom(z1) +
++                   bspatial(x1, x2) + brad(x1, x2, knots = 20) +
++                   bmono(x1) +  buser(x1, K = 1, lambda = 0) + x2)
+Loading required namespace: fields
+Warning messages:
+1: In bols(x1) : base-learner contains missing values;
+missing values are excluded per base-learner, i.e., base-learners may depend on different numbers of observations.
+2: In bbs(x1) : base-learner contains missing values;
+missing values are excluded per base-learner, i.e., base-learners may depend on different numbers of observations.
+3: In bols(z1, df = 4, contrasts.arg = "contr.dummy") :
+  base-learner contains missing values;
+missing values are excluded per base-learner, i.e., base-learners may depend on different numbers of observations.
+4: In bbs(x1, x2, df = 6) : base-learner contains missing values;
+missing values are excluded per base-learner, i.e., base-learners may depend on different numbers of observations.
+5: In brad(x1, x2, knots = 20) : base-learner contains missing values;
+missing values are excluded per base-learner, i.e., base-learners may depend on different numbers of observations.
+6: In fields::cover.design(R = unique(x), nd = knots) :
+  Number of nearst neighbors (nn) reduced to the actual number of candidates
+7: In bmono(x1) : base-learner contains missing values;
+missing values are excluded per base-learner, i.e., base-learners may depend on different numbers of observations.
+8: In buser(x1, K = 1, lambda = 0) : base-learner contains missing values;
+missing values are excluded per base-learner, i.e., base-learners may depend on different numbers of observations.
+> 
+> ## check handling of lists without names
+> n <- 100
+> x1 <- rnorm(n)
+> x2 <- rnorm(n) + 0.25 * x1
+> y <- 3 * sin(x1) + x2^2 + rnorm(n)
+> spline1 <- bbs(x1, knots = 20, df = 4)
+> spline2 <- bbs(x2, knots = 10, df = 5)
+> mod1 <- mboost_fit(list(spline1, spline2), y)
+> mod2 <- mboost_fit(list(spline1), y)
+> mod3 <- mboost_fit(list(s1 = spline1, s2 = spline2), y)
+> names(coef(mod1))
+[1] "bbs(x1, knots = 20, df = 4)" "bbs(x2, knots = 10, df = 5)"
+> names(coef(mod2))
+[1] "bbs(x1, knots = 20, df = 4)"
+> names(coef(mod3))
+[1] "s1" "s2"
+> extract(mod1, "bnames")
+[1] "bbs(x1, knots = 20, df = 4)" "bbs(x2, knots = 10, df = 5)"
+> extract(mod2, "bnames")
+[1] "bbs(x1, knots = 20, df = 4)"
+> extract(mod3, "bnames")
+[1] "s1" "s2"
+> 
+> ## check handling of newdata = list(), at least for common scenarios with lists
+> ## [https://github.com/boost-R/mboost/issues/15]
+> data("bodyfat", package = "TH.data")
+> bf <- as.list(bodyfat)
+> mod <- mboost(DEXfat ~ bols(waistcirc) + bmono(hipcirc) + btree(age),
++               data = bf)
+> ## predict with data frame
+> nd <- bodyfat[1:2,]
+> pr1 <- predict(mod, newdata = nd)
+> ## predict with list
+> nd <- as.list(bodyfat[1:2,])
+> pr2 <- predict(mod, newdata = nd)
+> stopifnot(pr1 == pr2)
+> ## check plotting
+> nd <- list(waistcirc = 1, age = 1,
++            hipcirc = seq(min(bf$hipcirc), max(bf$hipcirc), length = 100))
+> plot(mod, which = 2, newdata = nd)
+> nd <- data.frame(waistcirc = 1, age = 1,
++                  hipcirc = seq(min(bf$hipcirc), max(bf$hipcirc), length = 100))
+> plot(mod, which = 2, newdata = nd)
+> lines(mod, which = 2, rug = TRUE)
+Warning message:
+In plot_helper(xl, yl) :
+  'rug = TRUE' should be used with care if 'add = TRUE'
+> ## check user-specified labels
+> plot(mod, which = 2, newdata = nd, xlab = "hip circumference", ylab = "partial effect")
+> 
+> ## check categorical variables
+> bodyfat$hip_cat <- cut(bodyfat$hipcirc, breaks = 2)
+> bodyfat$waist_cat <- cut(bodyfat$waistcirc, breaks = 2)
+> mod <- mboost(DEXfat ~ bols(waist_cat) + bols(hip_cat), data = bodyfat)
+> plot(mod, which = "hip_cat", ylim = c(-4,9))
+> plot(mod, which = "hip_cat", ylim = c(-4,9), xaxt = "n", xlab = "")
+> lines(mod, which = "waist_cat", col = "red")
+> 
+> mod <- mboost(DEXfat ~ bols(waistcirc) + bols(hip_cat) + bols(hip_cat, waistcirc),
++               data = bodyfat)
+> plot(mod, which = "hip_cat")
+> 
+> 
+> ## check if model fitting with very few knots works
+> ## [https://github.com/boost-R/mboost/issues/30]
+> # kronecker product for matrix-valued responses
+> data("volcano", package = "datasets")
+> # estimate mean of image treating image as matrix
+> x1 <- 1:nrow(volcano)
+> x2 <- 1:ncol(volcano)
+> vol <- as.vector(volcano)
+> # do the model fit with default number of knots
+> mod <- mboost(vol ~ bbs(x1, df = 3, knots = 10)%O%
++                 bbs(x2, df = 3, knots = 10),
++               control = boost_control(nu = 0.25))
+> # do the model fit with very few knots
+> mod <- mboost(vol ~ bbs(x1, df = 3, knots = 3) %O%
++                 bbs(x2, df = 3, knots = 3),
++               control = boost_control(nu = 0.25))
+> 
+> 
+> ### IPCweights problem, see github issue #54
+> 
+> if (require("survival")){
++   x1 <- rnorm(100)
++   x2 <- x1 + rnorm(100)
++   X <- cbind(x1, x2)
++   beta <- c(1, 0.5)
++   survtime <- exp(X%*%beta)
++   event <- rep(c(TRUE, FALSE), 50)
++   
++   ipcw1 <- IPCweights(Surv(survtime, event))
++   ipcw2 <- IPCweights(Surv(as.numeric(survtime), event))
++   summary(cbind(ipcw1, ipcw2))
++   
++   stopifnot(identical(ipcw1, ipcw2))
++ }
+Loading required package: survival
+> 
+> ## make sure newdata is not used in fitted() but other arguments are:
+> data("bodyfat", package = "TH.data")
+> mod <- mboost(DEXfat ~ btree(age) + bols(waistcirc) + bbs(hipcirc),
++               control = boost_control(mstop = 10),
++               data = bodyfat)
+> fitted(mod, newdata = bodyfat)
+      [,1]
+ [1,] 36.1
+ [2,] 37.5
+ [3,] 34.0
+ [4,] 24.5
+ [5,] 29.6
+ [6,] 26.9
+ [7,] 29.0
+ [8,] 31.3
+ [9,] 26.3
+[10,] 24.4
+[11,] 26.9
+[12,] 23.5
+[13,] 25.7
+[14,] 20.5
+[15,] 30.4
+[16,] 34.7
+[17,] 28.1
+[18,] 40.6
+[19,] 36.2
+[20,] 24.2
+[21,] 34.6
+[22,] 25.9
+[23,] 29.7
+[24,] 29.2
+[25,] 25.8
+[26,] 29.7
+[27,] 33.6
+[28,] 26.4
+[29,] 40.0
+[30,] 29.5
+[31,] 39.6
+[32,] 40.4
+[33,] 27.8
+[34,] 33.7
+[35,] 27.2
+[36,] 29.5
+[37,] 31.0
+[38,] 38.6
+[39,] 26.8
+[40,] 33.7
+[41,] 41.3
+[42,] 38.1
+[43,] 37.1
+[44,] 35.0
+[45,] 44.5
+[46,] 42.6
+[47,] 43.5
+[48,] 42.7
+[49,] 33.0
+[50,] 29.5
+[51,] 26.3
+[52,] 34.8
+[53,] 38.5
+[54,] 37.1
+[55,] 26.5
+[56,] 30.5
+[57,] 25.4
+[58,] 40.3
+[59,] 34.0
+[60,] 28.8
+[61,] 22.5
+[62,] 22.3
+[63,] 20.3
+[64,] 23.0
+[65,] 24.5
+[66,] 21.7
+[67,] 21.7
+[68,] 22.7
+[69,] 25.0
+[70,] 28.1
+[71,] 21.0
+Warning message:
+In fitted.mboost(mod, newdata = bodyfat) :
+  Argument 'newdata' was  ignored. Please use 'predict()' to make predictions for new data.
+> stopifnot(.all.equal(fitted(mod, aggregate = "cumsum")[,10], 
++                     fitted(mod), check.attributes = FALSE))
+> stopifnot(.all.equal(fitted(mod, aggregate = "cumsum"), 
++                     fitted(mod, newdata = bodyfat, aggregate = "cumsum")))
+Warning message:
+In fitted.mboost(mod, newdata = bodyfat, aggregate = "cumsum") :
+  Argument 'newdata' was  ignored. Please use 'predict()' to make predictions for new data.
+> 
+> 
+> ## make sure weights are subset if missing values are present
+> weights <- sample(1:100, 100, replace=FALSE)
+> x <- rnorm(100)
+> y <- runif(100)
+> # create missing value
+> x[25] <- NA
+> myData <- data.frame(x=x, y=y)
+> ## was broken:
+> gamboost(y ~ bols(x), data = myData, weights = weights, family = Gaussian())
+
+	 Model-based Boosting
+
+Call:
+gamboost(formula = y ~ bols(x), data = myData, weights = weights,     family = Gaussian())
+
+
+	 Squared Error (Regression) 
+
+Loss function: (y - f)^2 
+ 
+
+Number of boosting iterations: mstop = 100 
+Step size:  0.1 
+Offset:  0.448 
+Number of baselearners:  1 
+
+> mboost(y ~ bols(x), data = myData, weights = weights, family = Gaussian())
+
+	 Model-based Boosting
+
+Call:
+mboost(formula = y ~ bols(x), data = myData, weights = weights,     family = Gaussian())
+
+
+	 Squared Error (Regression) 
+
+Loss function: (y - f)^2 
+ 
+
+Number of boosting iterations: mstop = 100 
+Step size:  0.1 
+Offset:  0.448 
+Number of baselearners:  1 
+
+> ## was always working
+> glmboost(y ~ x, data = myData, weights = weights, family = Gaussian())
+
+	 Generalized Linear Models Fitted via Gradient Boosting
+
+Call:
+glmboost.formula(formula = y ~ x, data = myData, weights = weights,     family = Gaussian())
+
+
+	 Squared Error (Regression) 
+
+Loss function: (y - f)^2 
+ 
+
+Number of boosting iterations: mstop = 100 
+Step size:  0.1 
+Offset:  0.448 
+
+Coefficients: 
+(Intercept)           x 
+    0.00294    -0.06126 
+attr(,"offset")
+[1] 0.448
+
+> blackboost(y ~ x, data = myData, weights = weights, family = Gaussian())
+
+	 Model-based Boosting
+
+Call:
+blackboost(formula = y ~ x, data = myData, weights = weights,     family = Gaussian())
+
+
+	 Squared Error (Regression) 
+
+Loss function: (y - f)^2 
+ 
+
+Number of boosting iterations: mstop = 100 
+Step size:  0.1 
+Offset:  0.448 
+Number of baselearners:  1 
+
+> 
+> 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+ 18.782   0.129  18.901 

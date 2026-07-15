@@ -1,12 +1,13 @@
 \documentclass[a4paper]{article}
 \usepackage{jmlr2e}
+
 \usepackage{color,hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \newcommand{\argmin}{\operatorname{argmin}\displaylimits}
 
 %%\VignetteIndexEntry{mboost}
-%%\VignetteDepends{mboost, partykit, TH.data}
+%%\VignetteDepends{mboost, partykit, TH.data,bibtex}
 
 %% software markup
 \let\proglang=\textsf
@@ -658,7 +659,7 @@ structure(c(3.7463373531230646, 5.0294654135338313, 3.805863095238093,
 1.4931641803723936, 1.4603329652076242, 1.6295693854945206, 1.6624546810087431, 
 1.3061920384979004, 1.396995761268865, 1.6785669277120703, 1.9372544801264491, 
 1.5743918472558274, 1.7250666697024684, 1.4503454917151744, 1.2655303765741142
-), .Dim = c(25L, 100L), .Dimnames = list(c("1", "2", "3", "4", 
+), dim = c(25L, 100L), dimnames = list(c("1", "2", "3", "4", 
 "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", 
 "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"), 
     c("10", "20", "30", "40", "50", "60", "70", "80", "90", "100", 
@@ -722,14 +723,14 @@ structure(c(3.7463373531230646, 5.0294654135338313, 3.805863095238093,
 Torsten Hothorn, Peter B\"uhlmann, Thomas Kneib, Mattthias Schmid
 and Benjamin Hofner (2010),  Model-based Boosting 2.0. \emph{Journal of Machine Learning Research}, \textbf{11},
 2109 -- 2113;\\
-URL \url{http://jmlr.csail.mit.edu/papers/v11/hothorn10a.html}.
+URL \url{https://jmlr.org/papers/v11/hothorn10a.html}.
 \end{center}
 \bigskip
 
 \begin{abstract}
 This is an extended version of the manuscript Torsten Hothorn, Peter B\"uhlmann, Thomas Kneib, Mattthias Schmid
 and Benjamin Hofner (2010),  Model-based Boosting 2.0. \emph{Journal of Machine Learning Research}, \textbf{11},
-2109 -- 2113; \url{http://jmlr.csail.mit.edu/papers/v11/hothorn10a.html}.
+2109 -- 2113; \url{https://jmlr.org/papers/v11/hothorn10a.html}.
 
 We describe version 2.0 of the \proglang{R} add-on package \pkg{mboost}.
 The package implements boosting for optimizing general risk functions utilizing
@@ -743,13 +744,13 @@ component-wise functional gradient descent, splines, decision trees.
 \end{keywords}
 
 \section{Overview}
-The \proglang{R} add-on package \pkg{mboost} \citep{PKG:mboost} implements tools for fitting
+The \proglang{R} add-on package \pkg{mboost} \citep{mboost} implements tools for fitting
 and evaluating
 a variety of regression and classification models that have been suggested in machine learning and statistics.
 Optimization within the empirical risk minimization framework is performed
 via a component-wise functional gradient descent algorithm.
 The algorithm originates from the statistical view on boosting
-algorithms \citep{fht00,pbyu03}. The theory and its implementation in
+algorithms \citep{friedmanetal2000,buehlmannyu2003}. The theory and its implementation in
 \pkg{mboost} allow for fitting complex prediction models,
 taking potentially many interactions of features into account, as well as
 for fitting additive and linear models.
@@ -788,10 +789,10 @@ potentially high-dimensional feature vectors $x_i$, and $w_i$ are some weights.
 The component-wise boosting algorithm starts with some offset for $f$ and iteratively fits residuals defined
 by the negative gradient of the loss function evaluated at the current fit by updating
 only the best model component in each iteration. The
-details have been described by \cite{pbyu03}. Early stopping via resampling approaches or
+details have been described by \cite{buehlmannyu2003}. Early stopping via resampling approaches or
 AIC leads to sparse models in the sense that only a subset of important model components
 $f_j$ defines the final model. A more thorough introduction to boosting with applications
-in statistics based on version 1.0 of \pkg{mboost} is given by \cite{BuhlmannHothorn06}.
+in statistics based on version 1.0 of \pkg{mboost} is given by \cite{Buehlmann:2008:StatSci}.
 
 As of version 2.0, the package allows for fitting models to binary, numeric, ordered and
 censored responses, i.e., regression of the mean, robust regression, classification
@@ -833,7 +834,7 @@ As a major improvement over the 1.0 series, computations on larger data sets
 (both with respect to the number of observations and the number of variables) are now
 facilitated by memory efficient implementations of the base-learners, mostly
 by applying sparse matrix techniques \citep[package
-\pkg{Matrix},][]{PKG:Matrix} and parallelization for a
+\pkg{Matrix},][]{Matrix} and parallelization for a
 cross-validation-based choice of the number of boosting iterations
 per default via package \pkg{parallel}. A more
 elaborate description of \pkg{mboost} 2.0 features is available
@@ -862,7 +863,7 @@ different model components (linear terms: \code{bols()}; smooth
 terms: \code{bbs()}; interactions: \code{btree()}).
 The loss function (here, the check function for the $0.5$ quantile)
 along with its negative gradient function are defined by the
-\code{QuantReg(0.5)} family \citep{Fenske+Kneib+Hothorn:2009}.
+\code{QuantReg(0.5)} family \citep{Fenske+Kneib+Hothorn_2011}.
 The model structure (specified using the formula \code{fm}), the data and the family
 are then passed to function \code{mboost()} for model fitting:
 <<setup, echo = FALSE>>=
@@ -1005,8 +1006,6 @@ print(plot(model, which = "btree", newdata = nd, col.regions = col,
 The sources of the \pkg{mboost} package are distributed
 at the Comprehensive \proglang{R} Archive Network under GPL-2,
 along with binaries for all major platforms as well as documentation and regression tests.
-Development versions are available from \url{http://R-forge.R-project.org}.
-
 
 \section{Overview on 2.0 Series Features}
 \label{sec:2.0-series-features}
@@ -1057,8 +1056,7 @@ of selected base-learners and is the basis for stability selection
 \citep[in function \code{stabsel()}, cf.][]{mebu10}.
 Secondly, an interface for parallel computing (based on \pkg{parallel}) is
 automatically used (if available) for cross-validation-based stopping of the
-algorithm in \code{cvrisk()}. With some extra work, other parallelization packages
-such as \pkg{snow} \citep{PKG:snow} can immediately be integrated.
+algorithm in \code{cvrisk()}. With some extra work, other parallelization packages can be integrated.
 Moreover, \code{cvrisk()} allows for more flexible definitions of resampling schemes
 ($k$-fold, cross-validation, bootstrap, subsampling).
 Thirdly, the
@@ -1095,6 +1093,26 @@ lines(nd$anthro3b, predict(model, which = "bols(anthro3b", newdata = nd),
 \end{center}
 \end{figure}
 
-\bibliography{boost}
+<<bib, echo = FALSE>>=
+thisdir <- getwd()
+bibfile <- system.file("REFERENCES.bib", package = "mboost")
+### bibfile may contain spaces LaTeX is unable to deal with on MacOS it seems
+if (file.copy(bibfile, to = thisdir, overwrite = TRUE)) {
+    bibfile <- "REFERENCES.bib"
+} else {
+    ### hope for the best
+    bibfile <- file.path("..", "inst", "REFERENCES.bib")
+}
+library("bibtex")
+library("bibtex")
+mboost <- citation(package = "mboost", auto = TRUE)
+x <- unclass(mboost)
+attr(x[[1]], "key") <- "mboost"
+class(x) <- class(mboost)
+x$doi <- "10.32614/CRAN.package.mboost"
+writeLines(toBibtex(x), con = "packages.bib")
+write.bib(c("Matrix"), file = "packages.bib", append = TRUE)
+@
+\bibliography{\Sexpr{bibfile},packages}
 
 \end{document}

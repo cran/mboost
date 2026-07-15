@@ -334,3 +334,15 @@ plot(log(wpbc3$time), predict(wpbc_surv, newdata = wpbc3),
 abline(a = 0, b = 1, lty = 2, lwd = 0.5)
 
 
+###################################################
+### code chunk number 39: bib
+###################################################
+thisdir <- getwd()
+bibfile <- system.file("REFERENCES.bib", package = "mboost")
+### bibfile may contain spaces LaTeX is unable to deal with on MacOS it seems
+if (file.copy(bibfile, to = thisdir, overwrite = TRUE)) {
+    bibfile <- "REFERENCES.bib"
+} else {
+    ### hope for the best
+    bibfile <- file.path("..", "inst", "REFERENCES.bib")
+}
