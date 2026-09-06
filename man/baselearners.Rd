@@ -12,8 +12,6 @@
 \alias{bmono}
 \alias{bmrf}
 \alias{buser}
-\alias{bns}
-\alias{bss}
 \alias{\%+\%}
 \alias{\%X\%}
 \alias{\%O\%}
@@ -197,8 +195,7 @@ bl1 \%O\% bl2
     determines how the constrained least squares problem should be
     solved. If \code{type = "quad.prog"}, a numeric quadratic
     programming method
-    %%% PROBLEM: mboost::Goldfarb:1982
-    \bibcitep{mboost::Goldfarb:1983} is used
+    \bibcitep{mboost::Goldfarb:1982,mboost::Goldfarb:1983} is used
     (see \code{\link[quadprog]{solve.QP}} in package \pkg{quadprog}). If
     \code{type = "iterative"}, the iterative procedure described in
     \bibcitet{mboost::Hofner+Mueller+Hothorn_2011}. 
@@ -442,11 +439,6 @@ bl1 \%O\% bl2
   \code{\link{blackboost}} is more efficient for boosting stumps. For
   further references see \bibcitet{mboost::Hothorn:2006:JCGS} and 
   \bibcitet{mboost::Hothorn+Buehlmann+Kneib+Schmid+Hofner_2010}.
-
-  Note that the base-learners \code{bns} and \code{bss} are deprecated
-  (and no longer available). Please use \code{bbs} instead, which
-  results in qualitatively the same models but is computationally much
-  more attractive.
 
 }
 \section{Global Options}{
